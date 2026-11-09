@@ -1,0 +1,54 @@
+---
+import FormShell from './FormShell.astro';
+import Field from './Field.astro';
+import Icon from '../Icon.astro';
+interface Props {
+  preset?: 'FONEN' | 'FONPRO';
+}
+const { preset } = Astro.props;
+const f = 'membership-enquiry';
+---
+
+<FormShell name={f} label="Membership enquiry" success="<strong>Thank you for your interest in Friends of Nigeria.</strong> Our membership team will contact you by email with the next steps.">
+  <fieldset class="field">
+    <legend>I am interested in</legend>
+    <div class="radio-cards">
+      <label class="radio-card">
+        <input type="radio" name="programme" value="FONPRO" required checked={preset === 'FONPRO'} aria-describedby={`${f}-programme-error`} />
+        <strong>FONPRO</strong>
+        <span>Individual membership for Nigerian professionals</span>
+      </label>
+      <label class="radio-card">
+        <input type="radio" name="programme" value="FONEN" required checked={preset === 'FONEN'} aria-describedby={`${f}-programme-error`} />
+        <strong>FONEN</strong>
+        <span>Corporate membership for European companies</span>
+      </label>
+    </div>
+    <p class="field-error" id={`${f}-programme-error`} aria-live="polite"></p>
+  </fieldset>
+  <div class="form-row form-row--2">
+    <Field form={f} name="name" label="Full name" required autocomplete="name" maxlength={120} />
+    <Field form={f} name="email" label="Email address" type="email" required autocomplete="email" inputmode="email" />
+  </div>
+  <div class="form-row form-row--2">
+    <Field form={f} name="organisation" label="Company or organisation" autocomplete="organization" maxlength={160} />
+    <Field
+      form={f}
+      name="country"
+      label="Country of residence"
+      as="select"
+      required
+      placeholder="Choose a country"
+      options={['France', 'Germany', 'Belgium', 'Luxembourg', 'Nigeria', 'United Kingdom', 'Netherlands', 'Other European country', 'Other'].map((c) => ({ value: c, label: c }))}
+    />
+  </div>
+  <Field form={f} name="message" label="Tell us a little about yourself or your company" as="textarea" rows={4} maxlength={2000} />
+  <label class="check">
+    <input type="checkbox" name="consent" value="yes" required aria-describedby={`${f}-consent-error`} />
+    <span>I agree that Friends of Nigeria may store my details to process this membership enquiry.</span>
+  </label>
+  <p class="field-error" id={`${f}-consent-error`} aria-live="polite"></p>
+  <div>
+    <button type="submit" class="btn">Send enquiry <Icon name="arrow-right" size={16} class="arrow" /></button>
+  </div>
+</FormShell>

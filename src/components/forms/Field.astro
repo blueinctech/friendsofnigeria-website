@@ -1,0 +1,92 @@
+---
+/** One labelled form control with hint + inline error wiring. */
+interface Option {
+  value: string;
+  label: string;
+}
+interface Props {
+  form: string;
+  name: string;
+  label: string;
+  type?: astroHTML.JSX.HTMLInputTypeAttribute;
+  as?: 'input' | 'select' | 'textarea';
+  required?: boolean;
+  autocomplete?: string;
+  placeholder?: string;
+  hint?: string;
+  options?: Option[];
+  maxlength?: number;
+  minlength?: number;
+  pattern?: string;
+  patternMessage?: string;
+  inputmode?: 'text' | 'email' | 'tel' | 'url' | 'numeric' | 'decimal' | 'search' | 'none';
+  rows?: number;
+  class?: string;
+}
+const {
+  form,
+  name,
+  label,
+  type = 'text',
+  as = 'input',
+  required = false,
+  autocomplete,
+  placeholder,
+  hint,
+  options = [],
+  maxlength,
+  minlength,
+  pattern,
+  patternMessage,
+  inputmode,
+  rows = 6,
+  class: className,
+} = Astro.props;
+const id = `${form}-${name}`;
+const describedBy = [hint ? `${id}-hint` : null, `${id}-error`].filter(Boolean).join(' ');
+---
+
+<div class:list={['field', className]}>
+  <label for={id}>
+    {label}
+    {!required && <span class="optional"> (optional)</span>}
+  </label>
+  {
+    as === 'select' ? (
+      <select id={id} name={name} required={required} autocomplete={autocomplete} aria-describedby={describedBy}>
+        <option value="">{placeholder ?? 'Select an option'}</option>
+        {options.map((o) => (
+          <option value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    ) : as === 'textarea' ? (
+      <textarea
+        id={id}
+        name={name}
+        required={required}
+        rows={rows}
+        maxlength={maxlength}
+        minlength={minlength}
+        placeholder={placeholder}
+        aria-describedby={describedBy}
+      />
+    ) : (
+      <input
+        id={id}
+        name={name}
+        type={type}
+        required={required}
+        autocomplete={autocomplete}
+        placeholder={placeholder}
+        maxlength={maxlength}
+        minlength={minlength}
+        pattern={pattern}
+        data-pattern-message={patternMessage}
+        inputmode={inputmode}
+        aria-describedby={describedBy}
+      />
+    )
+  }
+  {hint && <p class="field-hint" id={`${id}-hint`}>{hint}</p>}
+  <p class="field-error" id={`${id}-error`} aria-live="polite"></p>
+</div>

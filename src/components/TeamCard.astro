@@ -1,0 +1,128 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import Icon from './Icon.astro';
+
+interface Props {
+  person: CollectionEntry<'team'>;
+  showSummary?: boolean;
+  headingLevel?: 'h3' | 'h4';
+  eager?: boolean;
+}
+const { person, showSummary = false, headingLevel = 'h3', eager = false } = Astro.props;
+const d = person.data;
+const hasBio = Boolean(person.body && person.body.trim().length > 0);
+const href = `/team/${person.id}/`;
+const H = headingLevel;
+---
+
+<article class="person">
+  <div class="media media--zoom person-photo">
+    <Image
+      src={d.photo}
+      alt={`Portrait of ${d.name}`}
+      widths={[280, 420, 560]}
+      sizes="(min-width: 1200px) 240px, (min-width: 700px) 30vw, 70vw"
+      loading={eager ? 'eager' : 'lazy'}
+    />
+  </div>
+  <div class="person-body">
+    <H class="person-name">
+      {hasBio ? <a href={href} class="stretched">{d.name}</a> : d.name}
+    </H>
+    <p class="person-role">{d.role}</p>
+    {showSummary && d.summary && <p class="person-summary">{d.summary}</p>}
+    <div class="person-links">
+      {
+        hasBio && (
+          <span class="link-arrow" aria-hidden="true">
+            View profile <Icon name="arrow-right" size={15} />
+          </span>
+        )
+      }
+      {
+        d.linkedin && (
+          <a href={d.linkedin} class="person-li" target="_blank" rel="noopener noreferrer" aria-label={`${d.name} on LinkedIn (opens in a new tab)`}>
+            <Icon name="linkedin" size={15} />
+          </a>
+        )
+      }
+    </div>
+  </div>
+</article>
+
+<style>
+  .person {
+    position: relative;
+    display: grid;
+    gap: var(--s-4);
+    align-content: start;
+  }
+  .person-photo {
+    aspect-ratio: 4 / 5;
+    background: var(--grey-100);
+  }
+  .person-photo img {
+    object-position: center 20%;
+  }
+  .person-name {
+    font-size: 1.125rem;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+  }
+  .person-name a {
+    text-decoration: none;
+  }
+  .stretched::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .person:hover .person-name a {
+    color: var(--accent-ink);
+  }
+  .person-role {
+    margin-top: 4px;
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+    line-height: 1.45;
+  }
+  .person-summary {
+    margin-top: var(--s-3);
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .person-links {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--s-3);
+    min-height: 24px;
+  }
+  .person-li {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--r-sm);
+    color: var(--slate-500);
+    transition:
+      color 160ms var(--ease),
+      background-color 160ms var(--ease);
+  }
+  .person-li:hover {
+    color: #0a66c2;
+    background: var(--grey-100);
+  }
+  .person-li:only-child {
+    margin-left: -7px;
+  }
+</style>

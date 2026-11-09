@@ -1,0 +1,67 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+
+const links = [
+  { href: '/about/', label: 'About us' },
+  { href: '/what-we-do/', label: 'What we do' },
+  { href: '/events/', label: 'Events' },
+  { href: '/news/', label: 'News' },
+  { href: '/membership/', label: 'Become a member' },
+  { href: '/contact/', label: 'Contact us' },
+];
+---
+
+<BaseLayout title="Page not found" description="The page you were looking for could not be found." noindex>
+  <section class="section status-page">
+    <div class="container narrow">
+      <p class="code" aria-hidden="true">404</p>
+      <h1>We couldn't find that page</h1>
+      <p class="lead">It may have moved when we rebuilt our website. These pages are a good place to continue.</p>
+      <ul class="quick" role="list">
+        {links.map((l) => <li><a href={l.href}>{l.label} <Icon name="arrow-right" size={16} /></a></li>)}
+      </ul>
+      <a href="/" class="btn">Go to the homepage <Icon name="arrow-right" size={16} class="arrow" /></a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .status-page {
+    min-height: 60vh;
+  }
+  .narrow {
+    max-width: 760px;
+    display: grid;
+    gap: var(--s-5);
+    justify-items: start;
+  }
+  .code {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    letter-spacing: 0.08em;
+    color: var(--green-700);
+  }
+  .quick {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    border-top: 1px solid var(--line);
+  }
+  .quick a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 4px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .quick a:hover {
+    color: var(--green-700);
+  }
+</style>

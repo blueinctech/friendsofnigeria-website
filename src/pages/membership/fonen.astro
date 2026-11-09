@@ -1,0 +1,141 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import FonenForm from '../../components/forms/FonenForm.astro';
+import membership from '../../data/membership.json';
+import img from '../../assets/site/hero-networking.jpg';
+
+const m = membership.fonen;
+const benefits = [
+  'Business breakfast meetings and bespoke trade missions to understand the Nigerian business environment',
+  'Matchmaking with the right advisory and market research to introduce your products and services in Nigeria',
+  'In-house training on investing in Nigeria, its business culture and business environment',
+  'Access to Spotlight Nigeria and its community of Nigerian and European business leaders and investors',
+];
+---
+
+<BaseLayout title="FONEN – corporate membership" description={`${m.fullName}: ${m.summary}`} image={img}>
+  <PageHero
+    title={`${m.name}: ${m.fullName}`}
+    lead={m.summary}
+    crumbs={[{ label: 'Become a member', href: '/membership/' }, { label: 'FONEN' }]}
+  >
+    <div class="btn-row">
+      <a href="#register" class="btn">Register your company <Icon name="arrow-right" size={16} class="arrow" /></a>
+    </div>
+  </PageHero>
+
+  <section class="section" id="about">
+    <div class="container cols">
+      <div>
+        <h2 data-reveal>What membership offers</h2>
+        <p class="lead" data-reveal>{m.details}</p>
+        <ul class="benefits" role="list">
+          {benefits.map((b, i) => <li data-reveal style={`--reveal-delay:${i * 60}`}><Icon name="check" size={18} />{b}</li>)}
+        </ul>
+        <p class="note" data-reveal>These benefits reflect the investment promotion and training activities FON runs for its member companies.</p>
+      </div>
+      <aside class="fees" data-reveal style="--reveal-delay:100">
+        <h3>Membership categories</h3>
+        <ul role="list">
+          {m.categories.map((c) => <li><span>{c.name}</span><strong>{c.fee}</strong></li>)}
+        </ul>
+        <p>Membership is paid. Once your registration is received, our team confirms your membership and sends payment details.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section section--subtle" id="register">
+    <div class="container container--narrow">
+      <h2 data-reveal>Register your company</h2>
+      <p class="lead reg-lead" data-reveal>Fields marked as optional can be completed later.</p>
+      <div class="form-card" data-reveal>
+        <FonenForm />
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .cols {
+    display: grid;
+    gap: var(--s-8);
+  }
+  @media (min-width: 1000px) {
+    .cols {
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: var(--s-9);
+      align-items: start;
+    }
+  }
+  .cols .lead {
+    margin-top: var(--s-4);
+  }
+  .benefits {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--s-6);
+    border-top: 1px solid var(--line);
+  }
+  .benefits li {
+    display: flex;
+    gap: 12px;
+    padding: var(--s-4) 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+  }
+  .benefits :global(svg) {
+    flex: none;
+    margin-top: 4px;
+    color: var(--accent);
+  }
+  .note {
+    margin-top: var(--s-4);
+    font-size: var(--fs-xs);
+    color: var(--ink-3);
+  }
+  .fees {
+    padding: var(--s-6);
+    border-radius: var(--r-md);
+    background: var(--slate-900);
+    color: var(--grey-300);
+    display: grid;
+    gap: var(--s-4);
+  }
+  .fees h3 {
+    color: var(--white);
+    font-size: var(--fs-h4);
+  }
+  .fees ul {
+    list-style: none;
+    padding: 0;
+  }
+  .fees li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: var(--s-4) 0;
+    border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  }
+  .fees strong {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: -0.03em;
+  }
+  .fees p {
+    font-size: var(--fs-sm);
+  }
+  .reg-lead {
+    margin: var(--s-3) 0 var(--s-6);
+    font-size: var(--fs-base);
+  }
+  .form-card {
+    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--white);
+  }
+</style>

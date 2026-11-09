@@ -1,0 +1,157 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import NewsCard from '../../components/NewsCard.astro';
+import NewsletterForm from '../../components/forms/NewsletterForm.astro';
+import { sortByDateDesc } from '../../lib/related';
+
+const posts = sortByDateDesc(await getCollection('news', (p) => !p.data.draft));
+const [lead, ...rest] = posts;
+const categories = [...new Set(posts.map((p) => p.data.category))].sort();
+---
+
+<BaseLayout title="News and publications" description="Statements, press releases, event reports, interviews and career guides from Friends of Nigeria Europe.">
+  <PageHero
+    title="News and publications"
+    lead="Statements, press releases, event reports, interviews and career guides from Friends of Nigeria Europe."
+    crumbs={[{ label: 'News' }]}
+  />
+
+  <section class="section">
+    <div class="container">
+      {
+        lead && (
+          <div class="lead-story" data-reveal>
+            <NewsCard post={lead} variant="feature" headingLevel="h2" eager />
+          </div>
+        )
+      }
+
+      <div class="filters" role="group" aria-label="Filter articles by category" data-news-filters>
+        <button type="button" class="chip" aria-pressed="true" data-filter="all">All</button>
+        {categories.map((c) => <button type="button" class="chip" aria-pressed="false" data-filter={c}>{c}</button>)}
+      </div>
+      <p class="visually-hidden" aria-live="polite" data-news-status></p>
+
+      <ul class="news-grid" role="list">
+        {
+          rest.map((p, i) => (
+            <li data-category={p.data.category} data-reveal style={`--reveal-delay:${(i % 3) * 60}`}>
+              <NewsCard post={p} headingLevel="h2" />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--dark">
+    <div class="container nl">
+      <div>
+        <h2>Get our news by email</h2>
+        <p>Statements, event invitations and opportunities, a few times a year.</p>
+      </div>
+      <NewsletterForm id="news-newsletter" />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .lead-story {
+    padding-bottom: var(--s-8);
+    margin-bottom: var(--s-7);
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 1000px) {
+    .lead-story :global(.news-card--feature) {
+      grid-template-columns: 1.3fr 1fr;
+      gap: var(--s-8);
+      align-items: center;
+    }
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: var(--s-7);
+  }
+  .chip {
+    height: 38px;
+    padding: 0 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--white);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: var(--ink-2);
+    transition: all 160ms var(--ease);
+  }
+  .chip:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .chip[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--white);
+  }
+  .news-grid {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--s-8) var(--s-6);
+  }
+  @media (min-width: 640px) {
+    .news-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1000px) {
+    .news-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .news-grid li[hidden] {
+    display: none;
+  }
+  .nl {
+    display: grid;
+    gap: var(--s-6);
+    align-items: center;
+  }
+  .nl p {
+    margin-top: var(--s-3);
+    color: var(--grey-300);
+  }
+  @media (min-width: 900px) {
+    .nl {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-9);
+    }
+  }
+</style>
+
+<script>
+  const wrap = document.querySelector<HTMLElement>('[data-news-filters]');
+  if (wrap) {
+    const chips = wrap.querySelectorAll<HTMLButtonElement>('[data-filter]');
+    const status = document.querySelector<HTMLElement>('[data-news-status]');
+    chips.forEach((chip) =>
+      chip.addEventListener('click', () => {
+        const f = chip.dataset.filter!;
+        chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+        let n = 0;
+        document.querySelectorAll<HTMLElement>('[data-category]').forEach((li) => {
+          const show = f === 'all' || li.dataset.category === f;
+          li.hidden = !show;
+          if (show) {
+            n++;
+            li.classList.add('is-visible');
+          }
+        });
+        if (status) status.textContent = `Showing ${n} articles`;
+      }),
+    );
+  }
+</script>

@@ -1,0 +1,394 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Icon from '../../components/Icon.astro';
+import AlbumCard from '../../components/AlbumCard.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { formatDate } from '../../lib/format';
+import { sortByDateDesc } from '../../lib/related';
+
+export async function getStaticPaths() {
+  const events = await getCollection('events');
+  return events.map((event) => ({ params: { slug: event.id }, props: { event } }));
+}
+const { event } = Astro.props;
+const d = event.data;
+const { Content } = await render(event);
+const albums = event.id === 'spotlight-nigeria' ? sortByDateDesc(await getCollection('albums', (a) => a.data.type === 'Flagship event')) : [];
+const other = (await getCollection('events')).find((e) => e.id !== event.id);
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'EventSeries',
+  name: d.title,
+  description: d.summary,
+  url: d.website,
+  location: { '@type': 'Place', name: d.lastEdition?.venue ?? 'Paris', address: d.lastEdition ? `${d.lastEdition.address} ${d.lastEdition.city}` : 'Paris, France' },
+  organizer: { '@type': 'Organization', name: 'Friends of Nigeria', url: Astro.site?.toString() },
+};
+---
+
+<BaseLayout title={d.title} description={d.summary} image={d.image} imageAlt={d.imageAlt} jsonLd={ld}>
+  <section class="ev-hero">
+    <div class="container">
+      <Breadcrumbs items={[{ label: 'Events', href: '/events/' }, { label: d.shortTitle }]} tone="dark" />
+      <div class="ev-hero-grid">
+        <div class="ev-hero-copy">
+          <p class="ev-since">Since {d.since} · Paris</p>
+          <h1>{d.title}</h1>
+          <p class="ev-lead">{d.tagline}</p>
+          <div class="btn-row">
+            <a href={d.website} class="btn btn--light" target="_blank" rel="noopener">
+              Visit the official website <Icon name="arrow-up-right" size={16} /><span class="visually-hidden"> (opens in a new tab)</span>
+            </a>
+            <a href={`/contact/?topic=${encodeURIComponent(d.shortTitle === 'NIDA' ? 'NIDA' : 'Spotlight Nigeria')}`} class="btn btn--ghost-light">Enquire</a>
+          </div>
+        </div>
+        <div class="media ev-hero-media">
+          <Image src={d.image} alt={d.imageAlt} widths={[640, 960, 1280]} sizes="(min-width: 1000px) 620px, 100vw" loading="eager" fetchpriority="high" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {
+    d.stats.length > 0 && (
+      <section class="ev-stats">
+        <div class="container">
+          <dl class="stats-row">
+            {d.stats.map((s) => (
+              <div>
+                <dt class="visually-hidden">{s.label}</dt>
+                <dd>
+                  <span class="sv">
+                    <span data-count={s.value < 1000 ? s.value : undefined}>{s.value}</span>
+                    {s.suffix}
+                  </span>
+                  <span class="sl" aria-hidden="true">{s.label}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          {d.statsSource && <p class="source">Source: {d.statsSource}</p>}
+        </div>
+      </section>
+    )
+  }
+
+  <section class="section">
+    <div class="container ev-body">
+      <div class="prose" data-reveal>
+        <h2>About {d.shortTitle}</h2>
+        <Content />
+      </div>
+      <aside class="ev-aside" data-reveal style="--reveal-delay:100">
+        {
+          d.lastEdition && (
+            <div class="edition">
+              <h2 class="aside-title">Latest edition</h2>
+              <p class="edition-name">{d.lastEdition.name}</p>
+              <ul role="list">
+                <li>
+                  <Icon name="calendar" size={16} />
+                  {formatDate(d.lastEdition.date)}
+                </li>
+                <li>
+                  <Icon name="map-pin" size={16} />
+                  <span>
+                    {d.lastEdition.venue}
+                    <br />
+                    {d.lastEdition.address} {d.lastEdition.city}
+                  </span>
+                </li>
+              </ul>
+            </div>
+          )
+        }
+        <div class="highlights">
+          <h2 class="aside-title">Who it brings together</h2>
+          <ul role="list">
+            {d.highlights.map((h) => (
+              <li>
+                <Icon name="check" size={16} />
+                {h}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  {
+    d.gallery.length > 0 && (
+      <section class="section section--tight">
+        <div class="container">
+          <ul class="ev-gallery" role="list">
+            {d.gallery.map((g, i) => (
+              <li class="media" data-reveal="image" style={`--reveal-delay:${i * 80}`}>
+                <Image src={g} alt={`${d.shortTitle} in Paris`} widths={[400, 600, 800]} sizes="(min-width: 900px) 25vw, 50vw" loading="lazy" />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    albums.length > 0 && (
+      <section class="section section--subtle">
+        <div class="container">
+          <div class="section-head section-head--split">
+            <h2>Previous editions in pictures</h2>
+            <a href="/gallery/" class="link-arrow">
+              Photo gallery <Icon name="arrow-right" />
+            </a>
+          </div>
+          <ul class="albums" role="list">
+            {albums.map((a) => (
+              <li>
+                <AlbumCard album={a} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    other && (
+      <section class="section section--tight">
+        <div class="container">
+          <a href={`/events/${other.id}/`} class="other">
+            <span class="other-k">Our other flagship event</span>
+            <span class="other-t">
+              {other.data.title} <Icon name="arrow-right" size={24} />
+            </span>
+          </a>
+        </div>
+      </section>
+    )
+  }
+
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .ev-hero {
+    background: var(--slate-900);
+    color: var(--grey-200);
+    padding: clamp(2rem, 1.5rem + 2vw, 3.5rem) 0 clamp(3.5rem, 2.5rem + 4vw, 6rem);
+  }
+  .ev-hero-grid {
+    display: grid;
+    gap: var(--s-7);
+    margin-top: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+    align-items: center;
+  }
+  @media (min-width: 1000px) {
+    .ev-hero-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-9);
+    }
+  }
+  .ev-hero-copy {
+    display: grid;
+    gap: var(--s-5);
+    justify-items: start;
+  }
+  .ev-since {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--green-500);
+  }
+  .ev-hero h1 {
+    color: var(--white);
+    font-size: clamp(2.25rem, 1.5rem + 2.8vw, 3.75rem);
+  }
+  .ev-lead {
+    font-size: var(--fs-xl);
+    color: var(--grey-300);
+    max-width: 40ch;
+  }
+  .ev-hero-media {
+    aspect-ratio: 16 / 10;
+    background: var(--slate-800);
+  }
+  .ev-hero-media img {
+    object-position: left center;
+  }
+  .ev-stats {
+    border-bottom: 1px solid var(--line);
+  }
+  .stats-row {
+    display: grid;
+    gap: 0;
+  }
+  @media (min-width: 760px) {
+    .stats-row {
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    }
+  }
+  .stats-row > div {
+    padding: var(--s-6) var(--s-5) var(--s-6) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 760px) {
+    .stats-row > div {
+      border-bottom: 0;
+    }
+    .stats-row > div + div {
+      padding-left: var(--s-5);
+      border-left: 1px solid var(--line);
+    }
+  }
+  .sv {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 1.8rem + 1.8vw, 3.25rem);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .sl {
+    display: block;
+    margin-top: var(--s-3);
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+    max-width: 32ch;
+  }
+  .source {
+    font-size: var(--fs-xs);
+    color: var(--ink-3);
+    padding-bottom: var(--s-4);
+  }
+  .ev-body {
+    display: grid;
+    gap: var(--s-8);
+  }
+  @media (min-width: 1000px) {
+    .ev-body {
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: var(--s-9);
+      align-items: start;
+    }
+  }
+  .ev-body .prose h2 {
+    margin-top: 0;
+    font-size: var(--fs-h2);
+  }
+  .ev-aside {
+    display: grid;
+    gap: var(--s-6);
+  }
+  .aside-title {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: var(--s-3);
+  }
+  .edition {
+    padding: var(--s-6);
+    background: var(--paper);
+    border-radius: var(--r-sm);
+  }
+  .edition-name {
+    font-family: var(--font-display);
+    font-size: var(--fs-h4);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin-bottom: var(--s-4);
+  }
+  .edition ul,
+  .highlights ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 12px;
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .edition li,
+  .highlights li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .edition :global(svg),
+  .highlights :global(svg) {
+    flex: none;
+    margin-top: 4px;
+    color: var(--accent);
+  }
+  .ev-gallery {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  @media (min-width: 900px) {
+    .ev-gallery {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .ev-gallery li {
+    aspect-ratio: 1;
+  }
+  .albums {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--s-6) var(--s-5);
+  }
+  @media (min-width: 700px) {
+    .albums {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1100px) {
+    .albums {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .other {
+    display: grid;
+    gap: var(--s-3);
+    padding: var(--s-7) 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+  }
+  .other-k {
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+  }
+  .other-t {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    font-family: var(--font-display);
+    font-size: var(--fs-h2);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .other-t :global(svg) {
+    flex: none;
+    transition: transform 240ms var(--ease);
+  }
+  .other:hover .other-t {
+    color: var(--accent-ink);
+  }
+  .other:hover .other-t :global(svg) {
+    transform: translateX(6px);
+  }
+</style>

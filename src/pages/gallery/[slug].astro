@@ -1,0 +1,254 @@
+---
+import { Image, getImage } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Icon from '../../components/Icon.astro';
+import AlbumCard from '../../components/AlbumCard.astro';
+import { formatMonth } from '../../lib/format';
+import { sortByDateDesc } from '../../lib/related';
+
+export async function getStaticPaths() {
+  const albums = await getCollection('albums');
+  return albums.map((album) => ({ params: { slug: album.id }, props: { album } }));
+}
+const { album } = Astro.props;
+const d = album.data;
+const large = await Promise.all(d.photos.map((p) => getImage({ src: p, width: Math.min(1600, p.width), format: 'webp' })));
+const more = sortByDateDesc(await getCollection('albums', (a) => a.id !== album.id)).slice(0, 3);
+---
+
+<BaseLayout title={d.title} description={`${d.photos.length} photos: ${d.title}, ${formatMonth(d.date, d.yearOnly)}. ${d.type} by Friends of Nigeria.`} image={d.cover}>
+  <section class="section album-page">
+    <div class="container">
+      <Breadcrumbs items={[{ label: 'Photo gallery', href: '/gallery/' }, { label: d.title }]} />
+      <header class="album-head">
+        <p class="meta">
+          <span>{d.type}</span><span class="dot" aria-hidden="true"></span><time datetime={d.date.toISOString()}>{formatMonth(d.date, d.yearOnly)}</time>
+        </p>
+        <h1>{d.title}</h1>
+        <p class="count">
+          {d.photos.length} photos{d.photoCount && d.photoCount > d.photos.length ? ` (a selection of ${d.photoCount})` : ''}
+        </p>
+      </header>
+
+      <ul class="photos" role="list" data-lightbox-gallery>
+        {
+          d.photos.map((p, i) => (
+            <li>
+              <a href={large[i].src} class="photo" data-lightbox-item data-index={i} aria-label={`Open photo ${i + 1} of ${d.photos.length}`}>
+                <Image
+                  src={p}
+                  alt={`${d.title}, photo ${i + 1}`}
+                  widths={[360, 540, 720]}
+                  sizes="(min-width: 1100px) 400px, (min-width: 640px) 50vw, 100vw"
+                  loading={i < 6 ? 'eager' : 'lazy'}
+                />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <dialog class="lightbox" data-lightbox aria-label="Photo viewer">
+    <div class="lb-inner">
+      <img data-lb-img alt="" />
+      <p class="lb-caption" data-lb-caption></p>
+    </div>
+    <button type="button" class="lb-btn lb-close" data-lb-close aria-label="Close photo viewer"><Icon name="close" size={22} /></button>
+    <button type="button" class="lb-btn lb-prev" data-lb-prev aria-label="Previous photo"><Icon name="chevron-left" size={26} /></button>
+    <button type="button" class="lb-btn lb-next" data-lb-next aria-label="Next photo"><Icon name="chevron-right" size={26} /></button>
+  </dialog>
+
+  <section class="section section--subtle">
+    <div class="container">
+      <div class="section-head section-head--split">
+        <h2>More albums</h2>
+        <a href="/gallery/" class="link-arrow">All albums <Icon name="arrow-right" /></a>
+      </div>
+      <ul class="more" role="list">
+        {more.map((a) => <li><AlbumCard album={a} /></li>)}
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .album-page {
+    padding-top: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+  }
+  .album-head {
+    display: grid;
+    gap: var(--s-3);
+    margin: var(--s-7) 0 var(--s-7);
+    max-width: 40ch;
+  }
+  .album-head h1 {
+    font-size: clamp(2rem, 1.5rem + 2vw, 3.25rem);
+  }
+  .count {
+    color: var(--ink-3);
+  }
+  .photos {
+    list-style: none;
+    padding: 0;
+    columns: 1;
+    column-gap: 12px;
+  }
+  @media (min-width: 640px) {
+    .photos {
+      columns: 2;
+    }
+  }
+  @media (min-width: 1000px) {
+    .photos {
+      columns: 3;
+    }
+  }
+  .photos li {
+    break-inside: avoid;
+    margin-bottom: 12px;
+  }
+  .photo {
+    display: block;
+    overflow: hidden;
+    border-radius: var(--r-sm);
+    background: var(--grey-100);
+    cursor: zoom-in;
+  }
+  .photo img {
+    width: 100%;
+    transition: transform 700ms var(--ease);
+  }
+  .photo:hover img {
+    transform: scale(1.03);
+  }
+  .more {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--s-6) var(--s-5);
+  }
+  @media (min-width: 700px) {
+    .more {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .lightbox {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgb(8 14 16 / 0.96);
+    color: var(--white);
+  }
+  .lightbox::backdrop {
+    background: rgb(8 14 16 / 0.9);
+  }
+  .lb-inner {
+    position: absolute;
+    inset: 64px 16px 56px;
+    display: grid;
+    place-items: center;
+  }
+  .lb-inner img {
+    max-width: 100%;
+    max-height: calc(100dvh - 140px);
+    object-fit: contain;
+    border-radius: 2px;
+  }
+  .lb-caption {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 18px;
+    text-align: center;
+    font-size: var(--fs-xs);
+    color: var(--grey-300);
+  }
+  .lb-btn {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid rgb(255 255 255 / 0.18);
+    background: rgb(255 255 255 / 0.06);
+    color: var(--white);
+  }
+  .lb-btn:hover {
+    background: rgb(255 255 255 / 0.16);
+  }
+  .lb-close {
+    top: 12px;
+    right: 12px;
+  }
+  .lb-prev,
+  .lb-next {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .lb-prev {
+    left: 12px;
+  }
+  .lb-next {
+    right: 12px;
+  }
+  @media (max-width: 640px) {
+    .lb-prev,
+    .lb-next {
+      top: auto;
+      bottom: 8px;
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('[data-lightbox]');
+  const items = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-lightbox-item]'));
+  if (dialog && items.length) {
+    const img = dialog.querySelector<HTMLImageElement>('[data-lb-img]')!;
+    const caption = dialog.querySelector<HTMLElement>('[data-lb-caption]')!;
+    let current = 0;
+    const show = (i: number) => {
+      current = (i + items.length) % items.length;
+      const a = items[current];
+      img.src = a.href;
+      img.alt = a.querySelector('img')?.alt ?? '';
+      caption.textContent = `${current + 1} / ${items.length}`;
+      const next = new Image();
+      next.src = items[(current + 1) % items.length].href;
+    };
+    items.forEach((a, i) =>
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        show(i);
+        dialog.showModal();
+      }),
+    );
+    dialog.querySelector('[data-lb-close]')?.addEventListener('click', () => dialog.close());
+    dialog.querySelector('[data-lb-prev]')?.addEventListener('click', () => show(current - 1));
+    dialog.querySelector('[data-lb-next]')?.addEventListener('click', () => show(current + 1));
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog || (e.target as HTMLElement).classList.contains('lb-inner')) dialog.close();
+    });
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') show(current - 1);
+      if (e.key === 'ArrowRight') show(current + 1);
+    });
+    let startX = 0;
+    dialog.addEventListener('touchstart', (e) => (startX = e.touches[0].clientX), { passive: true });
+    dialog.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+    });
+    dialog.addEventListener('close', () => items[current]?.focus());
+  }
+</script>

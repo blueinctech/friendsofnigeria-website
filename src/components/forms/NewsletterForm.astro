@@ -1,0 +1,77 @@
+---
+import Icon from '../Icon.astro';
+interface Props {
+  tone?: 'dark' | 'light';
+  id?: string;
+}
+const { tone = 'dark', id = 'newsletter' } = Astro.props;
+---
+
+<form
+  class:list={['newsletter', `newsletter--${tone}`]}
+  name="newsletter"
+  method="POST"
+  action="/thank-you/"
+  data-netlify="true"
+  netlify-honeypot="company-website-url"
+  data-form
+  data-success="<strong>You're subscribed.</strong> Look out for news and event invitations from Friends of Nigeria."
+  aria-label="Newsletter subscription"
+>
+  <input type="hidden" name="form-name" value="newsletter" />
+  <p class="honeypot" aria-hidden="true"><label>Leave empty <input name="company-website-url" tabindex="-1" autocomplete="off" /></label></p>
+  <div class="field">
+    <label for={`${id}-email`} class="visually-hidden">Email address</label>
+    <div class="nl-row">
+      <input id={`${id}-email`} name="email" type="email" required autocomplete="email" inputmode="email" placeholder="Your email address" aria-describedby={`${id}-email-error`} />
+      <button type="submit" class="btn" aria-label="Subscribe"><span class="nl-btn-text">Subscribe</span><Icon name="arrow-right" size={16} class="arrow" /></button>
+    </div>
+    <p class="field-error" id={`${id}-email-error`} aria-live="polite"></p>
+  </div>
+  <label class="check nl-consent">
+    <input type="checkbox" name="consent" value="yes" required aria-describedby={`${id}-consent-error`} />
+    <span>Send me news and event invitations. I can unsubscribe at any time.</span>
+  </label>
+  <p class="field-error" id={`${id}-consent-error`} aria-live="polite"></p>
+  <div class="form-status" data-form-status role="status" aria-live="polite" tabindex="-1"></div>
+</form>
+
+<style>
+  .newsletter {
+    display: grid;
+    gap: 12px;
+  }
+  .nl-row {
+    display: flex;
+    gap: 8px;
+  }
+  .nl-row input {
+    flex: 1;
+    min-width: 0;
+  }
+  .newsletter--dark .nl-row input {
+    background: rgb(255 255 255 / 0.06);
+    border-color: rgb(255 255 255 / 0.16);
+    color: var(--white);
+  }
+  .newsletter--dark .nl-row input::placeholder {
+    color: var(--slate-400);
+  }
+  .newsletter--dark .nl-row input:focus {
+    border-color: var(--green-500);
+  }
+  .newsletter--dark .check {
+    color: var(--slate-400);
+  }
+  .newsletter--dark .field-error {
+    color: #fda29b;
+  }
+  .nl-consent {
+    font-size: var(--fs-xs);
+  }
+  @media (max-width: 380px) {
+    .nl-btn-text {
+      display: none;
+    }
+  }
+</style>

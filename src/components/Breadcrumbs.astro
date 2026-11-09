@@ -1,0 +1,78 @@
+---
+interface Crumb {
+  label: string;
+  href?: string;
+}
+interface Props {
+  items: Crumb[];
+  tone?: 'light' | 'dark';
+}
+const { items, tone = 'light' } = Astro.props;
+const all = [{ label: 'Home', href: '/' }, ...items];
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: all.map((c, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: c.label,
+    item: c.href ? new URL(c.href, Astro.site).toString() : undefined,
+  })),
+};
+---
+
+<nav aria-label="Breadcrumb" class:list={['crumbs', `crumbs--${tone}`]}>
+  <ol role="list">
+    {
+      all.map((c, i) => (
+        <li>
+          {c.href && i < all.length - 1 ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+<script type="application/ld+json" set:html={JSON.stringify(ld)} />
+
+<style>
+  .crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    list-style: none;
+    padding: 0;
+    font-size: var(--fs-xs);
+    color: var(--ink-3);
+  }
+  .crumbs li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .crumbs li + li::before {
+    content: '/';
+    color: var(--grey-300);
+  }
+  .crumbs a {
+    text-decoration: none;
+  }
+  .crumbs a:hover {
+    color: var(--ink);
+  }
+  .crumbs [aria-current] {
+    color: var(--ink-2);
+    max-width: 40ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .crumbs--dark ol {
+    color: var(--slate-400);
+  }
+  .crumbs--dark a:hover {
+    color: var(--white);
+  }
+  .crumbs--dark [aria-current] {
+    color: var(--grey-200);
+  }
+</style>

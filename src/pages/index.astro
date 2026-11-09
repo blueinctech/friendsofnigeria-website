@@ -1,0 +1,1060 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import TeamCard from '../components/TeamCard.astro';
+import NewsCard from '../components/NewsCard.astro';
+import PartnerGrid from '../components/PartnerGrid.astro';
+import CtaBand from '../components/CtaBand.astro';
+import about from '../data/about.json';
+import membership from '../data/membership.json';
+import site from '../data/site.json';
+
+import heroMain from '../assets/site/area-investment.jpg';
+import heroPanel from '../assets/site/hero-panel.jpg';
+import teamPhoto from '../assets/about/team-group.png';
+import spotlightImg from '../assets/site/spotlight-banner-2023.jpg';
+import nidaImg from '../assets/events/nida-og.jpg';
+
+const areas = (await getCollection('areas')).sort((a, b) => a.data.order - b.data.order);
+const exec = (await getCollection('team', (p) => p.data.group === 'executive-board-europe')).sort((a, b) => a.data.order - b.data.order);
+const news = (await getCollection('news', (p) => !p.data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const [lead, ...rest] = news;
+const albums = await getCollection('albums');
+const partners = await getCollection('partners');
+
+// Figures shown here are counted from the site's own content or taken from the
+// official event websites (Spotlight Nigeria 2026 = 9th edition; NIDA 2023–2025).
+const stats = [
+  { value: 9, label: 'editions of Spotlight Nigeria in Paris since 2014' },
+  { value: 3, label: 'NIDA gala nights celebrating Nigerians abroad, 2023 to 2025' },
+  { value: albums.length, label: 'documented engagements, missions and visits since 2017' },
+  { value: partners.length, label: 'institutional partners and sponsors' },
+];
+
+const iconFor: Record<string, string> = {
+  diaspora: 'globe',
+  support: 'users',
+  investment: 'trending-up',
+  training: 'graduation',
+  bilateral: 'landmark',
+};
+---
+
+<BaseLayout title={site.name} description="Friends of Nigeria connects Nigerian professionals and businesses with European companies, investors and institutions to create partnerships and opportunities between Nigeria and Europe.">
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <h1 class="hero-title">
+          <span class="ht-line" style="--i:0">Connecting Nigeria and Europe.</span>
+          <span class="ht-line ht-muted" style="--i:1">Creating opportunities.</span>
+          <span class="ht-line ht-muted" style="--i:2">Building lasting partnerships.</span>
+        </h1>
+        <p class="hero-lead">
+          Friends of Nigeria brings together businesses, investors, professionals and communities across Nigeria and Europe to create meaningful
+          partnerships, unlock opportunities and drive sustainable development.
+        </p>
+        <div class="btn-row hero-actions">
+          <a href="/about/" class="btn">Discover Friends of Nigeria <Icon name="arrow-right" size={16} class="arrow" /></a>
+          <a href="/membership/" class="btn btn--ghost">Become a Member</a>
+        </div>
+        <ul class="chapters" role="list" aria-label="Where we operate">
+          <li><span class="flag-dot" aria-hidden="true"></span>France</li>
+          <li><span class="flag-dot" aria-hidden="true"></span>Germany</li>
+          <li><span class="flag-dot" aria-hidden="true"></span>Belgium &amp; Luxembourg</li>
+          <li><span class="flag-dot" aria-hidden="true"></span>Nigeria liaison office</li>
+        </ul>
+      </div>
+
+      <div class="hero-visual" data-parallax-root>
+        <div class="hv-main media">
+          <Image
+            src={heroMain}
+            alt="Nigerian and European business leaders in conversation at the Spotlight Nigeria forum in Paris"
+            widths={[480, 720, 960, 1200, 1600]}
+            sizes="(min-width: 1100px) 560px, (min-width: 760px) 60vw, 100vw"
+            loading="eager"
+            fetchpriority="high"
+          />
+        </div>
+        <div class="hv-second media" data-parallax="0.06">
+          <Image
+            src={heroPanel}
+            alt="Panel discussion at Spotlight Nigeria 2023"
+            widths={[320, 480, 640]}
+            sizes="(min-width: 1100px) 260px, 40vw"
+            loading="eager"
+          />
+        </div>
+        <a href="/events/spotlight-nigeria/" class="hv-card" data-parallax="-0.04">
+          <span class="hv-card-k">Spotlight Nigeria</span>
+          <span class="hv-card-v">9th edition · Paris · 6 October 2026</span>
+          <span class="hv-card-cta">Explore the forum <Icon name="arrow-right" size={14} /></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="section about" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-media media" data-reveal="image">
+          <Image
+            src={teamPhoto}
+            alt="The Friends of Nigeria team and volunteers on stage at Spotlight Nigeria in Paris"
+            widths={[640, 960, 1280, 1600]}
+            sizes="(min-width: 1100px) 640px, 100vw"
+            loading="lazy"
+          />
+        </div>
+        <div class="about-copy">
+          <h2 data-reveal>A non-profit bridge between Nigeria and Europe</h2>
+          <p class="lead" data-reveal style="--reveal-delay:80">{about.intro}</p>
+          <p class="about-vision" data-reveal style="--reveal-delay:140">
+            <strong>Our vision</strong> is {about.vision.charAt(0).toLowerCase() + about.vision.slice(1)}
+          </p>
+          <ul class="mission" role="list">
+            {
+              about.mission.map((m, i) => (
+                <li data-reveal style={`--reveal-delay:${180 + i * 60}`}>
+                  <h3>{m.title}</h3>
+                  <p>{m.text}</p>
+                </li>
+              ))
+            }
+          </ul>
+          <a href="/about/" class="link-arrow" data-reveal>More about Friends of Nigeria <Icon name="arrow-right" /></a>
+        </div>
+      </div>
+
+      <dl class="stats">
+        {
+          stats.map((s, i) => (
+            <div class="stat" data-reveal style={`--reveal-delay:${i * 70}`}>
+              <dt class="visually-hidden">{s.label}</dt>
+              <dd>
+                <span class="stat-value" data-count={s.value}>{s.value}</span>
+                <span class="stat-label" aria-hidden="true">{s.label}</span>
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <!-- What we do -->
+  <section class="section section--subtle work" id="what-we-do">
+    <div class="container work-grid" data-areas>
+      <div class="work-intro">
+        <div class="work-sticky">
+          <h2 data-reveal>What we do</h2>
+          <p class="work-lead" data-reveal style="--reveal-delay:80">
+            Five areas of work that connect the Nigerian diaspora, European businesses and Nigerian institutions.
+          </p>
+          <div class="work-frame media" aria-hidden="true">
+            {
+              areas.map((a, i) => (
+                <Image
+                  src={a.data.image}
+                  alt=""
+                  widths={[480, 720, 960]}
+                  sizes="(min-width: 1000px) 480px, 0px"
+                  loading="lazy"
+                  class:list={['work-img', { 'is-active': i === 0 }]}
+                  data-area-img={i}
+                />
+              ))
+            }
+          </div>
+        </div>
+      </div>
+      <ol class="work-list" role="list">
+        {
+          areas.map((a, i) => (
+            <li class="work-item" data-area={i} data-reveal style={`--reveal-delay:${i * 60}`}>
+              <a href={`/what-we-do/${a.id}/`} class="work-link">
+                <span class="work-num">0{i + 1}</span>
+                <span class="work-icon">
+                  <Icon name={iconFor[a.data.icon]} size={22} />
+                </span>
+                <span class="work-text">
+                  <h3>{a.data.title}</h3>
+                  <p>{a.data.summary}</p>
+                </span>
+                <span class="work-arrow">
+                  <Icon name="arrow-up-right" size={20} />
+                </span>
+              </a>
+              <div class="work-mobile-img media">
+                <Image src={a.data.image} alt={a.data.imageAlt} widths={[480, 720]} sizes="(max-width: 999px) 100vw, 0px" loading="lazy" />
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- Flagship events -->
+  <section class="section section--dark events" id="events">
+    <div class="container">
+      <div class="section-head section-head--split">
+        <h2 data-reveal>Our flagship events</h2>
+        <a href="/events/" class="link-arrow" data-reveal>All events <Icon name="arrow-right" /></a>
+      </div>
+
+      <article class="event-row" data-reveal>
+        <div class="event-media media">
+          <Image
+            src={spotlightImg}
+            alt="Delegates in conversation in front of Spotlight Nigeria and Friends of Nigeria banners"
+            widths={[640, 960, 1280]}
+            sizes="(min-width: 1000px) 680px, 100vw"
+            loading="lazy"
+          />
+        </div>
+        <div class="event-copy">
+          <p class="event-kicker">Business and Investment Forum · Since 2014</p>
+          <h3>Spotlight Nigeria</h3>
+          <p>
+            An annual conference and exhibition that gives private sector companies and investors from France and Nigeria a platform to collaborate,
+            exchange ideas, build business contacts and sign deals, with a focus each year on key sectors of the Nigerian economy and key state
+            governments.
+          </p>
+          <ul class="event-facts" role="list">
+            <li><Icon name="map-pin" size={16} />L'Hôtel de l'Industrie, Paris</li>
+            <li><Icon name="calendar" size={16} />9th edition held on 6 October 2026</li>
+          </ul>
+          <div class="btn-row">
+            <a href="/events/spotlight-nigeria/" class="btn btn--light">Learn more <Icon name="arrow-right" size={16} class="arrow" /></a>
+            <a href="https://spotlightnigeria-france.com/" class="btn btn--ghost-light" target="_blank" rel="noopener">
+              Official website <Icon name="arrow-up-right" size={16} /><span class="visually-hidden"> (opens in a new tab)</span>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <article class="event-row event-row--flip" data-reveal>
+        <div class="event-media media event-media--nida">
+          <Image
+            src={nidaImg}
+            alt="Guests at the Nigerians in Diaspora Awards gala night in Paris"
+            widths={[640, 960, 1200]}
+            sizes="(min-width: 1000px) 680px, 100vw"
+            loading="lazy"
+          />
+        </div>
+        <div class="event-copy">
+          <p class="event-kicker">Gala and awards night · Since 2023</p>
+          <h3>Nigerians in Diaspora Awards</h3>
+          <p>
+            A first-of-its-kind gala celebrating trailblazing Nigerians who are rewriting the narrative of what it means to be a Nigerian abroad, with
+            awards, music, performances and an evening of networking for professionals across the diaspora in Europe.
+          </p>
+          <ul class="event-facts" role="list">
+            <li><Icon name="map-pin" size={16} />Paris</li>
+            <li><Icon name="award" size={16} />Editions in 2023, 2024 and 2025</li>
+          </ul>
+          <div class="btn-row">
+            <a href="/events/nida/" class="btn btn--light">Learn more <Icon name="arrow-right" size={16} class="arrow" /></a>
+            <a href="https://nida-awards.org/" class="btn btn--ghost-light" target="_blank" rel="noopener">
+              Official website <Icon name="arrow-up-right" size={16} /><span class="visually-hidden"> (opens in a new tab)</span>
+            </a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Management team -->
+  <section class="section team" id="team">
+    <div class="container">
+      <div class="section-head section-head--split">
+        <div>
+          <h2 data-reveal>Management team</h2>
+          <p data-reveal style="--reveal-delay:80">The executive board of Friends of Nigeria Europe, supported by an honorary board and chapter leads across Europe and Nigeria.</p>
+        </div>
+        <a href="/team/" class="link-arrow" data-reveal>Meet the full team <Icon name="arrow-right" /></a>
+      </div>
+      <ul class="team-row" role="list">
+        {
+          exec.map((p, i) => (
+            <li data-reveal style={`--reveal-delay:${i * 70}`}>
+              <TeamCard person={p} showSummary />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- Membership platforms -->
+  <section class="section section--subtle membership" id="membership">
+    <div class="container">
+      <div class="section-head">
+        <h2 data-reveal>Two ways to join the network</h2>
+        <p data-reveal style="--reveal-delay:80">{membership.intro}</p>
+      </div>
+      <div class="plans">
+        <article class="plan" data-reveal>
+          <div class="plan-top">
+            <span class="plan-icon"><Icon name="building" size={22} /></span>
+            <span class="tag">{membership.fonen.audience}</span>
+          </div>
+          <h3>{membership.fonen.name}<span>{membership.fonen.fullName}</span></h3>
+          <p>{membership.fonen.summary}</p>
+          <p class="plan-detail">{membership.fonen.details}</p>
+          <ul class="plan-tiers" role="list">
+            {membership.fonen.categories.map((c) => <li><span>{c.name}</span><strong>{c.fee}</strong></li>)}
+          </ul>
+          <div class="btn-row">
+            <a href="/membership/fonen/" class="btn">Register your company <Icon name="arrow-right" size={16} class="arrow" /></a>
+            <a href="/membership/#enquire" class="btn btn--ghost">Ask a question</a>
+          </div>
+        </article>
+        <article class="plan" data-reveal style="--reveal-delay:100">
+          <div class="plan-top">
+            <span class="plan-icon"><Icon name="user" size={22} /></span>
+            <span class="tag">{membership.fonpro.audience}</span>
+          </div>
+          <h3>{membership.fonpro.name}<span>{membership.fonpro.fullName}</span></h3>
+          <p>{membership.fonpro.summary}</p>
+          <p class="plan-detail">{membership.fonpro.details}</p>
+          <ul class="plan-tiers" role="list">
+            <li><span>Membership handled securely via</span><strong>HelloAsso</strong></li>
+          </ul>
+          <div class="btn-row">
+            <a href="/membership/fonpro/" class="btn">Join FONPRO <Icon name="arrow-right" size={16} class="arrow" /></a>
+            <a href="/membership/#enquire" class="btn btn--ghost">Ask a question</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- News -->
+  <section class="section news" id="news">
+    <div class="container">
+      <div class="section-head section-head--split">
+        <h2 data-reveal>News and publications</h2>
+        <a href="/news/" class="link-arrow" data-reveal>All news <Icon name="arrow-right" /></a>
+      </div>
+      <div class="news-grid">
+        <div data-reveal>{lead && <NewsCard post={lead} variant="feature" />}</div>
+        <ul class="news-list" role="list">
+          {
+            rest.slice(0, 4).map((p, i) => (
+              <li data-reveal style={`--reveal-delay:${i * 70}`}>
+                <NewsCard post={p} variant="compact" />
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Partners -->
+  <section class="section section--subtle partners-sec" id="partners">
+    <div class="container">
+      <div class="section-head section-head--split">
+        <div>
+          <h2 data-reveal>Partners and sponsors</h2>
+          <p data-reveal style="--reveal-delay:80">Institutions, chambers of commerce and organisations that have partnered with and supported our work.</p>
+        </div>
+        <a href="/partners/" class="link-arrow" data-reveal>Partner with us <Icon name="arrow-right" /></a>
+      </div>
+      <PartnerGrid />
+    </div>
+  </section>
+
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    padding-top: clamp(2.5rem, 1.5rem + 4vw, 5rem);
+    padding-bottom: clamp(3.5rem, 2.5rem + 3vw, 5.5rem);
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto auto;
+    width: min(46vw, 720px);
+    height: 100%;
+    background: var(--paper);
+    z-index: -1;
+  }
+  .hero-grid {
+    display: grid;
+    gap: clamp(3rem, 2rem + 4vw, 5rem);
+    align-items: center;
+  }
+  @media (min-width: 1000px) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+      gap: var(--s-8);
+    }
+  }
+  .hero-title {
+    font-size: clamp(2.25rem, 1.45rem + 2.6vw, 3.375rem);
+    line-height: 1.06;
+    letter-spacing: -0.036em;
+    max-width: 17ch;
+  }
+  .ht-line {
+    display: block;
+    animation: rise 900ms var(--ease) both;
+    animation-delay: calc(var(--i) * 110ms + 80ms);
+  }
+  .ht-muted {
+    color: var(--slate-500);
+  }
+  .ht-line:last-child {
+    color: var(--green-700);
+  }
+  .hero-lead {
+    margin-top: var(--s-5);
+    font-size: var(--fs-lg);
+    line-height: 1.6;
+    color: var(--ink-2);
+    max-width: 50ch;
+    animation: rise 900ms var(--ease) 420ms both;
+  }
+  .hero-actions {
+    margin-top: var(--s-6);
+    animation: rise 900ms var(--ease) 520ms both;
+  }
+  .chapters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    list-style: none;
+    padding: var(--s-5) 0 0;
+    margin-top: var(--s-7);
+    border-top: 1px solid var(--line);
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+    animation: rise 900ms var(--ease) 620ms both;
+  }
+  .chapters li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .flag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+  @keyframes settle {
+    from {
+      opacity: 0;
+      transform: scale(1.06);
+    }
+  }
+
+  .hero-visual {
+    position: relative;
+    padding: 0 0 56px 0;
+  }
+  @media (min-width: 640px) {
+    .hero-visual {
+      padding: 0 0 72px 64px;
+    }
+  }
+  .hv-main {
+    aspect-ratio: 4 / 4.4;
+    border-radius: var(--r-sm);
+    animation: rise 1000ms var(--ease) 200ms both;
+  }
+  .hv-main img {
+    object-position: 45% center;
+    animation: settle 1600ms var(--ease) 200ms both;
+  }
+  .hv-second {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 46%;
+    aspect-ratio: 4 / 3;
+    border: 6px solid var(--white);
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow-lg);
+    animation: rise 1000ms var(--ease) 480ms both;
+  }
+  @media (max-width: 639px) {
+    .hv-second {
+      left: auto;
+      right: 12px;
+      bottom: 0;
+      width: 48%;
+    }
+  }
+  .hv-card {
+    position: absolute;
+    right: -4px;
+    bottom: 20px;
+    display: grid;
+    gap: 4px;
+    width: min(270px, 52%);
+    padding: 16px 18px;
+    background: var(--slate-900);
+    color: var(--grey-200);
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow-lg);
+    text-decoration: none;
+    animation: rise 1000ms var(--ease) 640ms both;
+    transition: background-color 200ms var(--ease);
+  }
+  .hv-card:hover {
+    background: var(--green-800);
+  }
+  .hv-card-k {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.0625rem;
+    color: var(--white);
+    letter-spacing: -0.01em;
+  }
+  .hv-card-v {
+    font-size: var(--fs-xs);
+    color: var(--slate-400);
+  }
+  .hv-card:hover .hv-card-v {
+    color: var(--green-100);
+  }
+  .hv-card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--green-500);
+  }
+  .hv-card:hover .hv-card-cta {
+    color: var(--white);
+  }
+  @media (max-width: 639px) {
+    .hv-card {
+      left: 12px;
+      right: auto;
+      bottom: 0;
+      width: 46%;
+      padding: 12px 14px;
+    }
+    .hv-card-cta {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ht-line,
+    .hero-lead,
+    .hero-actions,
+    .chapters,
+    .hv-main,
+    .hv-main img,
+    .hv-second,
+    .hv-card {
+      animation: none;
+    }
+  }
+
+  /* ---------- About ---------- */
+  .about-grid {
+    display: grid;
+    gap: var(--s-7);
+    align-items: center;
+  }
+  @media (min-width: 1000px) {
+    .about-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--s-9);
+    }
+  }
+  .about-media {
+    aspect-ratio: 4 / 3;
+  }
+  .about-media img {
+    object-position: 50% 100%;
+  }
+  .about-copy {
+    display: grid;
+    gap: var(--s-5);
+    justify-items: start;
+  }
+  .about-copy h2 {
+    max-width: 16ch;
+  }
+  .about-vision {
+    color: var(--ink-2);
+  }
+  .about-vision strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .mission {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--s-5);
+    margin-block: var(--s-2);
+    width: 100%;
+  }
+  @media (min-width: 640px) {
+    .mission {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .mission li {
+    padding-top: var(--s-4);
+    border-top: 2px solid var(--accent);
+  }
+  .mission h3 {
+    font-size: 1.125rem;
+    letter-spacing: -0.015em;
+  }
+  .mission p {
+    margin-top: var(--s-2);
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: clamp(4rem, 3rem + 3vw, 6rem);
+    border-top: 1px solid var(--line);
+  }
+  @media (min-width: 900px) {
+    .stats {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .stat {
+    padding: var(--s-6) var(--s-5) 0 0;
+  }
+  @media (min-width: 900px) {
+    .stat + .stat {
+      padding-left: var(--s-5);
+      border-left: 1px solid var(--line);
+    }
+  }
+  .stat-value {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    display: block;
+    margin-top: var(--s-3);
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+    max-width: 26ch;
+    line-height: 1.5;
+  }
+
+  /* ---------- What we do ---------- */
+  .work-grid {
+    display: grid;
+    gap: var(--s-7);
+  }
+  @media (min-width: 1000px) {
+    .work-grid {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: var(--s-9);
+    }
+  }
+  .work-sticky {
+    position: sticky;
+    top: calc(var(--header-h) + 32px);
+    display: grid;
+    gap: var(--s-4);
+  }
+  .work-lead {
+    color: var(--ink-2);
+    font-size: var(--fs-lg);
+    max-width: 40ch;
+  }
+  .work-frame {
+    display: none;
+    position: relative;
+    aspect-ratio: 4 / 3;
+    margin-top: var(--s-5);
+  }
+  @media (min-width: 1000px) {
+    .work-frame {
+      display: block;
+    }
+  }
+  .work-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transform: scale(1.03);
+    transition:
+      opacity 600ms var(--ease),
+      transform 1200ms var(--ease);
+  }
+  .work-img.is-active {
+    opacity: 1;
+    transform: none;
+  }
+  .work-list {
+    list-style: none;
+    padding: 0;
+    border-top: 1px solid var(--line-strong);
+  }
+  .work-item {
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .work-link {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--s-2) var(--s-4);
+    align-items: start;
+    padding: var(--s-6) 0;
+    text-decoration: none;
+  }
+  .work-num {
+    display: none;
+  }
+  .work-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: var(--r-sm);
+    background: var(--white);
+    border: 1px solid var(--line);
+    color: var(--green-700);
+    transition:
+      background-color 240ms var(--ease),
+      color 240ms var(--ease),
+      border-color 240ms var(--ease);
+  }
+  .work-text h3 {
+    font-size: var(--fs-h4);
+    transition: color 200ms var(--ease);
+  }
+  .work-text p {
+    margin-top: var(--s-2);
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+    line-height: 1.65;
+    max-width: 56ch;
+  }
+  .work-arrow {
+    color: var(--slate-400);
+    padding-top: 4px;
+    transition:
+      color 200ms var(--ease),
+      transform 260ms var(--ease);
+  }
+  .work-item.is-active .work-icon,
+  .work-link:hover .work-icon,
+  .work-link:focus-visible .work-icon {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--white);
+  }
+  .work-link:hover .work-arrow,
+  .work-link:focus-visible .work-arrow {
+    color: var(--accent);
+    transform: translate(3px, -3px);
+  }
+  .work-link:hover h3 {
+    color: var(--accent-ink);
+  }
+  .work-mobile-img {
+    aspect-ratio: 16 / 9;
+    margin-bottom: var(--s-6);
+  }
+  @media (min-width: 1000px) {
+    .work-mobile-img {
+      display: none;
+    }
+    .work-num {
+      display: block;
+    }
+    .work-link {
+      grid-template-columns: 34px auto minmax(0, 1fr) auto;
+      gap: var(--s-5);
+    }
+    .work-num {
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      color: var(--slate-400);
+      padding-top: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  /* ---------- Events ---------- */
+  .event-row {
+    display: grid;
+    gap: var(--s-6);
+    align-items: center;
+  }
+  .event-row + .event-row {
+    margin-top: clamp(4rem, 3rem + 3vw, 6rem);
+  }
+  @media (min-width: 1000px) {
+    .event-row {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: var(--s-9);
+    }
+    .event-row--flip .event-media {
+      order: 2;
+    }
+  }
+  .event-media {
+    aspect-ratio: 16 / 10;
+    background: var(--slate-800);
+  }
+  .event-media--nida img {
+    object-position: 0% center;
+  }
+  .event-copy {
+    display: grid;
+    gap: var(--s-4);
+    justify-items: start;
+  }
+  .event-kicker {
+    font-size: var(--fs-sm);
+    color: var(--green-500);
+    font-weight: 500;
+  }
+  .event-copy h3 {
+    font-size: var(--fs-h2);
+    letter-spacing: -0.03em;
+  }
+  .event-copy > p:not(.event-kicker) {
+    color: var(--slate-400);
+    max-width: 52ch;
+  }
+  .event-facts {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+    margin-block: var(--s-2) var(--s-3);
+    font-size: var(--fs-sm);
+    color: var(--grey-200);
+  }
+  .event-facts li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .event-facts :global(svg) {
+    color: var(--green-500);
+  }
+
+  /* ---------- Team ---------- */
+  .team-row {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(230px, 72%);
+    gap: var(--s-5);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: var(--s-4);
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    scrollbar-width: thin;
+  }
+  .team-row > li {
+    scroll-snap-align: start;
+  }
+  @media (min-width: 640px) {
+    .team-row {
+      grid-auto-columns: minmax(230px, 40%);
+    }
+  }
+  @media (min-width: 1100px) {
+    .team-row {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      overflow: visible;
+      margin-inline: 0;
+      padding-inline: 0;
+    }
+  }
+
+  /* ---------- Membership ---------- */
+  .plans {
+    display: grid;
+    gap: var(--s-5);
+  }
+  @media (min-width: 900px) {
+    .plans {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .plan {
+    display: grid;
+    gap: var(--s-4);
+    align-content: start;
+    padding: clamp(1.75rem, 1.25rem + 2vw, 3rem);
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    transition:
+      border-color 240ms var(--ease),
+      box-shadow 240ms var(--ease);
+  }
+  .plan:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-md);
+  }
+  .plan-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--s-3);
+  }
+  .plan-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--r-sm);
+    background: var(--green-50);
+    color: var(--green-700);
+  }
+  .plan h3 {
+    font-size: var(--fs-h2);
+    letter-spacing: -0.035em;
+  }
+  .plan h3 span {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--ink-3);
+  }
+  .plan > p {
+    color: var(--ink-2);
+  }
+  .plan .plan-detail {
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+  }
+  .plan-tiers {
+    list-style: none;
+    padding: 0;
+    margin-block: var(--s-2) var(--s-3);
+    border-top: 1px solid var(--line);
+  }
+  .plan-tiers li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .plan-tiers strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* ---------- News ---------- */
+  .news-grid {
+    display: grid;
+    gap: var(--s-7);
+  }
+  @media (min-width: 1000px) {
+    .news-grid {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      gap: var(--s-8);
+    }
+  }
+  .news-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    align-content: start;
+  }
+  .news-list li {
+    padding-block: var(--s-5);
+    border-bottom: 1px solid var(--line);
+  }
+  .news-list li:first-child {
+    padding-top: 0;
+  }
+  .news-list li:last-child {
+    border-bottom: 0;
+  }
+</style>
+
+<script>
+  // "What we do": swap the preview image as the visitor moves through the list.
+  const root = document.querySelector<HTMLElement>('[data-areas]');
+  if (root) {
+    const items = root.querySelectorAll<HTMLElement>('[data-area]');
+    const imgs = root.querySelectorAll<HTMLElement>('[data-area-img]');
+    const activate = (i: string) => {
+      imgs.forEach((img) => img.classList.toggle('is-active', img.dataset.areaImg === i));
+      items.forEach((it) => it.classList.toggle('is-active', it.dataset.area === i));
+    };
+    items.forEach((it) => {
+      it.addEventListener('mouseenter', () => activate(it.dataset.area!));
+      it.addEventListener('focusin', () => activate(it.dataset.area!));
+    });
+    activate('0');
+  }
+
+  // Gentle parallax on hero accents.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const layers = document.querySelectorAll<HTMLElement>('[data-parallax]');
+  if (!reduce && layers.length && window.matchMedia('(min-width: 1000px)').matches) {
+    let ticking = false;
+    const update = () => {
+      const y = window.scrollY;
+      layers.forEach((l) => {
+        l.style.translate = `0 ${(y * Number(l.dataset.parallax)).toFixed(1)}px`;
+      });
+      ticking = false;
+    };
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!ticking && window.scrollY < 900) {
+          requestAnimationFrame(update);
+          ticking = true;
+        }
+      },
+      { passive: true },
+    );
+  }
+</script>

@@ -1,0 +1,257 @@
+# Decap CMS configuration. Editors sign in with GitHub at /admin/.
+# Every save becomes a commit on `main`; Netlify then rebuilds the site.
+# Setup steps are in README.md ("Content manager").
+backend:
+  name: github
+  repo: blueinctech/friendsofnigeria-website
+  branch: main
+  base_url: https://api.netlify.com
+  commit_messages:
+    create: 'Content: create {{collection}} "{{slug}}"'
+    update: 'Content: update {{collection}} "{{slug}}"'
+    delete: 'Content: delete {{collection}} "{{slug}}"'
+    uploadMedia: 'Content: upload "{{path}}"'
+    deleteMedia: 'Content: delete "{{path}}"'
+
+# Draft → In review → Ready workflow (uses pull requests).
+publish_mode: editorial_workflow
+
+site_url: https://friendsofnigeria.net
+display_url: https://friendsofnigeria.net
+logo_url: /icon-192.png
+
+# Default upload location. Each collection below overrides it so images
+# sit next to the content type they belong to.
+media_folder: src/assets/uploads
+public_folder: ../../assets/uploads
+
+collections:
+  - name: news
+    label: News
+    label_singular: Article
+    folder: src/content/news
+    create: true
+    slug: '{{slug}}'
+    media_folder: ../../assets/news
+    public_folder: ../../assets/news
+    sortable_fields: [date, title]
+    summary: '{{title}} · {{date}}'
+    preview_path: news/{{slug}}/
+    fields:
+      - { label: Title, name: title, widget: string }
+      - { label: Date, name: date, widget: datetime, format: YYYY-MM-DD, date_format: DD MMM YYYY, time_format: false, picker_utc: true }
+      - label: Category
+        name: category
+        widget: select
+        default: News
+        options: [News, Statement, Press release, Diaspora, Events, Careers, Interview, Opinion]
+      - { label: Short summary, name: excerpt, widget: text, hint: 'One or two sentences shown on cards and in search results.' }
+      - { label: Main image, name: image, widget: image, required: false }
+      - { label: Image description (alt text), name: imageAlt, widget: string, required: false, hint: 'Describe what the image shows, for screen readers.' }
+      - { label: Feature on news page, name: featured, widget: boolean, default: false }
+      - { label: Hide (draft), name: draft, widget: boolean, default: false }
+      - { label: Article, name: body, widget: markdown }
+
+  - name: team
+    label: Team
+    label_singular: Person
+    folder: src/content/team
+    create: true
+    slug: '{{fields.slug}}'
+    identifier_field: name
+    media_folder: ../../assets/team
+    public_folder: ../../assets/team
+    summary: '{{name}} · {{role}}'
+    fields:
+      - { label: Full name, name: name, widget: string }
+      - { label: Web address, name: slug, widget: string, hint: 'Lowercase with hyphens, e.g. jane-doe. Used for /team/jane-doe/.' }
+      - { label: Role, name: role, widget: string }
+      - label: Board or chapter
+        name: group
+        widget: select
+        options:
+          - { label: Honorary board, value: honorary-board }
+          - { label: Executive board (Europe), value: executive-board-europe }
+          - { label: Germany, value: germany }
+          - { label: Belgium & Luxembourg, value: belux }
+          - { label: France, value: france }
+          - { label: Nigeria, value: nigeria }
+      - { label: Order within group, name: order, widget: number, value_type: int, default: 99 }
+      - { label: Photo, name: photo, widget: image, hint: 'Square or portrait photo, at least 800px wide.' }
+      - { label: One-line summary, name: summary, widget: string, required: false }
+      - { label: LinkedIn URL, name: linkedin, widget: string, required: false }
+      - { label: Website, name: website, widget: string, required: false }
+      - { label: Show on homepage, name: showOnHome, widget: boolean, required: false }
+      - { label: Biography, name: body, widget: markdown, required: false, hint: 'Leave empty to hide the "View profile" link.' }
+
+  - name: albums
+    label: Photo albums
+    label_singular: Album
+    folder: src/content/albums
+    create: true
+    slug: '{{slug}}'
+    media_folder: ../../assets/albums
+    public_folder: ../../assets/albums
+    summary: '{{title}} · {{date}}'
+    sortable_fields: [date, title]
+    fields:
+      - { label: Title, name: title, widget: string }
+      - { label: Date, name: date, widget: datetime, format: YYYY-MM-DD, date_format: DD MMM YYYY, time_format: false, picker_utc: true }
+      - { label: Show year only, name: yearOnly, widget: boolean, default: false, hint: 'Tick when the exact date is not known.' }
+      - label: Type
+        name: type
+        widget: select
+        options: [Flagship event, Business & investment, Bilateral engagement, Diaspora engagement, Delegation]
+      - { label: Total photos taken (optional), name: photoCount, widget: number, value_type: int, required: false }
+      - { label: Cover photo, name: cover, widget: image }
+      - { label: Photos, name: photos, widget: list, field: { label: Photo, name: photo, widget: image } }
+      - { label: Notes, name: body, widget: markdown, required: false }
+
+  - name: events
+    label: Flagship events
+    label_singular: Event
+    folder: src/content/events
+    create: false
+    media_folder: ../../assets/events
+    public_folder: ../../assets/events
+    fields:
+      - { label: Title, name: title, widget: string }
+      - { label: Short title, name: shortTitle, widget: string }
+      - { label: Tagline, name: tagline, widget: string }
+      - { label: Summary, name: summary, widget: text }
+      - { label: Official website, name: website, widget: string }
+      - { label: Running since, name: since, widget: string, required: false }
+      - { label: Main image, name: image, widget: image }
+      - { label: Image description, name: imageAlt, widget: string }
+      - { label: Gallery, name: gallery, widget: list, required: false, field: { label: Photo, name: photo, widget: image } }
+      - label: Latest or next edition
+        name: lastEdition
+        widget: object
+        required: false
+        fields:
+          - { label: Name, name: name, widget: string }
+          - { label: Date, name: date, widget: datetime, format: YYYY-MM-DD, date_format: DD MMM YYYY, time_format: false, picker_utc: true }
+          - { label: Venue, name: venue, widget: string }
+          - { label: Address, name: address, widget: string }
+          - { label: City, name: city, widget: string }
+      - { label: Highlights, name: highlights, widget: list, required: false, field: { label: Highlight, name: text, widget: string } }
+      - label: Key figures
+        name: stats
+        widget: list
+        required: false
+        hint: 'Only add figures from a verifiable source.'
+        fields:
+          - { label: Number, name: value, widget: number, value_type: int }
+          - { label: Suffix (e.g. +), name: suffix, widget: string, required: false }
+          - { label: Label, name: label, widget: string }
+      - { label: Source of figures, name: statsSource, widget: string, required: false }
+      - { label: Order, name: order, widget: number, value_type: int }
+      - { label: Description, name: body, widget: markdown }
+
+  - name: areas
+    label: What we do
+    label_singular: Area of work
+    folder: src/content/areas
+    create: false
+    media_folder: ../../assets/site
+    public_folder: ../../assets/site
+    fields:
+      - { label: Title, name: title, widget: string }
+      - { label: Headline, name: headline, widget: string }
+      - { label: Summary, name: summary, widget: text }
+      - { label: Icon, name: icon, widget: select, options: [diaspora, support, investment, training, bilateral] }
+      - { label: Image, name: image, widget: image }
+      - { label: Image description, name: imageAlt, widget: string }
+      - { label: Order, name: order, widget: number, value_type: int }
+      - { label: Description, name: body, widget: markdown }
+
+  - name: settings
+    label: Site settings
+    editor: { preview: false }
+    files:
+      - name: partners
+        label: Partners & sponsors
+        file: src/content/partners.json
+        media_folder: ../assets/partners
+        public_folder: ../assets/partners
+        fields:
+          - label: Partners
+            name: partners
+            widget: list
+            summary: '{{fields.name}}'
+            fields:
+              - { label: ID (lowercase, hyphens), name: id, widget: string }
+              - { label: Name, name: name, widget: string }
+              - { label: Logo, name: logo, widget: image }
+              - { label: Website, name: url, widget: string, required: false }
+              - { label: Order, name: order, widget: number, value_type: int, default: 99 }
+      - name: site
+        label: Contact details & social links
+        file: src/data/site.json
+        fields:
+          - { label: Organisation name, name: name, widget: string }
+          - { label: Short name, name: shortName, widget: string }
+          - { label: Description (used in search results), name: description, widget: text }
+          - { label: Tagline, name: tagline, widget: string }
+          - { label: Countries, name: countries, widget: list }
+          - label: Contact
+            name: contact
+            widget: object
+            fields:
+              - { label: Street address, name: address, widget: string }
+              - { label: Postcode, name: postcode, widget: string }
+              - { label: City, name: city, widget: string }
+              - { label: Country, name: country, widget: string }
+              - label: Phone numbers
+                name: phones
+                widget: list
+                fields:
+                  - { label: Label, name: label, widget: string }
+                  - { label: Shown as, name: display, widget: string }
+                  - { label: Dial as (digits and +), name: tel, widget: string }
+              - { label: Email, name: email, widget: string }
+              - { label: Note, name: note, widget: string }
+          - label: Social links
+            name: social
+            widget: list
+            fields:
+              - { label: Network, name: name, widget: select, options: [LinkedIn, X, Facebook, Instagram, YouTube] }
+              - { label: URL, name: url, widget: string }
+          - label: Membership payment links
+            name: membershipLinks
+            widget: object
+            fields:
+              - { label: FONPRO (HelloAsso), name: fonproHelloAsso, widget: string }
+              - { label: FON France (HelloAsso), name: fonFranceHelloAsso, widget: string }
+      - name: about
+        label: About page text
+        file: src/data/about.json
+        fields:
+          - { label: Introduction, name: intro, widget: text }
+          - { label: Vision, name: vision, widget: text }
+          - { label: Mission, name: mission, widget: list, fields: [{ label: Title, name: title, widget: string }, { label: Text, name: text, widget: text }] }
+          - { label: Values, name: values, widget: list, fields: [{ label: Title, name: title, widget: string }, { label: Text, name: text, widget: text }] }
+      - name: membership
+        label: Membership text and fees
+        file: src/data/membership.json
+        fields:
+          - { label: Introduction, name: intro, widget: text }
+          - label: FONEN
+            name: fonen
+            widget: object
+            fields:
+              - { label: Name, name: name, widget: string }
+              - { label: Full name, name: fullName, widget: string }
+              - { label: Audience, name: audience, widget: string }
+              - { label: Summary, name: summary, widget: text }
+              - { label: Details, name: details, widget: text }
+              - { label: Categories, name: categories, widget: list, fields: [{ label: Category, name: name, widget: string }, { label: Fee, name: fee, widget: string }] }
+          - label: FONPRO
+            name: fonpro
+            widget: object
+            fields:
+              - { label: Name, name: name, widget: string }
+              - { label: Full name, name: fullName, widget: string }
+              - { label: Audience, name: audience, widget: string }
+              - { label: Summary, name: summary, widget: text }
+              - { label: Details, name: details, widget: text }

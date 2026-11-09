@@ -1,0 +1,71 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import AlbumCard from '../../components/AlbumCard.astro';
+import { sortByDateDesc } from '../../lib/related';
+
+const albums = sortByDateDesc(await getCollection('albums'));
+const total = albums.reduce((n, a) => n + a.data.photos.length, 0);
+const flagship = albums.filter((a) => a.data.type === 'Flagship event');
+const others = albums.filter((a) => a.data.type !== 'Flagship event');
+---
+
+<BaseLayout title="Photo gallery" description="Photo albums from Spotlight Nigeria, NIDA, delegations, trade missions and diaspora engagements organised or supported by Friends of Nigeria.">
+  <PageHero
+    title="Photo gallery"
+    lead={`${albums.length} albums and ${total} photographs from our forums, delegations, missions and community engagements.`}
+    crumbs={[{ label: 'Our activities', href: '/our-activities/' }, { label: 'Photo gallery' }]}
+  />
+
+  <section class="section">
+    <div class="container">
+      <h2 class="group-title">Spotlight Nigeria</h2>
+      <ul class="album-grid" role="list">
+        {
+          flagship.map((a, i) => (
+            <li data-reveal style={`--reveal-delay:${(i % 3) * 60}`}>
+              <AlbumCard album={a} />
+            </li>
+          ))
+        }
+      </ul>
+      <h2 class="group-title">Engagements, delegations and missions</h2>
+      <ul class="album-grid" role="list">
+        {
+          others.map((a, i) => (
+            <li data-reveal style={`--reveal-delay:${(i % 3) * 60}`}>
+              <AlbumCard album={a} />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .group-title {
+    font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+    margin-bottom: var(--s-6);
+  }
+  .album-grid + .group-title {
+    margin-top: var(--s-9);
+  }
+  .album-grid {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--s-7) var(--s-5);
+  }
+  @media (min-width: 640px) {
+    .album-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1000px) {
+    .album-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

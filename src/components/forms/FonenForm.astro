@@ -1,0 +1,58 @@
+---
+import FormShell from './FormShell.astro';
+import Field from './Field.astro';
+import Icon from '../Icon.astro';
+import membership from '../../data/membership.json';
+const f = 'fonen-registration';
+---
+
+<FormShell name={f} label="FONEN registration" success="<strong>Your FONEN registration has been received.</strong> Our team will review it and contact you with membership confirmation and payment details.">
+  <fieldset class="field">
+    <legend>Membership category</legend>
+    <div class="radio-cards">
+      {
+        membership.fonen.categories.map((c) => (
+          <label class="radio-card">
+            <input type="radio" name="category" value={`${c.name} (${c.fee})`} required aria-describedby={`${f}-category-error`} />
+            <strong>{c.name}</strong>
+            <span>{c.fee} membership</span>
+          </label>
+        ))
+      }
+    </div>
+    <p class="field-error" id={`${f}-category-error`} aria-live="polite"></p>
+  </fieldset>
+  <div class="form-row form-row--2">
+    <Field form={f} name="company" label="Company name" required autocomplete="organization" maxlength={160} />
+    <Field form={f} name="website" label="Company website" type="url" autocomplete="url" inputmode="url" placeholder="https://" />
+  </div>
+  <div class="form-row form-row--2">
+    <Field form={f} name="sector" label="Business sector" maxlength={120} />
+    <Field
+      form={f}
+      name="turnover"
+      label="Annual turnover"
+      as="select"
+      placeholder="Choose a range"
+      options={['Under €1m', '€1m – €10m', '€10m – €50m', 'Over €50m', 'Prefer not to say'].map((v) => ({ value: v, label: v }))}
+    />
+  </div>
+  <Field form={f} name="address" label="Company address" autocomplete="street-address" maxlength={240} />
+  <div class="form-row form-row--2">
+    <Field form={f} name="postcode" label="Postal code" autocomplete="postal-code" maxlength={20} />
+    <Field form={f} name="country" label="Country" autocomplete="country-name" required maxlength={80} />
+  </div>
+  <div class="form-row form-row--2">
+    <Field form={f} name="name" label="Contact person" required autocomplete="name" maxlength={120} />
+    <Field form={f} name="phone" label="Contact phone" type="tel" required autocomplete="tel" inputmode="tel" pattern="[0-9 +.\-\(\)]{6,24}" patternMessage="Please enter a valid phone number, including the country code." />
+  </div>
+  <Field form={f} name="email" label="Contact email" type="email" required autocomplete="email" inputmode="email" />
+  <label class="check">
+    <input type="checkbox" name="consent" value="yes" required aria-describedby={`${f}-consent-error`} />
+    <span>I confirm the details are correct and agree that Friends of Nigeria may store them to process this registration.</span>
+  </label>
+  <p class="field-error" id={`${f}-consent-error`} aria-live="polite"></p>
+  <div>
+    <button type="submit" class="btn">Submit registration <Icon name="arrow-right" size={16} class="arrow" /></button>
+  </div>
+</FormShell>

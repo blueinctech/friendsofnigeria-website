@@ -1,0 +1,172 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Icon from '../../components/Icon.astro';
+import NewsCard from '../../components/NewsCard.astro';
+import { formatDate, readingTime } from '../../lib/format';
+import { sortByDateDesc } from '../../lib/related';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('news', (p) => !p.data.draft);
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+const { post } = Astro.props;
+const d = post.data;
+const { Content } = await render(post);
+const all = sortByDateDesc(await getCollection('news', (p) => !p.data.draft && p.id !== post.id));
+const related = [...all.filter((p) => p.data.category === d.category), ...all.filter((p) => p.data.category !== d.category)].slice(0, 3);
+const url = new URL(Astro.url.pathname, Astro.site).toString();
+const share = [
+  { name: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}` },
+  { name: 'X', href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(d.title)}&via=FON_EUROPE` },
+  { name: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}` },
+];
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'NewsArticle',
+  headline: d.title,
+  datePublished: d.date.toISOString(),
+  description: d.excerpt,
+  author: { '@type': 'Organization', name: 'Friends of Nigeria Europe' },
+  publisher: { '@type': 'Organization', name: 'Friends of Nigeria', logo: { '@type': 'ImageObject', url: new URL('/icon-512.png', Astro.site).toString() } },
+  mainEntityOfPage: url,
+};
+---
+
+<BaseLayout title={d.title} description={d.excerpt} image={d.image} imageAlt={d.imageAlt} type="article" publishedTime={d.date} jsonLd={ld}>
+  <article>
+    <header class="art-head">
+      <div class="container container--narrow">
+        <Breadcrumbs items={[{ label: 'News', href: '/news/' }, { label: d.title }]} />
+        <p class="meta art-meta">
+          <span class="tag">{d.category}</span>
+          <time datetime={d.date.toISOString()}>{formatDate(d.date)}</time>
+          <span class="dot" aria-hidden="true"></span>
+          <span>{readingTime(post.body)} min read</span>
+        </p>
+        <h1>{d.title}</h1>
+        <p class="lead art-lead">{d.excerpt}</p>
+      </div>
+    </header>
+    {
+      d.image && (
+        <div class="container art-figure">
+          <div class="media art-media">
+            <Image src={d.image} alt={d.imageAlt ?? ''} widths={[640, 960, 1280, 1600]} sizes="(min-width: 1100px) 1040px, 100vw" loading="eager" fetchpriority="high" />
+          </div>
+        </div>
+      )
+    }
+    <div class="container container--narrow art-body">
+      <div class="prose">
+        <Content />
+      </div>
+      <footer class="art-foot">
+        <span>Share this article</span>
+        <ul role="list">
+          {
+            share.map((s) => (
+              <li>
+                <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={`Share on ${s.name} (opens in a new tab)`}>
+                  <Icon name={s.name} size={16} />
+                </a>
+              </li>
+            ))
+          }
+          <li>
+            <a href={`mailto:?subject=${encodeURIComponent(d.title)}&body=${encodeURIComponent(url)}`} aria-label="Share by email">
+              <Icon name="mail" size={16} />
+            </a>
+          </li>
+        </ul>
+      </footer>
+    </div>
+  </article>
+
+  <section class="section section--subtle">
+    <div class="container">
+      <div class="section-head section-head--split">
+        <h2>More from Friends of Nigeria</h2>
+        <a href="/news/" class="link-arrow">All news <Icon name="arrow-right" /></a>
+      </div>
+      <ul class="rel" role="list">
+        {related.map((p) => <li><NewsCard post={p} /></li>)}
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .art-head {
+    padding-top: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+  }
+  .art-meta {
+    margin-top: var(--s-7);
+    flex-wrap: wrap;
+  }
+  .art-head h1 {
+    margin-top: var(--s-4);
+    font-size: clamp(2rem, 1.4rem + 2.4vw, 3.25rem);
+    line-height: 1.08;
+  }
+  .art-lead {
+    margin-top: var(--s-5);
+  }
+  .art-figure {
+    max-width: calc(1040px + var(--gutter) * 2);
+    margin-top: var(--s-7);
+  }
+  .art-media {
+    aspect-ratio: 16 / 9;
+    max-height: 640px;
+  }
+  .art-body {
+    padding-block: var(--s-8) var(--section);
+  }
+  .art-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    margin-top: var(--s-8);
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--line);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+  }
+  .art-foot ul {
+    display: flex;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+  }
+  .art-foot a {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--line-strong);
+    color: var(--ink-2);
+    transition: all 160ms var(--ease);
+  }
+  .art-foot a:hover {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--white);
+  }
+  .rel {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--s-7) var(--s-6);
+  }
+  @media (min-width: 800px) {
+    .rel {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>
