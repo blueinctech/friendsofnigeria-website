@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<BaseLayout title="Thank you" description="Your submission has been received by Friends of Nigeria." noindex>
+  <section class="section status-page">
+    <div class="container narrow">
+      <span class="ok-icon"><Icon name="check-circle" size={32} /></span>
+      <h1>Thank you</h1>
+      <p class="lead">Your submission has reached our team. If you asked a question, we will reply by email as soon as we can.</p>
+      <div class="btn-row">
+        <a href="/" class="btn">Back to the homepage <Icon name="arrow-right" size={16} class="arrow" /></a>
+        <a href="/news/" class="btn btn--ghost">Read our latest news</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .status-page {
+    min-height: 60vh;
+    display: grid;
+    align-items: center;
+  }
+  .narrow {
+    max-width: 680px;
+    display: grid;
+    gap: var(--s-5);
+    justify-items: start;
+  }
+  .ok-icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--green-50);
+    color: var(--green-700);
+  }
+</style>

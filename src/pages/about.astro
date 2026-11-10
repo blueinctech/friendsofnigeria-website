@@ -1,0 +1,292 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import TeamCard from '../components/TeamCard.astro';
+import CtaBand from '../components/CtaBand.astro';
+import about from '../data/about.json';
+import site from '../data/site.json';
+import heroImg from '../assets/site/team-spotlight-2022.jpg';
+import imgVision from '../assets/site/hero-conversation.jpg';
+import imgMission from '../assets/about/team-group-2.png';
+
+const exec = (await getCollection('team', (p) => p.data.group === 'executive-board-europe')).sort((a, b) => a.data.order - b.data.order);
+const chapters = [
+  { name: 'France', text: 'Our headquarters in Paris, home to Spotlight Nigeria and NIDA, with business, professional and governance committees.' },
+  { name: 'Germany', text: 'A country chapter connecting Nigerian professionals and communities across Germany.' },
+  { name: 'Belgium & Luxembourg', text: 'A chapter serving Nigerian professionals and partners in Belgium and Luxembourg.' },
+  { name: 'Nigeria', text: 'A liaison office coordinating operations and communications with partners in Nigeria.' },
+];
+---
+
+<BaseLayout title="About us" description={about.intro} image={heroImg}>
+  <PageHero
+    title="About Friends of Nigeria"
+    lead={about.intro}
+    crumbs={[{ label: 'About us' }]}
+    image={heroImg}
+    imageAlt="The Friends of Nigeria team with speakers and guests at Spotlight Nigeria 2022 in Paris"
+    imagePosition="center 40%"
+  >
+    <div class="btn-row">
+      <a href="/team/" class="btn">Meet the team <Icon name="arrow-right" size={16} class="arrow" /></a>
+      <a href="/contact/" class="btn btn--ghost">Contact us</a>
+    </div>
+  </PageHero>
+
+  <section class="section">
+    <div class="container vm">
+      <article class="vm-item" data-reveal>
+        <div class="media vm-media">
+          <Image src={imgVision} alt="A Nigerian business leader in conversation with a European guest at Spotlight Nigeria" widths={[480, 720, 960]} sizes="(min-width: 900px) 560px, 100vw" />
+        </div>
+        <div class="vm-copy">
+          <h2>Our vision</h2>
+          <p class="lead">{about.vision}</p>
+        </div>
+      </article>
+      <article class="vm-item vm-item--flip" data-reveal>
+        <div class="media vm-media">
+          <Image src={imgMission} alt="Friends of Nigeria members and volunteers at Spotlight Nigeria" widths={[480, 720, 960, 1280]} sizes="(min-width: 900px) 560px, 100vw" style="object-position:center 80%" />
+        </div>
+        <div class="vm-copy">
+          <h2>Our mission, in two parts</h2>
+          <p class="vm-sub">Our mission guides and inspires every decision we make.</p>
+          <ol class="mission-list" role="list">
+            {
+              about.mission.map((m, i) => (
+                <li>
+                  <span class="m-num">0{i + 1}</span>
+                  <div>
+                    <h3>{m.title}</h3>
+                    <p>{m.text}</p>
+                  </div>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section section--subtle">
+    <div class="container">
+      <div class="section-head">
+        <h2 data-reveal>Our values</h2>
+        <p data-reveal style="--reveal-delay:80">To achieve our goals and aspirations, we strive to abide by these core values and principles.</p>
+      </div>
+      <ul class="values" role="list">
+        {
+          about.values.map((v, i) => (
+            <li data-reveal style={`--reveal-delay:${i * 70}`}>
+              <span class="v-num">0{i + 1}</span>
+              <h3>{v.title}</h3>
+              <p>{v.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2 data-reveal>Where we work</h2>
+        <p data-reveal style="--reveal-delay:80">A network of chapters across Europe, with a liaison office in Nigeria.</p>
+      </div>
+      <ul class="chapters-grid" role="list">
+        {
+          chapters.map((c, i) => (
+            <li data-reveal style={`--reveal-delay:${i * 70}`}>
+              <Icon name="map-pin" size={20} />
+              <h3>{c.name}</h3>
+              <p>{c.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="hq">
+        <strong>Head office:</strong> {site.contact.address}, {site.contact.postcode} {site.contact.city}, {site.contact.country}
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--subtle">
+    <div class="container">
+      <div class="section-head section-head--split">
+        <div>
+          <h2 data-reveal>Executive board</h2>
+          <p data-reveal>The leadership of Friends of Nigeria Europe.</p>
+        </div>
+        <a href="/team/" class="link-arrow">All boards and chapters <Icon name="arrow-right" /></a>
+      </div>
+      <ul class="team-grid" role="list">
+        {
+          exec.map((p, i) => (
+            <li data-reveal style={`--reveal-delay:${i * 70}`}>
+              <TeamCard person={p} />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .vm {
+    display: grid;
+    gap: clamp(4rem, 3rem + 4vw, 7rem);
+  }
+  .vm-item {
+    display: grid;
+    gap: var(--s-6);
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .vm-item {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-9);
+    }
+    .vm-item--flip .vm-media {
+      order: 2;
+    }
+  }
+  .vm-media {
+    aspect-ratio: 4 / 3;
+  }
+  .vm-copy {
+    display: grid;
+    gap: var(--s-4);
+  }
+  .vm-sub {
+    color: var(--ink-3);
+  }
+  .mission-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    margin-top: var(--s-3);
+    border-top: 1px solid var(--line);
+  }
+  .mission-list li {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: var(--s-3);
+    padding: var(--s-5) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .m-num,
+  .v-num {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--accent-ink);
+    font-variant-numeric: tabular-nums;
+    padding-top: 4px;
+  }
+  .mission-list h3 {
+    font-size: var(--fs-h4);
+  }
+  .mission-list p {
+    margin-top: var(--s-2);
+    color: var(--ink-2);
+  }
+  .values {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  @media (min-width: 700px) {
+    .values {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 1100px) {
+    .values {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .values li {
+    background: var(--white);
+    padding: clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
+    display: grid;
+    gap: var(--s-3);
+    align-content: start;
+  }
+  .values h3 {
+    font-size: var(--fs-h3);
+    margin-top: var(--s-4);
+  }
+  .values p {
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+    line-height: 1.65;
+  }
+  .chapters-grid {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--s-6);
+  }
+  @media (min-width: 700px) {
+    .chapters-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 1100px) {
+    .chapters-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .chapters-grid li {
+    display: grid;
+    gap: var(--s-3);
+    align-content: start;
+    padding-top: var(--s-5);
+    border-top: 2px solid var(--ink);
+  }
+  .chapters-grid :global(svg) {
+    color: var(--accent);
+  }
+  .chapters-grid h3 {
+    font-size: var(--fs-h4);
+  }
+  .chapters-grid p {
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+  }
+  .hq {
+    margin-top: var(--s-7);
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+  }
+  .hq strong {
+    color: var(--ink);
+  }
+  .team-grid {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-6) var(--s-5);
+  }
+  @media (min-width: 800px) {
+    .team-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1100px) {
+    .team-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+</style>

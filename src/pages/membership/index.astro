@@ -1,0 +1,248 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import MembershipEnquiryForm from '../../components/forms/MembershipEnquiryForm.astro';
+import membership from '../../data/membership.json';
+import heroImg from '../../assets/site/audience-2022.jpg';
+
+const steps = [
+  { title: 'Choose your platform', text: 'FONEN for companies, FONPRO for individual professionals.' },
+  { title: 'Register', text: 'Complete the FONEN registration form, or join FONPRO securely through HelloAsso.' },
+  { title: 'Get connected', text: 'Access our events, network, training sessions and opportunities in Nigeria and Europe.' },
+];
+---
+
+<BaseLayout title="Become a member" description="Join Friends of Nigeria through FONEN, our corporate network for European companies, or FONPRO, the largest network of Nigerian professionals in France." image={heroImg}>
+  <PageHero
+    title="Become a member"
+    lead={membership.intro}
+    crumbs={[{ label: 'Become a member' }]}
+  >
+    <div class="btn-row">
+      <a href="#platforms" class="btn">Compare memberships <Icon name="arrow-right" size={16} class="arrow" /></a>
+      <a href="#enquire" class="btn btn--ghost">Ask a question</a>
+    </div>
+  </PageHero>
+
+  <section class="section" id="platforms">
+    <div class="container">
+      <div class="plans">
+        <article class="plan" data-reveal>
+          <span class="plan-icon"><Icon name="building" size={24} /></span>
+          <span class="tag">{membership.fonen.audience}</span>
+          <h2>{membership.fonen.name}<span>{membership.fonen.fullName}</span></h2>
+          <p>{membership.fonen.summary}</p>
+          <p class="muted">{membership.fonen.details}</p>
+          <ul class="rows" role="list">
+            {membership.fonen.categories.map((c) => <li><span>{c.name} membership</span><strong>{c.fee}</strong></li>)}
+          </ul>
+          <div class="btn-row">
+            <a href="/membership/fonen/" class="btn">Register your company <Icon name="arrow-right" size={16} class="arrow" /></a>
+            <a href="/membership/fonen/#about" class="btn btn--ghost">Learn more</a>
+          </div>
+        </article>
+        <article class="plan" data-reveal style="--reveal-delay:100">
+          <span class="plan-icon"><Icon name="user" size={24} /></span>
+          <span class="tag">{membership.fonpro.audience}</span>
+          <h2>{membership.fonpro.name}<span>{membership.fonpro.fullName}</span></h2>
+          <p>{membership.fonpro.summary}</p>
+          <p class="muted">{membership.fonpro.details}</p>
+          <ul class="rows" role="list">
+            <li><span>Registration and payment</span><strong>Secure, via HelloAsso</strong></li>
+          </ul>
+          <div class="btn-row">
+            <a href="/membership/fonpro/" class="btn">Join FONPRO <Icon name="arrow-right" size={16} class="arrow" /></a>
+            <a href="/membership/fonpro/#about" class="btn btn--ghost">Learn more</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--subtle">
+    <div class="container how">
+      <div class="media how-media" data-reveal="image">
+        <Image src={heroImg} alt="Business leaders and members in the audience at Spotlight Nigeria 2022" widths={[480, 720, 960]} sizes="(min-width: 1000px) 520px, 100vw" />
+      </div>
+      <div>
+        <h2 data-reveal>How to join</h2>
+        <ol class="steps" role="list">
+          {
+            steps.map((s, i) => (
+              <li data-reveal style={`--reveal-delay:${i * 80}`}>
+                <span class="step-n">{i + 1}</span>
+                <div>
+                  <h3>{s.title}</h3>
+                  <p>{s.text}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="enquire">
+    <div class="container enquire">
+      <div class="enquire-intro">
+        <h2 data-reveal>Not sure which is right for you?</h2>
+        <p class="lead" data-reveal>Send us a short note and our membership team will help you choose and guide you through registration.</p>
+        <p class="contact-alt" data-reveal>
+          Prefer email? Write to <a href="mailto:contact@friendsofnigeria.net">contact@friendsofnigeria.net</a>
+        </p>
+      </div>
+      <div class="form-card" data-reveal style="--reveal-delay:100">
+        <MembershipEnquiryForm />
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .plans {
+    display: grid;
+    gap: var(--s-5);
+  }
+  @media (min-width: 900px) {
+    .plans {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .plan {
+    display: grid;
+    gap: var(--s-4);
+    align-content: start;
+    justify-items: start;
+    padding: clamp(1.75rem, 1.25rem + 2vw, 3rem);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+  }
+  .plan-icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--r-sm);
+    background: var(--green-50);
+    color: var(--green-700);
+  }
+  .plan h2 {
+    font-size: var(--fs-h2);
+  }
+  .plan h2 span {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--ink-3);
+  }
+  .plan > p {
+    color: var(--ink-2);
+  }
+  .plan .muted {
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+  }
+  .rows {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    border-top: 1px solid var(--line);
+  }
+  .rows li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .rows strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .how {
+    display: grid;
+    gap: var(--s-7);
+    align-items: center;
+  }
+  @media (min-width: 1000px) {
+    .how {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-9);
+    }
+  }
+  .how-media {
+    aspect-ratio: 4 / 3;
+  }
+  .steps {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--s-6);
+    display: grid;
+  }
+  .steps li {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: var(--s-4);
+    padding: var(--s-5) 0;
+    border-top: 1px solid var(--line-strong);
+  }
+  .step-n {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+  }
+  .steps h3 {
+    font-size: var(--fs-h4);
+  }
+  .steps p {
+    margin-top: 4px;
+    color: var(--ink-2);
+  }
+  .enquire {
+    display: grid;
+    gap: var(--s-7);
+  }
+  @media (min-width: 1000px) {
+    .enquire {
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: var(--s-9);
+      align-items: start;
+    }
+    .enquire-intro {
+      position: sticky;
+      top: calc(var(--header-h) + 32px);
+    }
+  }
+  .enquire-intro {
+    display: grid;
+    gap: var(--s-4);
+  }
+  .contact-alt {
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+  }
+  .contact-alt a {
+    color: var(--accent-ink);
+  }
+  .form-card {
+    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--white);
+    box-shadow: var(--shadow-sm);
+  }
+</style>

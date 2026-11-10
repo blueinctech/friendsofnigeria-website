@@ -1,0 +1,245 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { formatMonth } from '../lib/format';
+import { sortByDateDesc } from '../lib/related';
+
+const albums = sortByDateDesc(await getCollection('albums'));
+const years = [...new Set(albums.map((a) => a.data.date.getUTCFullYear()))];
+const types = [...new Set(albums.map((a) => a.data.type))].sort();
+---
+
+<BaseLayout
+  title="Our activities"
+  description="A record of Friends of Nigeria's forums, delegations, trade missions, diaspora engagements and bilateral meetings in Paris and beyond since 2017."
+>
+  <PageHero
+    title="Our activities"
+    lead="From hosting Nigerian delegations in Paris to trade missions, investment clubs and presidential visits, here is a record of the engagements our members have led and supported."
+    crumbs={[{ label: 'Our activities' }]}
+  >
+    <div class="btn-row">
+      <a href="/gallery/" class="btn btn--ghost"><Icon name="images" size={16} /> Browse the photo gallery</a>
+    </div>
+  </PageHero>
+
+  <section class="section">
+    <div class="container">
+      <div class="filters" role="group" aria-label="Filter activities by type" data-filters>
+        <button type="button" class="chip" aria-pressed="true" data-filter="all">All <span>{albums.length}</span></button>
+        {
+          types.map((t) => (
+            <button type="button" class="chip" aria-pressed="false" data-filter={t}>
+              {t} <span>{albums.filter((a) => a.data.type === t).length}</span>
+            </button>
+          ))
+        }
+      </div>
+      <p class="visually-hidden" aria-live="polite" data-filter-status></p>
+
+      <div class="timeline">
+        {
+          years.map((y) => (
+            <section class="year" data-year>
+              <h2 class="year-label">{y}</h2>
+              <ol class="entries" role="list">
+                {albums
+                  .filter((a) => a.data.date.getUTCFullYear() === y)
+                  .map((a) => (
+                    <li class="entry" data-type={a.data.type} data-reveal>
+                      <a href={`/gallery/${a.id}/`} class="entry-link">
+                        <div class="media media--zoom entry-media">
+                          <Image src={a.data.cover} alt="" widths={[240, 360, 480]} sizes="(min-width: 700px) 220px, 100vw" loading="lazy" />
+                        </div>
+                        <div class="entry-copy">
+                          <p class="meta">
+                            <time datetime={a.data.date.toISOString()}>{formatMonth(a.data.date, a.data.yearOnly)}</time>
+                            <span class="dot" aria-hidden="true" />
+                            <span>{a.data.type}</span>
+                          </p>
+                          <h3>{a.data.title}</h3>
+                          <span class="entry-photos">
+                            <Icon name="images" size={15} /> View {a.data.photos.length} photos
+                          </span>
+                        </div>
+                        <span class="entry-arrow" aria-hidden="true">
+                          <Icon name="arrow-right" size={20} />
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+              </ol>
+            </section>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: var(--s-8);
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--white);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: var(--ink-2);
+    transition: all 160ms var(--ease);
+  }
+  .chip span {
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .chip:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .chip[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--white);
+  }
+  .chip[aria-pressed='true'] span {
+    color: var(--grey-300);
+  }
+  .timeline {
+    display: grid;
+    gap: var(--s-8);
+  }
+  .year {
+    display: grid;
+    gap: var(--s-4);
+  }
+  @media (min-width: 900px) {
+    .year {
+      grid-template-columns: 160px minmax(0, 1fr);
+      gap: var(--s-7);
+    }
+    .year-label {
+      position: sticky;
+      top: calc(var(--header-h) + 24px);
+      align-self: start;
+    }
+  }
+  .year-label {
+    font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+    color: var(--grey-300);
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .year[hidden] {
+    display: none;
+  }
+  .entries {
+    list-style: none;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .entry {
+    border-bottom: 1px solid var(--line);
+  }
+  .entry[hidden] {
+    display: none;
+  }
+  .entry-link {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: var(--s-4);
+    padding: var(--s-5) 0;
+    text-decoration: none;
+    align-items: center;
+  }
+  @media (min-width: 700px) {
+    .entry-link {
+      grid-template-columns: 200px minmax(0, 1fr) auto;
+      gap: var(--s-6);
+    }
+  }
+  .entry-media {
+    aspect-ratio: 3 / 2;
+  }
+  .entry-copy {
+    display: grid;
+    gap: 6px;
+  }
+  .entry-copy h3 {
+    font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.375rem);
+    line-height: 1.3;
+    letter-spacing: -0.018em;
+    transition: color 160ms var(--ease);
+  }
+  .entry-photos {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--accent-ink);
+  }
+  .entry-arrow {
+    display: none;
+    color: var(--slate-400);
+    transition:
+      transform 220ms var(--ease),
+      color 220ms var(--ease);
+  }
+  @media (min-width: 700px) {
+    .entry-arrow {
+      display: block;
+    }
+  }
+  .entry-link:hover h3 {
+    color: var(--accent-ink);
+  }
+  .entry-link:hover .entry-arrow {
+    color: var(--accent);
+    transform: translateX(4px);
+  }
+</style>
+
+<script>
+  const wrap = document.querySelector<HTMLElement>('[data-filters]');
+  const status = document.querySelector<HTMLElement>('[data-filter-status]');
+  if (wrap) {
+    const chips = wrap.querySelectorAll<HTMLButtonElement>('[data-filter]');
+    chips.forEach((chip) =>
+      chip.addEventListener('click', () => {
+        const f = chip.dataset.filter!;
+        chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+        let shown = 0;
+        document.querySelectorAll<HTMLElement>('[data-year]').forEach((year) => {
+          let any = false;
+          year.querySelectorAll<HTMLElement>('[data-type]').forEach((e) => {
+            const show = f === 'all' || e.dataset.type === f;
+            e.hidden = !show;
+            if (show) {
+              any = true;
+              shown++;
+              e.classList.add('is-visible');
+            }
+          });
+          year.hidden = !any;
+        });
+        if (status) status.textContent = `Showing ${shown} activities`;
+      }),
+    );
+  }
+</script>

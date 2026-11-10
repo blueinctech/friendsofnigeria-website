@@ -1,0 +1,32 @@
+{
+  "intro": "Friends of Nigeria (FON) is a non-profit involved in facilitating the access of Nigerian professionals in Europe to business and professional development opportunities and promoting Nigeria's attractiveness to European companies and investors.",
+  "vision": "To be at the forefront of promoting Nigeria in Europe and connecting professionals and businesses to opportunities in Nigeria.",
+  "mission": [
+    {
+      "title": "Building networks",
+      "text": "We are building the largest network of Nigerian professionals in Europe and facilitating their access to entrepreneurship and career opportunities, so they can contribute their quota towards the economic development of Nigeria."
+    },
+    {
+      "title": "Mutual partnerships",
+      "text": "We promote economic and commercial relations between France and Nigeria and facilitate mutual partnerships and collaborations between European enterprises and Nigerian enterprises."
+    }
+  ],
+  "values": [
+    {
+      "title": "Synergy",
+      "text": "Our actions are deeply rooted in teamwork, and this runs across our activities and operations. We believe collaboration is the bedrock of every great achievement."
+    },
+    {
+      "title": "Equity",
+      "text": "Our actions are governed by meritocracy and fairness. FON is not affiliated with any religious, political or tribal propaganda. We treat all our members equally."
+    },
+    {
+      "title": "Excellence",
+      "text": "As a professional organisation, we work with individuals at the forefront of their careers and industries, and carry out our activities with a dedication to excellence."
+    },
+    {
+      "title": "Integrity",
+      "text": "We operate at the highest level of transparency and openness with our members, partners and team. Integrity runs through our organisational culture."
+    }
+  ]
+}

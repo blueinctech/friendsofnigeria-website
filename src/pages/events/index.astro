@@ -1,0 +1,130 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import CtaBand from '../../components/CtaBand.astro';
+
+const events = (await getCollection('events')).sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout title="Events" description="Spotlight Nigeria Business and Investment Forum and the Nigerians in Diaspora Awards (NIDA), the flagship events of Friends of Nigeria in Paris.">
+  <PageHero
+    title="Flagship events"
+    lead="Two annual gatherings in Paris that bring Nigerian and European business leaders, investors, institutions and the diaspora together."
+    crumbs={[{ label: 'Events' }]}
+  />
+
+  <section class="section">
+    <div class="container ev-list">
+      {
+        events.map((e, i) => (
+          <article class:list={['ev', { 'ev--flip': i % 2 }]}>
+            <div class="media media--zoom ev-media" data-reveal="image">
+              <Image src={e.data.image} alt={e.data.imageAlt} widths={[640, 960, 1280]} sizes="(min-width: 1000px) 680px, 100vw" loading={i === 0 ? 'eager' : 'lazy'} />
+            </div>
+            <div class="ev-copy" data-reveal>
+              <p class="ev-since">Since {e.data.since} · Paris</p>
+              <h2>{e.data.title}</h2>
+              <p class="ev-tagline">{e.data.tagline}</p>
+              <p>{e.data.summary}</p>
+              <div class="btn-row">
+                <a href={`/events/${e.id}/`} class="btn">
+                  Discover {e.data.shortTitle} <Icon name="arrow-right" size={16} class="arrow" />
+                </a>
+                <a href={e.data.website} class="btn btn--ghost" target="_blank" rel="noopener">
+                  Official website <Icon name="arrow-up-right" size={16} />
+                  <span class="visually-hidden"> (opens in a new tab)</span>
+                </a>
+              </div>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="section section--subtle">
+    <div class="container more-events">
+      <div>
+        <h2 data-reveal>Business breakfasts, missions and community events</h2>
+        <p class="lead" data-reveal>
+          Throughout the year we also host Nigerian delegations in Paris, organise business breakfast meetings and trade missions, and take part in
+          bilateral events between Europe and Nigeria.
+        </p>
+      </div>
+      <a href="/our-activities/" class="btn btn--dark" data-reveal>See our activities <Icon name="arrow-right" size={16} class="arrow" /></a>
+    </div>
+  </section>
+
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .ev-list {
+    display: grid;
+    gap: clamp(4rem, 3rem + 4vw, 7rem);
+  }
+  .ev {
+    display: grid;
+    gap: var(--s-6);
+    align-items: center;
+  }
+  @media (min-width: 1000px) {
+    .ev {
+      grid-template-columns: 1.15fr 1fr;
+      gap: var(--s-9);
+    }
+    .ev--flip .ev-media {
+      order: 2;
+    }
+  }
+  .ev-media {
+    aspect-ratio: 16 / 10;
+  }
+  .ev-media img {
+    object-position: left center;
+  }
+  .ev-copy {
+    display: grid;
+    gap: var(--s-4);
+    justify-items: start;
+  }
+  .ev-since {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--accent-ink);
+  }
+  .ev-tagline {
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    color: var(--ink-2);
+    letter-spacing: -0.015em;
+  }
+  .ev-copy > p:not(.ev-since):not(.ev-tagline) {
+    color: var(--ink-2);
+    max-width: 54ch;
+  }
+  .ev-copy .btn-row {
+    margin-top: var(--s-3);
+  }
+  .more-events {
+    display: grid;
+    gap: var(--s-6);
+  }
+  .more-events h2 {
+    max-width: 22ch;
+  }
+  .more-events .lead {
+    margin-top: var(--s-4);
+    max-width: 60ch;
+  }
+  @media (min-width: 1000px) {
+    .more-events {
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: var(--s-9);
+    }
+  }
+</style>

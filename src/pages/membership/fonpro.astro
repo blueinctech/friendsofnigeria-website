@@ -1,0 +1,125 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import MembershipEnquiryForm from '../../components/forms/MembershipEnquiryForm.astro';
+import membership from '../../data/membership.json';
+import site from '../../data/site.json';
+import img from '../../assets/site/hero-conversation.jpg';
+
+const m = membership.fonpro;
+const benefits = [
+  'Take part in projects and initiatives that contribute towards development in Nigeria',
+  'Belong to a network of trailblazers and experts across France and Europe',
+  'Training and capacity development sessions on business and professional subjects',
+  'Access to career resources, networking events, Spotlight Nigeria and NIDA',
+];
+---
+
+<BaseLayout title="FONPRO – professional membership" description={`${m.fullName}: ${m.summary}`} image={img}>
+  <PageHero title={`${m.name}: ${m.fullName}`} lead={m.summary} crumbs={[{ label: 'Become a member', href: '/membership/' }, { label: 'FONPRO' }]}>
+    <div class="btn-row">
+      <a href="#join" class="btn">Join FONPRO <Icon name="arrow-right" size={16} class="arrow" /></a>
+      <a href={site.membershipLinks.fonproHelloAsso} class="btn btn--ghost" target="_blank" rel="noopener">
+        Open on HelloAsso <Icon name="arrow-up-right" size={16} /><span class="visually-hidden"> (opens in a new tab)</span>
+      </a>
+    </div>
+  </PageHero>
+
+  <section class="section" id="about">
+    <div class="container container--narrow">
+      <h2 data-reveal>Why join</h2>
+      <p class="lead" data-reveal>{m.details}</p>
+      <ul class="benefits" role="list">
+        {benefits.map((b, i) => <li data-reveal style={`--reveal-delay:${i * 60}`}><Icon name="check" size={18} />{b}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--subtle" id="join">
+    <div class="container container--narrow">
+      <h2 data-reveal>Join online</h2>
+      <p class="lead join-lead" data-reveal>
+        FONPRO membership is processed securely by HelloAsso, the payment platform used by French associations. Complete the form below or{' '}
+        <a href={site.membershipLinks.fonproHelloAsso} target="_blank" rel="noopener">open it on HelloAsso<span class="visually-hidden"> (opens in a new tab)</span></a>.
+      </p>
+      <div class="embed" data-reveal>
+        <iframe
+          title="FONPRO membership form on HelloAsso"
+          src={`${site.membershipLinks.fonproHelloAsso}/widget`}
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="payment"
+        ></iframe>
+      </div>
+      <p class="alt">
+        Living in France and looking for general FON France membership instead?{' '}
+        <a href={site.membershipLinks.fonFranceHelloAsso} target="_blank" rel="noopener">Join FON France on HelloAsso<span class="visually-hidden"> (opens in a new tab)</span></a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container container--narrow">
+      <h2 data-reveal>Have a question first?</h2>
+      <p class="lead join-lead" data-reveal>Our membership team will get back to you by email.</p>
+      <div class="form-card" data-reveal>
+        <MembershipEnquiryForm preset="FONPRO" />
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .lead {
+    margin-top: var(--s-4);
+  }
+  .lead a,
+  .alt a {
+    color: var(--accent-ink);
+  }
+  .benefits {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--s-6);
+    border-top: 1px solid var(--line);
+  }
+  .benefits li {
+    display: flex;
+    gap: 12px;
+    padding: var(--s-4) 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-2);
+  }
+  .benefits :global(svg) {
+    flex: none;
+    margin-top: 4px;
+    color: var(--accent);
+  }
+  .join-lead {
+    margin-bottom: var(--s-6);
+    font-size: var(--fs-base);
+  }
+  .embed {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+  .embed iframe {
+    display: block;
+    width: 100%;
+    height: 760px;
+    border: 0;
+  }
+  .alt {
+    margin-top: var(--s-5);
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+  }
+  .form-card {
+    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+  }
+</style>

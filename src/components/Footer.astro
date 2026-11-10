@@ -1,0 +1,221 @@
+---
+import { Image } from 'astro:assets';
+import Icon from './Icon.astro';
+import NewsletterForm from './forms/NewsletterForm.astro';
+import logoLight from '../assets/brand/logo-europe-light.png';
+import site from '../data/site.json';
+import { footerNav } from '../data/navigation';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="/" aria-label="Friends of Nigeria — home" class="footer-logo">
+          <Image src={logoLight} alt="Friends of Nigeria Europe" width={110} height={80} densities={[1, 2]} loading="lazy" />
+        </a>
+        <p class="footer-desc">{site.description}</p>
+        <ul class="social" role="list">
+          {
+            site.social.map((s) => (
+              <li>
+                <a href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`Friends of Nigeria on ${s.name} (opens in a new tab)`}>
+                  <Icon name={s.name} size={16} />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="footer-news">
+        <h2 class="footer-heading-lg">Stay informed</h2>
+        <p>News, event invitations and opportunities between Nigeria and Europe, in your inbox.</p>
+        <NewsletterForm id="footer-newsletter" />
+      </div>
+    </div>
+
+    <div class="footer-grid">
+      {
+        footerNav.map((col) => (
+          <nav aria-label={col.title}>
+            <h2 class="footer-heading">{col.title}</h2>
+            <ul role="list">
+              {col.links.map((l) => (
+                <li>
+                  <a href={l.href}>{l.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))
+      }
+      <div>
+        <h2 class="footer-heading">Contact</h2>
+        <address>
+          <p class="contact-line">
+            <Icon name="map-pin" size={16} />
+            <span>{site.contact.address}<br />{site.contact.postcode} {site.contact.city}, {site.contact.country}</span>
+          </p>
+          {
+            site.contact.phones.map((p) => (
+              <p class="contact-line">
+                <Icon name="phone" size={16} />
+                <a href={`tel:${p.tel}`}>{p.display}</a>
+              </p>
+            ))
+          }
+          <p class="contact-line">
+            <Icon name="mail" size={16} />
+            <a href={`mailto:${site.contact.email}`}>{site.contact.email}</a>
+          </p>
+        </address>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© {year} Friends of Nigeria Europe. All rights reserved.</p>
+      <p>Website by <a href="https://blueinctech.com" target="_blank" rel="noopener">Blueinc Technologies</a></p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--slate-950);
+    color: var(--slate-400);
+    font-size: var(--fs-sm);
+    padding-top: clamp(4rem, 3rem + 4vw, 6rem);
+  }
+  .footer-top {
+    display: grid;
+    gap: var(--s-7);
+    padding-bottom: var(--s-8);
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  }
+  @media (min-width: 960px) {
+    .footer-top {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-9);
+    }
+  }
+  .footer-logo {
+    display: inline-block;
+  }
+  .footer-logo img {
+    width: 110px;
+    height: auto;
+  }
+  .footer-desc {
+    margin-top: var(--s-5);
+    max-width: 46ch;
+    line-height: 1.7;
+  }
+  .social {
+    display: flex;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin-top: var(--s-5);
+  }
+  .social a {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--r-sm);
+    border: 1px solid rgb(255 255 255 / 0.12);
+    color: var(--grey-200);
+    transition:
+      color 160ms var(--ease),
+      border-color 160ms var(--ease),
+      background-color 160ms var(--ease);
+  }
+  .social a:hover {
+    color: var(--white);
+    background: var(--green-600);
+    border-color: var(--green-600);
+  }
+  .footer-heading-lg {
+    font-size: var(--fs-h3);
+    color: var(--white);
+  }
+  .footer-news > p {
+    margin: var(--s-3) 0 var(--s-5);
+    max-width: 44ch;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-7) var(--s-5);
+    padding-block: var(--s-8);
+  }
+  @media (min-width: 820px) {
+    .footer-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.4fr);
+    }
+  }
+  .footer-grid > div:last-child {
+    grid-column: 1 / -1;
+  }
+  @media (min-width: 820px) {
+    .footer-grid > div:last-child {
+      grid-column: auto;
+    }
+  }
+  .footer-heading {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--grey-200);
+    margin-bottom: var(--s-4);
+  }
+  .footer-grid ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .footer-grid a {
+    text-decoration: none;
+    transition: color 160ms var(--ease);
+  }
+  .footer-grid a:hover {
+    color: var(--white);
+  }
+  address {
+    font-style: normal;
+    display: grid;
+    gap: 12px;
+  }
+  .contact-line {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .contact-line :global(svg) {
+    flex: none;
+    margin-top: 4px;
+    color: var(--green-500);
+  }
+  .footer-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding-block: var(--s-5) var(--s-6);
+    border-top: 1px solid rgb(255 255 255 / 0.08);
+    font-size: var(--fs-xs);
+  }
+  .footer-bottom a {
+    color: var(--grey-200);
+    text-decoration: none;
+  }
+  .footer-bottom a:hover {
+    color: var(--white);
+  }
+</style>

@@ -1,0 +1,136 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import CtaBand from '../../components/CtaBand.astro';
+
+const areas = (await getCollection('areas')).sort((a, b) => a.data.order - b.data.order);
+const iconFor: Record<string, string> = { diaspora: 'globe', support: 'users', investment: 'trending-up', training: 'graduation', bilateral: 'landmark' };
+---
+
+<BaseLayout
+  title="What we do"
+  description="Diaspora engagement, social support and integration, investment promotion, training and professional development, and bilateral engagements between Nigeria and Europe."
+>
+  <PageHero
+    title="What we do"
+    lead="Five areas of work, one purpose: helping Nigerian professionals in Europe thrive and connecting European companies and investors with opportunities in Nigeria."
+    crumbs={[{ label: 'What we do' }]}
+  >
+    <ol class="toc" role="list">
+      {
+        areas.map((a, i) => (
+          <li>
+            <a href={`#${a.id}`}>
+              <span>0{i + 1}</span>
+              {a.data.title}
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </PageHero>
+
+  <section class="section">
+    <div class="container rows">
+      {
+        areas.map((a, i) => (
+          <article class:list={['row', { 'row--flip': i % 2 === 1 }]} id={a.id}>
+            <div class="media media--zoom row-media" data-reveal="image">
+              <Image src={a.data.image} alt={a.data.imageAlt} widths={[480, 720, 960, 1280]} sizes="(min-width: 1000px) 620px, 100vw" loading={i === 0 ? 'eager' : 'lazy'} />
+            </div>
+            <div class="row-copy" data-reveal>
+              <span class="row-icon">
+                <Icon name={iconFor[a.data.icon]} size={22} />
+              </span>
+              <h2>{a.data.title}</h2>
+              <p class="row-headline">{a.data.headline}</p>
+              <p>{a.data.summary}</p>
+              <a href={`/what-we-do/${a.id}/`} class="link-arrow">
+                Learn more<span class="visually-hidden"> about {a.data.title.toLowerCase()}</span> <Icon name="arrow-right" />
+              </a>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .toc {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+  .toc a {
+    display: flex;
+    gap: var(--s-4);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--ink-2);
+  }
+  .toc a span {
+    color: var(--slate-400);
+    font-variant-numeric: tabular-nums;
+  }
+  .toc a:hover {
+    color: var(--accent-ink);
+  }
+  .rows {
+    display: grid;
+    gap: clamp(4rem, 3rem + 4vw, 7rem);
+  }
+  .row {
+    display: grid;
+    gap: var(--s-6);
+    align-items: center;
+    scroll-margin-top: calc(var(--header-h) + 24px);
+  }
+  @media (min-width: 1000px) {
+    .row {
+      grid-template-columns: 1.1fr 1fr;
+      gap: var(--s-9);
+    }
+    .row--flip .row-media {
+      order: 2;
+    }
+  }
+  .row-media {
+    aspect-ratio: 3 / 2;
+  }
+  .row-copy {
+    display: grid;
+    gap: var(--s-4);
+    justify-items: start;
+  }
+  .row-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--r-sm);
+    background: var(--green-50);
+    color: var(--green-700);
+    margin-bottom: var(--s-2);
+  }
+  .row-headline {
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    letter-spacing: -0.015em;
+    color: var(--ink-2);
+    line-height: 1.35;
+  }
+  .row-copy > p:not(.row-headline) {
+    color: var(--ink-2);
+    max-width: 54ch;
+  }
+</style>

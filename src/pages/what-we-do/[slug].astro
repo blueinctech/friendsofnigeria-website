@@ -1,0 +1,210 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import AlbumCard from '../../components/AlbumCard.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { albumsForArea } from '../../lib/related';
+
+export async function getStaticPaths() {
+  const areas = (await getCollection('areas')).sort((a, b) => a.data.order - b.data.order);
+  return areas.map((area, i) => ({ params: { slug: area.id }, props: { area, prev: areas[i - 1], next: areas[i + 1] } }));
+}
+const { area, prev, next } = Astro.props;
+const { Content } = await render(area);
+const albums = albumsForArea(area.id, await getCollection('albums'));
+const others = (await getCollection('areas')).filter((a) => a.id !== area.id).sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout title={area.data.title} description={area.data.summary} image={area.data.image} imageAlt={area.data.imageAlt}>
+  <PageHero
+    title={area.data.title}
+    lead={area.data.headline}
+    crumbs={[{ label: 'What we do', href: '/what-we-do/' }, { label: area.data.title }]}
+    image={area.data.image}
+    imageAlt={area.data.imageAlt}
+  />
+
+  <section class="section">
+    <div class="container detail">
+      <div class="prose detail-body" data-reveal>
+        <Content />
+      </div>
+      <aside class="detail-aside" data-reveal style="--reveal-delay:100">
+        <h2 class="aside-title">Other areas of work</h2>
+        <ul role="list">
+          {
+            others.map((o) => (
+              <li>
+                <a href={`/what-we-do/${o.id}/`}>
+                  {o.data.title} <Icon name="arrow-right" size={16} />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="aside-cta">
+          <p>Want to take part or work with us in this area?</p>
+          <a href="/contact/" class="btn btn--sm">Get in touch</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  {
+    albums.length > 0 && (
+      <section class="section section--subtle">
+        <div class="container">
+          <div class="section-head section-head--split">
+            <h2>Related activities</h2>
+            <a href="/our-activities/" class="link-arrow">
+              All activities <Icon name="arrow-right" />
+            </a>
+          </div>
+          <ul class="album-grid" role="list">
+            {albums.map((a) => (
+              <li>
+                <AlbumCard album={a} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <nav class="container pager" aria-label="Areas of work">
+    {
+      prev ? (
+        <a href={`/what-we-do/${prev.id}/`} class="pager-link">
+          <span>Previous</span>
+          <strong><Icon name="arrow-left" size={16} /> {prev.data.title}</strong>
+        </a>
+      ) : <span />
+    }
+    {
+      next && (
+        <a href={`/what-we-do/${next.id}/`} class="pager-link pager-link--next">
+          <span>Next</span>
+          <strong>{next.data.title} <Icon name="arrow-right" size={16} /></strong>
+        </a>
+      )
+    }
+  </nav>
+
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .detail {
+    display: grid;
+    gap: var(--s-8);
+  }
+  @media (min-width: 1000px) {
+    .detail {
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: var(--s-9);
+      align-items: start;
+    }
+  }
+  .detail-body {
+    max-width: 68ch;
+  }
+  .detail-body :global(p:first-child) {
+    font-size: var(--fs-xl);
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .detail-aside {
+    position: sticky;
+    top: calc(var(--header-h) + 32px);
+    display: grid;
+    gap: var(--s-4);
+  }
+  .aside-title {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .detail-aside ul {
+    list-style: none;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .detail-aside li a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--s-3);
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: var(--fs-sm);
+  }
+  .detail-aside li a :global(svg) {
+    color: var(--slate-400);
+    transition: transform 200ms var(--ease);
+  }
+  .detail-aside li a:hover {
+    color: var(--accent-ink);
+  }
+  .detail-aside li a:hover :global(svg) {
+    transform: translateX(3px);
+    color: var(--accent);
+  }
+  .aside-cta {
+    margin-top: var(--s-4);
+    padding: var(--s-5);
+    background: var(--paper);
+    border-radius: var(--r-sm);
+    display: grid;
+    gap: var(--s-3);
+    justify-items: start;
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .album-grid {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--s-6) var(--s-5);
+  }
+  @media (min-width: 700px) {
+    .album-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .pager {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-5);
+    padding-block: var(--s-7);
+  }
+  .pager-link {
+    display: grid;
+    gap: 4px;
+    text-decoration: none;
+  }
+  .pager-link span {
+    font-size: var(--fs-xs);
+    color: var(--ink-3);
+  }
+  .pager-link strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+  }
+  .pager-link:hover strong {
+    color: var(--accent-ink);
+  }
+  .pager-link--next {
+    text-align: right;
+    justify-items: end;
+  }
+</style>

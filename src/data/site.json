@@ -1,0 +1,30 @@
+{
+  "name": "Friends of Nigeria",
+  "shortName": "FON Europe",
+  "description": "Friends of Nigeria (FON) is a non-profit that facilitates access for Nigerian professionals in Europe to business and professional development opportunities, and promotes Nigeria's attractiveness to European companies and investors.",
+  "tagline": "Connecting cultures, creating opportunities",
+  "countries": ["France", "Germany", "Belgium & Luxembourg", "Nigeria"],
+  "contact": {
+    "address": "229 rue Saint-Honoré",
+    "postcode": "75001",
+    "city": "Paris",
+    "country": "France",
+    "phones": [
+      { "label": "France", "display": "+33 7 58 68 37 71", "tel": "+33758683771" },
+      { "label": "Nigeria", "display": "+234 809 754 3000", "tel": "+2348097543000" }
+    ],
+    "email": "contact@friendsofnigeria.net",
+    "note": "All meetings are strictly by appointment."
+  },
+  "social": [
+    { "name": "LinkedIn", "url": "https://www.linkedin.com/company/11407971/" },
+    { "name": "X", "url": "https://twitter.com/FON_EUROPE" },
+    { "name": "Facebook", "url": "https://www.facebook.com/Friends-of-Nigeria-805717569606527/" },
+    { "name": "Instagram", "url": "https://www.instagram.com/friendsofnigeria/" },
+    { "name": "YouTube", "url": "https://www.youtube.com/@friendsofnigeriaeurope1497" }
+  ],
+  "membershipLinks": {
+    "fonproHelloAsso": "https://www.helloasso.com/associations/friends-of-nigeria/adhesions/professional-membership-fonpro",
+    "fonFranceHelloAsso": "https://www.helloasso.com/associations/friends-of-nigeria/adhesions/fonfrancemembership"
+  }
+}

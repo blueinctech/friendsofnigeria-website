@@ -1,0 +1,157 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Icon from '../../components/Icon.astro';
+import TeamCard from '../../components/TeamCard.astro';
+import { groupLabels } from '../../lib/format';
+
+export async function getStaticPaths() {
+  const people = await getCollection('team');
+  // Only members with a biography get a profile page.
+  return people.filter((p) => p.body && p.body.trim()).map((p) => ({ params: { slug: p.id }, props: { person: p } }));
+}
+const { person } = Astro.props;
+const d = person.data;
+const { Content } = await render(person);
+const group = groupLabels[d.group];
+const colleagues = (await getCollection('team', (p) => p.data.group === d.group && p.id !== person.id)).sort((a, b) => a.data.order - b.data.order).slice(0, 4);
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: d.name,
+  jobTitle: d.role,
+  worksFor: { '@type': 'Organization', name: 'Friends of Nigeria' },
+  sameAs: [d.linkedin, d.website].filter(Boolean),
+};
+---
+
+<BaseLayout title={`${d.name}, ${d.role}`} description={d.summary ?? `${d.name} — ${d.role}, Friends of Nigeria.`} image={d.photo} imageAlt={`Portrait of ${d.name}`} jsonLd={ld}>
+  <article class="section profile">
+    <div class="container">
+      <Breadcrumbs items={[{ label: 'Management team', href: '/team/' }, { label: d.name }]} />
+      <div class="profile-grid">
+        <aside class="profile-aside">
+          <div class="media profile-photo" data-reveal="image">
+            <Image src={d.photo} alt={`Portrait of ${d.name}`} widths={[360, 540, 720]} sizes="(min-width: 900px) 360px, 80vw" loading="eager" />
+          </div>
+          <div class="profile-links">
+            {
+              d.linkedin && (
+                <a href={d.linkedin} class="btn btn--ghost btn--sm" target="_blank" rel="noopener noreferrer">
+                  <Icon name="linkedin" size={15} /> LinkedIn<span class="visually-hidden"> (opens in a new tab)</span>
+                </a>
+              )
+            }
+            {
+              d.website && (
+                <a href={d.website} class="btn btn--ghost btn--sm" target="_blank" rel="noopener noreferrer">
+                  <Icon name="external" size={15} /> Website<span class="visually-hidden"> (opens in a new tab)</span>
+                </a>
+              )
+            }
+          </div>
+        </aside>
+        <div class="profile-main">
+          <p class="profile-group">{group.title}</p>
+          <h1>{d.name}</h1>
+          <p class="profile-role">{d.role}</p>
+          <div class="prose">
+            <Content />
+          </div>
+          <a href="/team/" class="link-arrow back"><Icon name="arrow-left" /> Back to the team</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  {
+    colleagues.length > 0 && (
+      <section class="section section--subtle">
+        <div class="container">
+          <div class="section-head">
+            <h2>Also on the {group.title.replace(', FON Europe', '')}</h2>
+          </div>
+          <ul class="colleagues" role="list">
+            {colleagues.map((p) => (
+              <li>
+                <TeamCard person={p} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>
+
+<style>
+  .profile {
+    padding-top: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+  }
+  .profile-grid {
+    display: grid;
+    gap: var(--s-7);
+    margin-top: var(--s-7);
+  }
+  @media (min-width: 900px) {
+    .profile-grid {
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: var(--s-9);
+      align-items: start;
+    }
+    .profile-aside {
+      position: sticky;
+      top: calc(var(--header-h) + 32px);
+    }
+  }
+  .profile-photo {
+    aspect-ratio: 4 / 5;
+    max-width: 420px;
+  }
+  .profile-photo img {
+    object-position: center 20%;
+  }
+  .profile-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: var(--s-4);
+  }
+  .profile-group {
+    font-size: var(--fs-sm);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  .profile-main h1 {
+    margin-top: var(--s-3);
+    font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3.5rem);
+  }
+  .profile-role {
+    margin-top: var(--s-3);
+    font-size: var(--fs-xl);
+    color: var(--ink-2);
+    padding-bottom: var(--s-6);
+    margin-bottom: var(--s-6);
+    border-bottom: 1px solid var(--line);
+  }
+  .profile-main .prose {
+    max-width: 68ch;
+  }
+  .back {
+    margin-top: var(--s-7);
+  }
+  .colleagues {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-6) var(--s-5);
+  }
+  @media (min-width: 900px) {
+    .colleagues {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+</style>

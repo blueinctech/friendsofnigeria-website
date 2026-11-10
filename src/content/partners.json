@@ -1,0 +1,102 @@
+{
+  "partners": [
+    {
+      "id": "business-france",
+      "name": "Business France",
+      "logo": "../assets/partners/business-france.png",
+      "url": "https://www.businessfrance.fr/",
+      "order": 1
+    },
+    {
+      "id": "les-conseillers-du-commerce-ext-rieur-de",
+      "name": "Les Conseillers du Commerce Extérieur de la France – Nigeria",
+      "logo": "../assets/partners/les-conseillers-du-commerce-ext-rieur-de.jpg",
+      "url": null,
+      "order": 2
+    },
+    {
+      "id": "cci-paris-le-de-france-comit-d-changes-a",
+      "name": "CCI Paris Île-de-France – Comité d’échanges Afrique-France",
+      "logo": "../assets/partners/cci-paris-le-de-france-comit-d-changes-a.jpg",
+      "url": null,
+      "order": 3
+    },
+    {
+      "id": "embassy-of-nigeria-paris",
+      "name": "Embassy of Nigeria, Paris",
+      "logo": "../assets/partners/embassy-of-nigeria-paris.jpg",
+      "url": null,
+      "order": 4
+    },
+    {
+      "id": "association-france-nigeria",
+      "name": "Association France Nigeria",
+      "logo": "../assets/partners/association-france-nigeria.jpg",
+      "url": null,
+      "order": 5
+    },
+    {
+      "id": "groupe-damiti-parlementaire-france-nig-r",
+      "name": "Groupe d’amitié parlementaire France-Nigéria",
+      "logo": "../assets/partners/groupe-damiti-parlementaire-france-nig-r.jpg",
+      "url": null,
+      "order": 6
+    },
+    {
+      "id": "club-efficience",
+      "name": "Club Efficience",
+      "logo": "../assets/partners/club-efficience.png",
+      "url": null,
+      "order": 7
+    },
+    {
+      "id": "agence-fran-aise-de-d-veloppement-afd",
+      "name": "Agence Française de Développement (AFD)",
+      "logo": "../assets/partners/agence-fran-aise-de-d-veloppement-afd.jpg",
+      "url": "https://www.afd.fr/",
+      "order": 8
+    },
+    {
+      "id": "cci-france-nigeria",
+      "name": "CCI France Nigeria",
+      "logo": "../assets/partners/cci-france-nigeria.png",
+      "url": null,
+      "order": 9
+    },
+    {
+      "id": "cian-conseil-fran-ais-des-investisseurs",
+      "name": "CIAN – Conseil français des investisseurs en Afrique",
+      "logo": "../assets/partners/cian-conseil-fran-ais-des-investisseurs.png",
+      "url": null,
+      "order": 10
+    },
+    {
+      "id": "campus-france",
+      "name": "Campus France",
+      "logo": "../assets/partners/campus-france.png",
+      "url": "https://www.campusfrance.org/",
+      "order": 11
+    },
+    {
+      "id": "expertise-france",
+      "name": "Expertise France",
+      "logo": "../assets/partners/expertise-france.png",
+      "url": null,
+      "order": 12
+    },
+    {
+      "id": "adepta",
+      "name": "ADEPTA",
+      "logo": "../assets/partners/adepta.png",
+      "url": null,
+      "order": 13
+    },
+    {
+      "id": "naccima",
+      "name": "NACCIMA",
+      "logo": "../assets/partners/naccima.png",
+      "url": null,
+      "order": 14
+    }
+  ]
+}

@@ -1,0 +1,301 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "astro",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "trailingSlash": true,
+  "redirects": [
+    {
+      "source": "/about-me/:path*",
+      "destination": "/about/",
+      "permanent": true
+    },
+    {
+      "source": "/get-involved/:path*",
+      "destination": "/membership/",
+      "permanent": true
+    },
+    {
+      "source": "/fonen-registration/:path*",
+      "destination": "/membership/fonen/",
+      "permanent": true
+    },
+    {
+      "source": "/event/:path*",
+      "destination": "/events/",
+      "permanent": true
+    },
+    {
+      "source": "/spotlight-nigeria-france-business-forum/:path*",
+      "destination": "/events/spotlight-nigeria/",
+      "permanent": true
+    },
+    {
+      "source": "/posts-articles/:path*",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/new/contact/:path*",
+      "destination": "/contact/",
+      "permanent": true
+    },
+    {
+      "source": "/new/news/:path*",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/new/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/home-2/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/home-3/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sample-page/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/donate-2/:path*",
+      "destination": "/membership/",
+      "permanent": true
+    },
+    {
+      "source": "/shop/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/cart/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/my-account/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/woo-checkout/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/wfp-cancel/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/wfp-success/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/wfp-checkout/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/wfp-dashboard/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/wfp-auth-form/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/wpfd-invoice-checking/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/category/:path*",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/tag/:path*",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/author/:path*",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/feed/:path*",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/chisom-onwumere/:path*",
+      "destination": "/team/",
+      "permanent": true
+    },
+    {
+      "source": "/victory-ayele/:path*",
+      "destination": "/team/victory-ayele/",
+      "permanent": true
+    },
+    {
+      "source": "/praise-el-osayi-ekekhor/:path*",
+      "destination": "/team/praise-el-osayi-ekekhor/",
+      "permanent": true
+    },
+    {
+      "source": "/ajibola-faniyi/:path*",
+      "destination": "/team/ajibola-faniyi/",
+      "permanent": true
+    },
+    {
+      "source": "/anurika-ohalezim/:path*",
+      "destination": "/team/anurika-ohalezim/",
+      "permanent": true
+    },
+    {
+      "source": "/angel-amegbe-patricks/:path*",
+      "destination": "/team/angel-amegbe-patricks/",
+      "permanent": true
+    },
+    {
+      "source": "/ogenna-onwumere/:path*",
+      "destination": "/team/ogenna-onwumere/",
+      "permanent": true
+    },
+    {
+      "source": "/oluwasegun-kadiri/:path*",
+      "destination": "/team/oluwasegun-kadiri/",
+      "permanent": true
+    },
+    {
+      "source": "/john-okoro/:path*",
+      "destination": "/team/john-okoro/",
+      "permanent": true
+    },
+    {
+      "source": "/oluwatoyin-f-sanni/:path*",
+      "destination": "/team/oluwatoyin-f-sanni/",
+      "permanent": true
+    },
+    {
+      "source": "/chat-with-mr-alec-fokapu-ceo-of-fiftyfor-a-b2b-rating-platform-for-african-companies/:path*",
+      "destination": "/news/chat-with-mr-alec-fokapu-ceo-of-fiftyfor-a-b2b-rating-platform-for-african-companies/",
+      "permanent": true
+    },
+    {
+      "source": "/covid-19-information-the-5th-edition-of-spotlight-nigeria-moved-to-2021/:path*",
+      "destination": "/news/covid-19-information-the-5th-edition-of-spotlight-nigeria-moved-to-2021/",
+      "permanent": true
+    },
+    {
+      "source": "/fon-partners-with-aldelia-to-host-job-fair-webinar-for-professional-nigerians-in-europe/:path*",
+      "destination": "/news/fon-partners-with-aldelia-to-host-job-fair-webinar-for-professional-nigerians-in-europe/",
+      "permanent": true
+    },
+    {
+      "source": "/friends-of-nigeria-fon-europe-statement-on-the-rising-cases-of-kidnappings-and-killings-in-nigeria/:path*",
+      "destination": "/news/friends-of-nigeria-fon-europe-statement-on-the-rising-cases-of-kidnappings-and-killings-in-nigeria/",
+      "permanent": true
+    },
+    {
+      "source": "/goodwill-message-to-ambassador-modupe-irele-on-new-appointment/:path*",
+      "destination": "/news/goodwill-message-to-ambassador-modupe-irele-on-new-appointment/",
+      "permanent": true
+    },
+    {
+      "source": "/harnessing-the-critical-role-of-youth-as-the-engine-for-growth-and-national-development/:path*",
+      "destination": "/news/harnessing-the-critical-role-of-youth-as-the-engine-for-growth-and-national-development/",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-get-a-job-as-a-non-european-final-part/:path*",
+      "destination": "/news/how-to-get-a-job-as-a-non-european-final-part/",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-get-a-job-in-europe-as-a-non-european-part-i/:path*",
+      "destination": "/news/how-to-get-a-job-in-europe-as-a-non-european-part-i/",
+      "permanent": true
+    },
+    {
+      "source": "/how-to-get-a-job-in-europe-as-a-non-european-part-ii/:path*",
+      "destination": "/news/how-to-get-a-job-in-europe-as-a-non-european-part-ii/",
+      "permanent": true
+    },
+    {
+      "source": "/president-tinubus-high-level-visit-and-engagements-with-the-nigerian-diaspora-in-france/:path*",
+      "destination": "/news/president-tinubus-high-level-visit-and-engagements-with-the-nigerian-diaspora-in-france/",
+      "permanent": true
+    },
+    {
+      "source": "/press-release-on-president-buharis-visit-to-paris-during-the-peace-forum-friends-of-nigeria/:path*",
+      "destination": "/news/press-release-on-president-buharis-visit-to-paris-during-the-peace-forum-friends-of-nigeria/",
+      "permanent": true
+    },
+    {
+      "source": "/the-eu-job-market-sectors-with-the-most-job-offers/:path*",
+      "destination": "/news/the-eu-job-market-sectors-with-the-most-job-offers/",
+      "permanent": true
+    },
+    {
+      "source": "/the-impact-of-the-twitter-ban-on-nigeria-its-citizens-and-the-diaspora/:path*",
+      "destination": "/news/the-impact-of-the-twitter-ban-on-nigeria-its-citizens-and-the-diaspora/",
+      "permanent": true
+    },
+    {
+      "source": "/tribute-to-ambassador-kayode-laro-friends-of-nigeria-fon-europe/:path*",
+      "destination": "/news/tribute-to-ambassador-kayode-laro-friends-of-nigeria-fon-europe/",
+      "permanent": true
+    },
+    {
+      "source": "/we-want-the-youths-to-know-2018/:path*",
+      "destination": "/news/we-want-the-youths-to-know-2018/",
+      "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/_astro/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    }
+  ]
+}

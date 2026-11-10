@@ -1,0 +1,31 @@
+---
+/**
+ * Wraps a site form: hidden form-name, honeypot, status region.
+ * Submissions go to the Vercel function in api/submit.js.
+ * Submissions are handled by src/scripts/forms.ts.
+ */
+interface Props {
+  name: string;
+  success: string;
+  class?: string;
+  label?: string;
+}
+const { name, success, class: className, label } = Astro.props;
+---
+
+<form
+  class:list={['form', className]}
+  name={name}
+  method="POST"
+  action="/api/submit"
+  data-form
+  data-success={success}
+  aria-label={label}
+>
+  <input type="hidden" name="form-name" value={name} />
+  <p class="honeypot" aria-hidden="true">
+    <label>Leave this field empty <input name="company-website-url" tabindex="-1" autocomplete="off" /></label>
+  </p>
+  <slot />
+  <div class="form-status" data-form-status role="status" aria-live="polite" tabindex="-1"></div>
+</form>

@@ -1,0 +1,21 @@
+{
+  "intro": "Get involved with the Friends of Nigeria initiative and leverage business opportunities and ideas from international experts and professionals. The initiative also gives SMEs the opportunity to network with large businesses.",
+  "fonen": {
+    "name": "FONEN",
+    "fullName": "FON Entreprise Network",
+    "audience": "Corporate membership",
+    "summary": "FONEN is open to all French and European companies interested in the Nigerian market, including European companies owned or founded by Nigerians in the diaspora.",
+    "details": "FONEN membership is paid, and companies seeking to join the network are required to register in order to get access.",
+    "categories": [
+      { "name": "SME", "fee": "€500" },
+      { "name": "Corporate", "fee": "€1,000" }
+    ]
+  },
+  "fonpro": {
+    "name": "FONPRO",
+    "fullName": "FON Professional Members",
+    "audience": "Individual membership",
+    "summary": "FONPRO is a membership platform for Nigerian professionals in France. It is the largest network of Nigerian professionals in France.",
+    "details": "Members can take part in projects and initiatives that contribute towards development in Nigeria, and belong to a network of trailblazers and experts."
+  }
+}

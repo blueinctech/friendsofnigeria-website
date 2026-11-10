@@ -1,0 +1,41 @@
+---
+import FormShell from './FormShell.astro';
+import Field from './Field.astro';
+import Icon from '../Icon.astro';
+const f = 'contact';
+---
+
+<FormShell name={f} label="Contact Friends of Nigeria" success="<strong>Thank you for getting in touch.</strong> Your message has reached our team and we will reply by email.">
+  <div class="form-row form-row--2">
+    <Field form={f} name="name" label="Full name" required autocomplete="name" maxlength={120} />
+    <Field form={f} name="email" label="Email address" type="email" required autocomplete="email" inputmode="email" />
+  </div>
+  <div class="form-row form-row--2">
+    <Field form={f} name="phone" label="Phone" type="tel" autocomplete="tel" inputmode="tel" pattern="[0-9 +.\-\(\)]{6,24}" patternMessage="Please enter a valid phone number, including the country code." />
+    <Field
+      form={f}
+      name="topic"
+      label="Subject"
+      as="select"
+      required
+      placeholder="Choose a subject"
+      options={[
+        { value: 'General enquiry', label: 'General enquiry' },
+        { value: 'Membership', label: 'Membership (FONEN or FONPRO)' },
+        { value: 'Partnership or sponsorship', label: 'Partnership or sponsorship' },
+        { value: 'Spotlight Nigeria', label: 'Spotlight Nigeria' },
+        { value: 'NIDA', label: 'Nigerians in Diaspora Awards (NIDA)' },
+        { value: 'Media and press', label: 'Media and press' },
+      ]}
+    />
+  </div>
+  <Field form={f} name="message" label="Message" as="textarea" required minlength={10} maxlength={3000} />
+  <label class="check">
+    <input type="checkbox" name="consent" value="yes" required aria-describedby="contact-consent-error" />
+    <span>I agree that Friends of Nigeria may store my details to respond to this enquiry.</span>
+  </label>
+  <p class="field-error" id="contact-consent-error" aria-live="polite"></p>
+  <div>
+    <button type="submit" class="btn">Send message <Icon name="send" size={16} /></button>
+  </div>
+</FormShell>

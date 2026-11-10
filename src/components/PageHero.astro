@@ -1,0 +1,97 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Breadcrumbs from './Breadcrumbs.astro';
+
+interface Props {
+  title: string;
+  lead?: string;
+  crumbs: { label: string; href?: string }[];
+  image?: ImageMetadata;
+  imageAlt?: string;
+  imagePosition?: string;
+}
+const { title, lead, crumbs, image, imageAlt = '', imagePosition = 'center' } = Astro.props;
+---
+
+<section class:list={['page-hero', { 'has-image': image }]}>
+  <div class="container">
+    <Breadcrumbs items={crumbs} />
+    <div class="hero-grid">
+      <h1 data-reveal>{title}</h1>
+      {
+        (lead || Astro.slots.has('default')) && (
+          <div class="hero-side" data-reveal style="--reveal-delay:120">
+            {lead && <p class="lead">{lead}</p>}
+            <slot />
+          </div>
+        )
+      }
+    </div>
+  </div>
+  {
+    image && (
+      <div class="container hero-media-wrap">
+        <div class="media hero-media" data-reveal="image">
+          <Image
+            src={image}
+            alt={imageAlt}
+            widths={[640, 960, 1280, 1600, 2000]}
+            sizes="(min-width: 1320px) 1240px, 100vw"
+            loading="eager"
+            fetchpriority="high"
+            style={`object-position:${imagePosition}`}
+          />
+        </div>
+      </div>
+    )
+  }
+</section>
+
+<style>
+  .page-hero {
+    padding-top: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+    padding-bottom: clamp(3rem, 2rem + 4vw, 5.5rem);
+    border-bottom: 1px solid var(--line);
+  }
+  .page-hero.has-image {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .hero-grid {
+    display: grid;
+    gap: var(--s-5);
+    margin-top: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+  }
+  .hero-grid h1 {
+    max-width: 16ch;
+  }
+  .hero-side {
+    display: grid;
+    gap: var(--s-5);
+    align-content: end;
+  }
+  .hero-side .lead {
+    max-width: 52ch;
+  }
+  @media (min-width: 960px) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: var(--s-9);
+      align-items: end;
+    }
+  }
+  .hero-media-wrap {
+    margin-top: clamp(2.5rem, 2rem + 2vw, 4rem);
+  }
+  .hero-media {
+    aspect-ratio: 16 / 9;
+    max-height: 620px;
+    width: 100%;
+  }
+  @media (max-width: 640px) {
+    .hero-media {
+      aspect-ratio: 4 / 3;
+    }
+  }
+</style>
