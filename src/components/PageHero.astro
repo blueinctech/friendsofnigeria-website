@@ -15,6 +15,7 @@ const { title, lead, crumbs, image, imageAlt = '', imagePosition = 'center' } = 
 ---
 
 <section class:list={['page-hero', { 'has-image': image }]}>
+  <div class="ph-backdrop" aria-hidden="true"></div>
   <div class="container">
     <Breadcrumbs items={crumbs} />
     <div class="hero-grid">
@@ -32,7 +33,7 @@ const { title, lead, crumbs, image, imageAlt = '', imagePosition = 'center' } = 
   {
     image && (
       <div class="container hero-media-wrap">
-        <div class="media hero-media" data-reveal="image">
+        <div class="media hero-media" data-reveal="image" data-parallax>
           <Image
             src={image}
             alt={imageAlt}
@@ -50,9 +51,25 @@ const { title, lead, crumbs, image, imageAlt = '', imagePosition = 'center' } = 
 
 <style>
   .page-hero {
+    position: relative;
+    isolation: isolate;
     padding-top: clamp(2rem, 1.5rem + 2vw, 3.5rem);
     padding-bottom: clamp(3rem, 2rem + 4vw, 5.5rem);
     border-bottom: 1px solid var(--line);
+  }
+  /* Faint dot grid with a brand-green bloom, fading out toward the content. */
+  .ph-backdrop {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: min(560px, 100%);
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    background:
+      radial-gradient(600px 320px at 88% 0%, rgb(11 148 68 / 0.1), transparent 70%),
+      radial-gradient(circle at 1px 1px, rgb(13 22 25 / 0.09) 1px, transparent 0) 0 0 / 22px 22px;
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 92%);
+    mask-image: linear-gradient(180deg, #000 0%, transparent 92%);
   }
   .page-hero.has-image {
     border-bottom: 0;
@@ -65,6 +82,8 @@ const { title, lead, crumbs, image, imageAlt = '', imagePosition = 'center' } = 
   }
   .hero-grid h1 {
     max-width: 16ch;
+    font-size: clamp(2.5rem, 1.4rem + 4.2vw, 5rem);
+    letter-spacing: -0.045em;
   }
   .hero-side {
     display: grid;
@@ -86,8 +105,10 @@ const { title, lead, crumbs, image, imageAlt = '', imagePosition = 'center' } = 
   }
   .hero-media {
     aspect-ratio: 16 / 9;
-    max-height: 620px;
+    max-height: 640px;
     width: 100%;
+    border-radius: var(--r-lg);
+    box-shadow: 0 40px 80px -48px rgb(13 22 25 / 0.5);
   }
   @media (max-width: 640px) {
     .hero-media {

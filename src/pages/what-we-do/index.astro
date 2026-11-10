@@ -38,7 +38,7 @@ const iconFor: Record<string, string> = { diaspora: 'globe', support: 'users', i
       {
         areas.map((a, i) => (
           <article class:list={['row', { 'row--flip': i % 2 === 1 }]} id={a.id}>
-            <div class="media media--zoom row-media" data-reveal="image">
+            <div class="media media--zoom row-media" data-reveal="image" data-parallax>
               <Image src={a.data.image} alt={a.data.imageAlt} widths={[480, 720, 960, 1280]} sizes="(min-width: 1000px) 620px, 100vw" loading={i === 0 ? 'eager' : 'lazy'} />
             </div>
             <div class="row-copy" data-reveal>

@@ -14,6 +14,7 @@ import site from '../data/site.json';
 import heroMain from '../assets/site/area-investment.jpg';
 import heroPanel from '../assets/site/hero-panel.jpg';
 import heroBrand from '../assets/activities/extra-3.jpg';
+import heroCity from '../assets/site/hero-city.jpg';
 import teamPhoto from '../assets/about/team-group.png';
 import spotlightImg from '../assets/site/spotlight-banner-2023.jpg';
 import nidaImg from '../assets/events/nida-og.jpg';
@@ -46,6 +47,24 @@ const iconFor: Record<string, string> = {
 <BaseLayout title={site.name} description="Friends of Nigeria connects Nigerian professionals and businesses with European companies, investors and institutions to create partnerships and opportunities between Nigeria and Europe.">
   <!-- Hero -->
   <section class="hero" data-hero>
+    <!-- Cityscape atmosphere from the original site: image, then a soft white veil. -->
+    <div class="hero-city" aria-hidden="true">
+      <div class="hc-parallax">
+        <div class="hc-drift">
+          <Image
+            src={heroCity}
+            alt=""
+            widths={[800, 1200, 1600]}
+            sizes="100vw"
+            loading="eager"
+            fetchpriority="low"
+            decoding="async"
+            class="hc-img"
+          />
+        </div>
+      </div>
+      <div class="hc-veil"></div>
+    </div>
     <div class="hero-backdrop" aria-hidden="true">
       <svg class="hero-orbits" viewBox="0 0 800 800" fill="none">
         <circle cx="400" cy="400" r="398" />
@@ -143,7 +162,7 @@ const iconFor: Record<string, string> = {
   <section class="section about" id="about">
     <div class="container">
       <div class="about-grid">
-        <div class="about-media media" data-reveal="image">
+        <div class="about-media media" data-reveal="image" data-parallax>
           <Image
             src={teamPhoto}
             alt="The Friends of Nigeria team and volunteers on stage at Spotlight Nigeria in Paris"
@@ -172,7 +191,7 @@ const iconFor: Record<string, string> = {
         </div>
       </div>
 
-      <dl class="stats">
+      <dl class="stats" data-line>
         {
           stats.map((s, i) => (
             <div class="stat" data-reveal style={`--reveal-delay:${i * 70}`}>
@@ -242,7 +261,8 @@ const iconFor: Record<string, string> = {
   </section>
 
   <!-- Flagship events -->
-  <section class="section section--dark events" id="events">
+  <section class="section section--dark events grain glow" id="events">
+    <span class="glow-orb events-orb" aria-hidden="true"></span>
     <div class="container">
       <div class="section-head section-head--split">
         <h2 data-reveal>Our flagship events</h2>
@@ -250,7 +270,7 @@ const iconFor: Record<string, string> = {
       </div>
 
       <article class="event-row" data-reveal>
-        <div class="event-media media">
+        <div class="event-media media" data-parallax>
           <Image
             src={spotlightImg}
             alt="Delegates in conversation in front of Spotlight Nigeria and Friends of Nigeria banners"
@@ -281,7 +301,7 @@ const iconFor: Record<string, string> = {
       </article>
 
       <article class="event-row event-row--flip" data-reveal>
-        <div class="event-media media event-media--nida">
+        <div class="event-media media event-media--nida" data-parallax>
           <Image
             src={nidaImg}
             alt="Guests at the Nigerians in Diaspora Awards gala night in Paris"
@@ -342,7 +362,7 @@ const iconFor: Record<string, string> = {
         <p data-reveal style="--reveal-delay:80">{membership.intro}</p>
       </div>
       <div class="plans">
-        <article class="plan" data-reveal>
+        <article class="plan spotlight lift" data-reveal>
           <div class="plan-top">
             <span class="plan-icon"><Icon name="building" size={22} /></span>
             <span class="tag">{membership.fonen.audience}</span>
@@ -358,7 +378,7 @@ const iconFor: Record<string, string> = {
             <a href="/membership/#enquire" class="btn btn--ghost">Ask a question</a>
           </div>
         </article>
-        <article class="plan" data-reveal style="--reveal-delay:100">
+        <article class="plan spotlight lift" data-reveal style="--reveal-delay:100">
           <div class="plan-top">
             <span class="plan-icon"><Icon name="user" size={22} /></span>
             <span class="tag">{membership.fonpro.audience}</span>
@@ -401,7 +421,7 @@ const iconFor: Record<string, string> = {
   </section>
 
   <!-- Partners -->
-  <section class="section section--subtle partners-sec" id="partners">
+  <section class="section partners-sec" id="partners">
     <div class="container">
       <div class="section-head section-head--split">
         <div>
@@ -410,7 +430,7 @@ const iconFor: Record<string, string> = {
         </div>
         <a href="/partners/" class="link-arrow" data-reveal>Partner with us <Icon name="arrow-right" /></a>
       </div>
-      <PartnerGrid />
+      <PartnerGrid variant="marquee" />
     </div>
   </section>
 
@@ -430,11 +450,70 @@ const iconFor: Record<string, string> = {
     padding-bottom: clamp(3.5rem, 2.5rem + 3vw, 5.5rem);
     overflow: hidden;
   }
+  /* Layer 1-2: cityscape and white veil. Three wrappers so load-in, slow drift
+     and scroll parallax each own one transform and never fight. */
+  .hero-city {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .hc-parallax {
+    position: absolute;
+    inset: -6% 0 -6% 0;
+    transform: translate3d(0, calc(var(--hp) * 90px), 0);
+  }
+  .hc-drift {
+    width: 100%;
+    height: 100%;
+    animation: city-drift 48s ease-in-out 2.4s infinite alternate;
+  }
+  .hero-city :global(.hc-img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 78%;
+    opacity: 1;
+    animation: city-in 2600ms var(--ease-expo) 100ms both;
+  }
+  @keyframes city-in {
+    from {
+      opacity: 0;
+      transform: scale(1.08);
+      filter: blur(6px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1.02);
+      filter: blur(0);
+    }
+  }
+  @keyframes city-drift {
+    from {
+      transform: translate3d(-1.2%, 0, 0) scale(1.05);
+    }
+    to {
+      transform: translate3d(1.2%, -0.6%, 0) scale(1.08);
+    }
+  }
+  /* Veil: strongest behind the headline, lighter where the skyline rises,
+     and dissolving into white at the top and bottom edges. */
+  .hc-veil {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, #fff 0%, rgb(255 255 255 / 0) 16%, rgb(255 255 255 / 0) 76%, #fff 100%),
+      linear-gradient(90deg, rgb(255 255 255 / 0.66) 0%, rgb(255 255 255 / 0.32) 45%, rgb(255 255 255 / 0.04) 100%);
+  }
+
   .hero-backdrop {
     position: absolute;
     inset: 0 0 0 auto;
     width: min(44vw, 700px);
-    background: var(--paper);
+    background: rgb(247 248 246 / 0.35);
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+    mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
     z-index: -1;
   }
   .hero-orbits {
@@ -465,7 +544,9 @@ const iconFor: Record<string, string> = {
       content: '';
       position: absolute;
       inset: 16% -50vw -18% -50vw;
-      background: var(--paper);
+      background: rgb(247 248 246 / 0.5);
+      -webkit-mask-image: linear-gradient(180deg, transparent, #000 25%, #000 75%, transparent);
+      mask-image: linear-gradient(180deg, transparent, #000 25%, #000 75%, transparent);
       z-index: -1;
     }
   }
@@ -545,16 +626,21 @@ const iconFor: Record<string, string> = {
     display: inline-flex;
     align-items: center;
     gap: 14px;
-    min-height: 52px;
-    padding: 0 8px 0 22px;
-    border-radius: var(--r-sm);
+    min-height: 54px;
+    padding: 0 8px 0 24px;
+    border-radius: var(--r-pill);
+    transform: translate3d(var(--mag-x, 0), var(--mag-y, 0), 0);
     font-weight: 600;
     font-size: 0.9688rem;
     text-decoration: none;
     transition:
       color 420ms var(--ease),
       border-color 420ms var(--ease),
-      box-shadow 420ms var(--ease);
+      box-shadow 420ms var(--ease),
+      transform 420ms var(--ease-spring);
+  }
+  .hbtn:active {
+    transform: translate3d(var(--mag-x, 0), var(--mag-y, 0), 0) scale(0.97);
   }
   .hbtn::before {
     content: '';
@@ -584,9 +670,9 @@ const iconFor: Record<string, string> = {
   .hbtn-icon {
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 5px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     background: rgb(255 255 255 / 0.16);
     overflow: hidden;
     transition: background-color 420ms var(--ease);
@@ -612,10 +698,12 @@ const iconFor: Record<string, string> = {
     }
   }
   .hbtn--ghost {
-    padding: 0 22px;
+    padding: 0 24px;
     color: var(--ink);
     border: 1px solid var(--line-strong);
-    background: transparent;
+    background: rgb(255 255 255 / 0.66);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   .hbtn--ghost::before {
     background: var(--green-50);
@@ -731,10 +819,10 @@ const iconFor: Record<string, string> = {
   }
   @keyframes frame-reveal {
     from {
-      clip-path: inset(100% 0 0 0 round 14px);
+      clip-path: inset(100% 0 0 0 round 20px);
     }
     to {
-      clip-path: inset(0 0 0 0 round 14px);
+      clip-path: inset(0 0 0 0 round 20px);
     }
   }
   @keyframes img-settle {
@@ -757,11 +845,11 @@ const iconFor: Record<string, string> = {
   .hs-frame--card {
     padding: 5px;
     background: var(--white);
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: var(--shadow-lg);
   }
   .hs-frame--card :global(img) {
-    border-radius: 8px;
+    border-radius: 11px;
   }
   .hs-a {
     left: 0;
@@ -810,7 +898,7 @@ const iconFor: Record<string, string> = {
     padding: 14px 16px 12px;
     background: var(--slate-950);
     color: var(--slate-400);
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: 0 24px 50px -24px rgb(13 22 25 / 0.6);
     animation: card-in 1100ms var(--ease) 1100ms both;
   }
@@ -937,9 +1025,13 @@ const iconFor: Record<string, string> = {
       display: none;
     }
     .hero-copy,
-    .hero-stage {
+    .hero-stage,
+    .hc-parallax {
       transform: none;
       opacity: 1;
+    }
+    .hc-drift {
+      transform: scale(1.04);
     }
     .hs-frame--main :global(img) {
       transform: scale(1.04);
@@ -1012,6 +1104,9 @@ const iconFor: Record<string, string> = {
     margin-top: clamp(4rem, 3rem + 3vw, 6rem);
     border-top: 1px solid var(--line);
   }
+  :global(.js) .stats {
+    border-top-color: transparent;
+  }
   @media (min-width: 900px) {
     .stats {
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1029,9 +1124,9 @@ const iconFor: Record<string, string> = {
   .stat-value {
     display: block;
     font-family: var(--font-display);
-    font-size: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+    font-size: clamp(3rem, 2rem + 3.4vw, 5rem);
     font-weight: 600;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.055em;
     line-height: 1;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
@@ -1129,7 +1224,17 @@ const iconFor: Record<string, string> = {
   }
   .work-text h3 {
     font-size: var(--fs-h4);
-    transition: color 200ms var(--ease);
+    transition:
+      color 200ms var(--ease),
+      transform 600ms var(--ease-expo);
+  }
+  .work-link:hover .work-text h3,
+  .work-item.is-active .work-text h3 {
+    transform: translate3d(6px, 0, 0);
+  }
+  .work-frame {
+    border-radius: var(--r-lg);
+    box-shadow: 0 40px 80px -50px rgb(13 22 25 / 0.55);
   }
   .work-text p {
     margin-top: var(--s-2);
@@ -1205,6 +1310,15 @@ const iconFor: Record<string, string> = {
   .event-media {
     aspect-ratio: 16 / 10;
     background: var(--slate-800);
+    border-radius: var(--r-lg);
+    box-shadow: 0 50px 100px -50px rgb(0 0 0 / 0.8);
+  }
+  .event-media::after {
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  }
+  .events-orb {
+    left: -18%;
+    top: 22%;
   }
   .event-media--nida img {
     object-position: 0% center;
@@ -1295,14 +1409,11 @@ const iconFor: Record<string, string> = {
     padding: clamp(1.75rem, 1.25rem + 2vw, 3rem);
     background: var(--white);
     border: 1px solid var(--line);
-    border-radius: var(--r-md);
-    transition:
-      border-color 240ms var(--ease),
-      box-shadow 240ms var(--ease);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
   }
   .plan:hover {
-    border-color: var(--line-strong);
-    box-shadow: var(--shadow-md);
+    border-color: rgb(11 148 68 / 0.35);
   }
   .plan-top {
     display: flex;
@@ -1315,9 +1426,10 @@ const iconFor: Record<string, string> = {
     place-items: center;
     width: 48px;
     height: 48px;
-    border-radius: var(--r-sm);
-    background: var(--green-50);
+    border-radius: 14px;
+    background: linear-gradient(180deg, var(--green-50), var(--green-100));
     color: var(--green-700);
+    box-shadow: inset 0 0 0 1px rgb(11 148 68 / 0.12);
   }
   .plan h3 {
     font-size: var(--fs-h2);

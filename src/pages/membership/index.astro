@@ -29,7 +29,7 @@ const steps = [
   <section class="section" id="platforms">
     <div class="container">
       <div class="plans">
-        <article class="plan" data-reveal>
+        <article class="plan spotlight lift" data-reveal>
           <span class="plan-icon"><Icon name="building" size={24} /></span>
           <span class="tag">{membership.fonen.audience}</span>
           <h2>{membership.fonen.name}<span>{membership.fonen.fullName}</span></h2>
@@ -43,7 +43,7 @@ const steps = [
             <a href="/membership/fonen/#about" class="btn btn--ghost">Learn more</a>
           </div>
         </article>
-        <article class="plan" data-reveal style="--reveal-delay:100">
+        <article class="plan spotlight lift" data-reveal style="--reveal-delay:100">
           <span class="plan-icon"><Icon name="user" size={24} /></span>
           <span class="tag">{membership.fonpro.audience}</span>
           <h2>{membership.fonpro.name}<span>{membership.fonpro.fullName}</span></h2>
@@ -63,7 +63,7 @@ const steps = [
 
   <section class="section section--subtle">
     <div class="container how">
-      <div class="media how-media" data-reveal="image">
+      <div class="media how-media" data-reveal="image" data-parallax>
         <Image src={heroImg} alt="Business leaders and members in the audience at Spotlight Nigeria 2022" widths={[480, 720, 960]} sizes="(min-width: 1000px) 520px, 100vw" />
       </div>
       <div>
@@ -94,7 +94,7 @@ const steps = [
           Prefer email? Write to <a href="mailto:contact@friendsofnigeria.net">contact@friendsofnigeria.net</a>
         </p>
       </div>
-      <div class="form-card" data-reveal style="--reveal-delay:100">
+      <div class="form-card spotlight" data-reveal style="--reveal-delay:100">
         <MembershipEnquiryForm />
       </div>
     </div>
