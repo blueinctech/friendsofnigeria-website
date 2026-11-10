@@ -1,11 +1,13 @@
 # Decap CMS configuration. Editors sign in with GitHub at /admin/.
-# Every save becomes a commit on `main`; Netlify then rebuilds the site.
+# Sign-in goes through the site's own functions (api/auth.js, api/callback.js);
+# base_url is set to the current site address in admin/index.html.
+# Every save becomes a commit on `main`; Vercel then rebuilds the site.
 # Setup steps are in README.md ("Content manager").
 backend:
   name: github
   repo: blueinctech/friendsofnigeria-website
   branch: main
-  base_url: https://api.netlify.com
+  auth_endpoint: api/auth
   commit_messages:
     create: 'Content: create {{collection}} "{{slug}}"'
     update: 'Content: update {{collection}} "{{slug}}"'

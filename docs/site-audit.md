@@ -18,7 +18,7 @@ This file records what was found on the old site (friendsofnigeria.net, WordPres
 | Contact | `/contact/` |
 | Shop, cart, checkout, donate, `wfp-*`, `home-2`, `home-3`, sample page | Not rebuilt (unused plugin or test pages). They redirect to the closest page. |
 
-All old addresses redirect permanently to the new ones (`public/_redirects`), including the 15 old article URLs that lived at the site root.
+All old addresses redirect permanently to the new ones (`vercel.json`), including the 15 old article URLs that lived at the site root.
 
 Content carried over: 23 team members with photos and bios, 15 news articles with their images, 22 photo albums (up to 24 photos each), 14 partner logos, the five areas of work, mission, vision and values, membership details and fees, and contact details.
 
@@ -68,12 +68,12 @@ Brand: the original FON logo (Europe and standard versions) and the brand green 
 
 | Integration | Status | What is needed |
 | --- | --- | --- |
-| Hosting | Ready for Netlify (`netlify.toml`) | A Netlify account connected to the GitHub repository, and DNS for friendsofnigeria.net |
-| Forms (contact, membership, FONEN, newsletter) | Built for Netlify Forms; work once deployed | Turn on email notifications to contact@friendsofnigeria.net in Netlify |
-| Newsletter mailing list | **Not connected.** Sign-ups are stored in Netlify | Mailchimp (API key, audience ID, server prefix) or Brevo (API key, list ID) |
-| Content manager `/admin/` | Configured (Decap CMS) | A GitHub OAuth app and Netlify OAuth provider, as described in the README |
+| Hosting | Vercel, deploying from GitHub (`vercel.json`) | DNS for friendsofnigeria.net pointed at Vercel |
+| Forms (contact, membership, FONEN, newsletter) | Built (`api/submit.js`), email delivery through Resend | A Resend account and API key, the receiving address, and the sending domain verified in Resend |
+| Newsletter mailing list | Sign-ups are emailed to FON; Brevo list sync is built but off | Brevo API key and list ID, if Brevo will be used |
+| Content manager `/admin/` | Configured (Decap CMS with its own GitHub sign-in) | A GitHub OAuth app; client ID and secret added to Vercel |
 | FONPRO payments | Live HelloAsso links and embedded form | None; payments stay on HelloAsso |
-| Analytics | Not installed | Choose a tool (for example Plausible or Google Analytics 4) and provide the site ID. A cookie banner is needed for GA4 |
+| Analytics | Not installed | Choose a tool (for example Vercel Analytics, Plausible or GA4). A cookie banner is needed for GA4 |
 
 ## 5. QA results
 
@@ -90,4 +90,4 @@ Checked on the production build, at 1440px desktop and 390px mobile, for all 78 
 - SEO: Open Graph and Twitter tags with an image per page, structured data for the organisation, breadcrumbs and articles, `sitemap-index.xml` (77 URLs), `robots.txt`, and redirects from old URLs.
 - `astro check` passes with no errors.
 
-Not tested here: real form submissions (these need the live Netlify site) and the embedded HelloAsso form, which could not load from the test environment.
+Not tested here: real form submissions (these need the Resend key on Vercel) and the embedded HelloAsso form, which could not load from the test environment.

@@ -6,9 +6,13 @@
     <meta name="robots" content="noindex" />
     <title>Content manager · Friends of Nigeria</title>
     <link rel="icon" href="/favicon-32.png" />
-    <!-- Netlify Identity is not used; sign-in is through GitHub (see README). -->
   </head>
   <body>
+    <script>window.CMS_MANUAL_INIT = true;</script>
     <script src="https://unpkg.com/decap-cms@3.3.3/dist/decap-cms.js"></script>
+    <script>
+      // Sign in through this site's own /api/auth, whatever domain it runs on.
+      CMS.init({ config: { backend: { base_url: location.origin } } });
+    </script>
   </body>
 </html>

@@ -2,9 +2,8 @@
  * Progressive form handling for every <form data-form>.
  *
  * - Validates with the browser's constraint API and shows friendly inline errors.
- * - Submits with fetch as URL-encoded data to the form's action. On Netlify, forms
- *   marked `data-netlify="true"` are captured automatically (see README).
- * - Without JavaScript the form still posts normally and lands on /thank-you/.
+ * - Submits with fetch as URL-encoded data to the form's action (api/submit.js on Vercel).
+ * - Without JavaScript the form still posts normally and the handler redirects to /thank-you/.
  */
 
 const messages: Record<string, (el: HTMLInputElement) => string> = {
@@ -93,7 +92,7 @@ function init(form: HTMLFormElement) {
       const body = new URLSearchParams(new FormData(form) as unknown as Record<string, string>).toString();
       const res = await fetch(form.getAttribute('action') || '/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'text/html' },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
         body,
       });
       if (!res.ok) throw new Error(String(res.status));

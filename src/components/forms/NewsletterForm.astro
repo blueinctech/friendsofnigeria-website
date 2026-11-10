@@ -11,9 +11,7 @@ const { tone = 'dark', id = 'newsletter' } = Astro.props;
   class:list={['newsletter', `newsletter--${tone}`]}
   name="newsletter"
   method="POST"
-  action="/thank-you/"
-  data-netlify="true"
-  netlify-honeypot="company-website-url"
+  action="/api/submit"
   data-form
   data-success="<strong>You're subscribed.</strong> Look out for news and event invitations from Friends of Nigeria."
   aria-label="Newsletter subscription"
