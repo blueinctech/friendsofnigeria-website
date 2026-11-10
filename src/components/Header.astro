@@ -137,23 +137,50 @@ const activeIn = (children: { href: string }[] = []) => children.some((c) => c.h
     position: sticky;
     top: 0;
     z-index: 50;
-    background: rgb(255 255 255 / 0.88);
-    backdrop-filter: saturate(180%) blur(14px);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    background: rgb(255 255 255 / 0.72);
+    backdrop-filter: saturate(180%) blur(18px);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
     border-bottom: 1px solid transparent;
     transition:
-      border-color 240ms var(--ease),
-      box-shadow 240ms var(--ease);
+      border-color 400ms var(--ease),
+      background-color 400ms var(--ease),
+      box-shadow 400ms var(--ease);
+    animation: header-in 900ms var(--ease-expo) both;
+  }
+  @keyframes header-in {
+    from {
+      opacity: 0;
+    }
   }
   .site-header.is-scrolled {
-    border-bottom-color: var(--line);
-    box-shadow: 0 6px 24px -18px rgb(13 22 25 / 0.35);
+    background: rgb(255 255 255 / 0.82);
+    border-bottom-color: rgb(13 22 25 / 0.06);
+    box-shadow: 0 10px 30px -22px rgb(13 22 25 / 0.4);
   }
   .header-inner {
     height: var(--header-h);
     display: flex;
     align-items: center;
     gap: var(--s-6);
+    transition: height 500ms var(--ease-expo);
+  }
+  .brand-logo {
+    transition: transform 500ms var(--ease-expo);
+    transform-origin: left center;
+  }
+  @media (min-width: 1140px) {
+    /* The bar condenses once the page scrolls, giving content more room. */
+    .is-scrolled .header-inner {
+      height: 64px;
+    }
+    .is-scrolled .brand-logo {
+      transform: scale(0.84);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .site-header {
+      animation: none;
+    }
   }
   .brand {
     flex: none;
@@ -191,9 +218,17 @@ const activeIn = (children: { href: string }[] = []) => children.some((c) => c.h
     font-weight: 500;
     color: var(--slate-700);
     text-decoration: none;
-    border-radius: var(--r-sm);
-    transition: color 160ms var(--ease);
+    border-radius: var(--r-pill);
+    transition:
+      color 200ms var(--ease),
+      background-color 200ms var(--ease);
     white-space: nowrap;
+  }
+  .nav-item:not(.has-menu) .nav-link {
+    padding: 0 14px;
+  }
+  .nav-item:not(.has-menu) .nav-link:hover {
+    background: rgb(13 22 25 / 0.05);
   }
   .has-menu .nav-link {
     padding-right: 2px;
@@ -205,8 +240,21 @@ const activeIn = (children: { href: string }[] = []) => children.some((c) => c.h
   }
   .nav-link[aria-current='page'] {
     color: var(--ink);
-    box-shadow: inset 0 -2px 0 var(--accent);
-    border-radius: 0;
+    position: relative;
+  }
+  .nav-link[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 3px;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .has-menu .nav-link[aria-current='page']::after {
+    margin-left: -1px;
   }
   .nav-caret {
     display: inline-grid;
@@ -397,6 +445,26 @@ const activeIn = (children: { href: string }[] = []) => children.some((c) => c.h
   }
   .mobile-nav > ul > li {
     border-bottom: 1px solid var(--line);
+    animation: m-item-in 700ms var(--ease-expo) both;
+  }
+  .mobile-nav > ul > li:nth-child(2) { animation-delay: 40ms; }
+  .mobile-nav > ul > li:nth-child(3) { animation-delay: 80ms; }
+  .mobile-nav > ul > li:nth-child(4) { animation-delay: 120ms; }
+  .mobile-nav > ul > li:nth-child(5) { animation-delay: 160ms; }
+  .mobile-nav > ul > li:nth-child(6) { animation-delay: 200ms; }
+  .mobile-nav > ul > li:nth-child(7) { animation-delay: 240ms; }
+  .mobile-nav > ul > li:nth-child(8) { animation-delay: 280ms; }
+  @keyframes m-item-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 16px, 0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-menu,
+    .mobile-nav > ul > li {
+      animation: none;
+    }
   }
   .m-link,
   .m-toggle {
@@ -409,9 +477,9 @@ const activeIn = (children: { href: string }[] = []) => children.some((c) => c.h
     border: 0;
     background: none;
     font-family: var(--font-display);
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 500;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     text-decoration: none;
     color: var(--ink);
     text-align: left;

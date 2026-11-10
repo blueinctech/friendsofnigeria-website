@@ -21,7 +21,7 @@ const events = (await getCollection('events')).sort((a, b) => a.data.order - b.d
       {
         events.map((e, i) => (
           <article class:list={['ev', { 'ev--flip': i % 2 }]}>
-            <div class="media media--zoom ev-media" data-reveal="image">
+            <div class="media media--zoom ev-media" data-reveal="image" data-parallax>
               <Image src={e.data.image} alt={e.data.imageAlt} widths={[640, 960, 1280]} sizes="(min-width: 1000px) 680px, 100vw" loading={i === 0 ? 'eager' : 'lazy'} />
             </div>
             <div class="ev-copy" data-reveal>

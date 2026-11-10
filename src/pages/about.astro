@@ -39,7 +39,7 @@ const chapters = [
   <section class="section">
     <div class="container vm">
       <article class="vm-item" data-reveal>
-        <div class="media vm-media">
+        <div class="media vm-media" data-parallax>
           <Image src={imgVision} alt="A Nigerian business leader in conversation with a European guest at Spotlight Nigeria" widths={[480, 720, 960]} sizes="(min-width: 900px) 560px, 100vw" />
         </div>
         <div class="vm-copy">
@@ -48,7 +48,7 @@ const chapters = [
         </div>
       </article>
       <article class="vm-item vm-item--flip" data-reveal>
-        <div class="media vm-media">
+        <div class="media vm-media" data-parallax>
           <Image src={imgMission} alt="Friends of Nigeria members and volunteers at Spotlight Nigeria" widths={[480, 720, 960, 1280]} sizes="(min-width: 900px) 560px, 100vw" style="object-position:center 80%" />
         </div>
         <div class="vm-copy">
@@ -81,7 +81,7 @@ const chapters = [
       <ul class="values" role="list">
         {
           about.values.map((v, i) => (
-            <li data-reveal style={`--reveal-delay:${i * 70}`}>
+            <li class="spotlight" data-reveal style={`--reveal-delay:${i * 70}`}>
               <span class="v-num">0{i + 1}</span>
               <h3>{v.title}</h3>
               <p>{v.text}</p>
@@ -204,6 +204,8 @@ const chapters = [
     gap: 1px;
     background: var(--line);
     border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
   }
   @media (min-width: 700px) {
     .values {
