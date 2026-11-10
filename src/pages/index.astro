@@ -15,7 +15,7 @@ import heroMain from '../assets/site/area-investment.jpg';
 import heroPanel from '../assets/site/hero-panel.jpg';
 import heroBrand from '../assets/activities/extra-3.jpg';
 import heroCity from '../assets/site/hero-city.jpg';
-import teamPhoto from '../assets/about/team-group.png';
+import teamPhoto from '../assets/site/team-spotlight-2022.jpg';
 import spotlightImg from '../assets/site/spotlight-banner-2023.jpg';
 import nidaImg from '../assets/events/nida-og.jpg';
 
@@ -76,12 +76,11 @@ const iconFor: Record<string, string> = {
       <div class="hero-copy" data-hero-copy>
         <h1 class="hero-title">
           <span class="ht-line" style="--i:0"><span>Connecting Nigeria and&nbsp;Europe.</span></span>
-          <span class="ht-line ht-muted" style="--i:1"><span>Creating opportunities.</span></span>
-          <span class="ht-line ht-green" style="--i:2"><span>Building lasting partnerships.</span></span>
+          <span class="ht-line ht-green" style="--i:1"><span>Building lasting partnerships.</span></span>
         </h1>
         <p class="hero-lead">
-          Friends of Nigeria brings together businesses, investors, professionals and communities across Nigeria and Europe to create meaningful
-          partnerships, unlock opportunities and drive sustainable development.
+          We bring together businesses, investors and professionals across Nigeria and Europe to create partnerships and unlock
+          opportunities.
         </p>
         <div class="hero-actions">
           <a href="/about/" class="hbtn hbtn--primary">
@@ -105,8 +104,8 @@ const iconFor: Record<string, string> = {
               <Image
                 src={heroMain}
                 alt="Nigerian and European business leaders in conversation at the Spotlight Nigeria forum in Paris"
-                widths={[480, 720, 960, 1200]}
-                sizes="(min-width: 1280px) 460px, (min-width: 1100px) 36vw, (min-width: 640px) 430px, 86vw"
+                widths={[600, 900, 1200, 1600]}
+                sizes="(min-width: 1100px) 880px, (min-width: 640px) 820px, 150vw"
                 loading="eager"
                 fetchpriority="high"
               />
@@ -117,7 +116,7 @@ const iconFor: Record<string, string> = {
         <div class="hs-layer hs-a" data-depth="1.3">
           <div class="hs-float">
             <figure class="hs-frame hs-frame--card">
-              <Image src={heroPanel} alt="Panel discussion on stage at Spotlight Nigeria 2023 in Paris" widths={[320, 480, 640]} sizes="(min-width: 1000px) 230px, 34vw" loading="eager" />
+              <Image src={heroPanel} alt="Panel discussion on stage at Spotlight Nigeria 2023 in Paris" widths={[320, 480, 640]} sizes="(min-width: 1000px) 240px, 40vw" loading="eager" />
             </figure>
           </div>
         </div>
@@ -125,7 +124,7 @@ const iconFor: Record<string, string> = {
         <div class="hs-layer hs-b" data-depth="1.8">
           <div class="hs-float">
             <figure class="hs-frame hs-frame--card">
-              <Image src={heroBrand} alt="Nigerian and European professionals in conversation at a Friends of Nigeria networking evening" widths={[320, 480, 640]} sizes="(min-width: 1000px) 200px, 32vw" loading="eager" />
+              <Image src={heroBrand} alt="Nigerian and European professionals in conversation at a Friends of Nigeria networking evening" widths={[360, 540, 720]} sizes="(min-width: 1000px) 360px, 60vw" loading="eager" />
             </figure>
           </div>
         </div>
@@ -165,9 +164,9 @@ const iconFor: Record<string, string> = {
         <div class="about-media media" data-reveal="image" data-parallax>
           <Image
             src={teamPhoto}
-            alt="The Friends of Nigeria team and volunteers on stage at Spotlight Nigeria in Paris"
+            alt="The Friends of Nigeria team with speakers and guests at Spotlight Nigeria 2022 in Paris"
             widths={[640, 960, 1280, 1600]}
-            sizes="(min-width: 1100px) 640px, 100vw"
+            sizes="(min-width: 1100px) 700px, 110vw"
             loading="lazy"
           />
         </div>
@@ -409,7 +408,7 @@ const iconFor: Record<string, string> = {
         <div data-reveal>{lead && <NewsCard post={lead} variant="feature" />}</div>
         <ul class="news-list" role="list">
           {
-            rest.slice(0, 4).map((p, i) => (
+            rest.slice(0, 3).map((p, i) => (
               <li data-reveal style={`--reveal-delay:${i * 70}`}>
                 <NewsCard post={p} variant="compact" />
               </li>
@@ -430,7 +429,7 @@ const iconFor: Record<string, string> = {
         </div>
         <a href="/partners/" class="link-arrow" data-reveal>Partner with us <Icon name="arrow-right" /></a>
       </div>
-      <PartnerGrid variant="marquee" />
+      <PartnerGrid />
     </div>
   </section>
 
@@ -986,6 +985,38 @@ const iconFor: Record<string, string> = {
     }
   }
   @media (max-width: 639px) {
+    /* Phones: tighter copy so the photos start inside the first screen. */
+    .hero {
+      padding-top: 1.25rem;
+    }
+    .hero-grid {
+      gap: 1.75rem;
+    }
+    .hero-title {
+      font-size: 2.25rem;
+    }
+    .hero-lead {
+      margin-top: var(--s-4);
+      font-size: 1.0625rem;
+      line-height: 1.55;
+    }
+    .hero-actions {
+      margin-top: var(--s-5);
+      gap: 10px;
+    }
+    .hbtn {
+      min-height: 50px;
+      font-size: 0.9375rem;
+    }
+    .hbtn--primary {
+      padding-left: 20px;
+    }
+    .hbtn--ghost {
+      padding: 0 18px;
+    }
+    .chapters {
+      display: none;
+    }
     .hero-stage {
       aspect-ratio: 1 / 1.08;
     }
@@ -1054,7 +1085,7 @@ const iconFor: Record<string, string> = {
     aspect-ratio: 4 / 3;
   }
   .about-media img {
-    object-position: 50% 100%;
+    object-position: 50% 40%;
   }
   .about-copy {
     display: grid;
@@ -1268,6 +1299,12 @@ const iconFor: Record<string, string> = {
   .work-mobile-img {
     aspect-ratio: 16 / 9;
     margin-bottom: var(--s-6);
+  }
+  /* Phones: icon list only, to keep the homepage short. */
+  @media (max-width: 639px) {
+    .work-mobile-img {
+      display: none;
+    }
   }
   @media (min-width: 1000px) {
     .work-mobile-img {

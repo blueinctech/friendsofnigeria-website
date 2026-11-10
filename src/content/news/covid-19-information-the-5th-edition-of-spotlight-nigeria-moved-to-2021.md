@@ -1,10 +1,10 @@
 ---
-title: "COVID-19 INFORMATION: THE 5TH EDITION OF SPOTLIGHT NIGERIA MOVED TO 2021"
+title: "COVID-19 information: the 5th edition of Spotlight Nigeria moved to 2021"
 date: "2020-06-03"
 category: "Events"
 excerpt: "In the wake of the COVID-19 pandemic, we’ve all witnessed how rapidly the world has changed overnight, forcing countries to close borders in a bid to safeguard the health and wellbeing of their citizens. Today, even as countries put in place…"
 image: "../../assets/news/covid-19-information-the-5th-edition-of-spotlight-nigeria-mo.jpg"
-imageAlt: "COVID-19 INFORMATION: THE 5TH EDITION OF SPOTLIGHT NIGERIA MOVED TO 2021"
+imageAlt: "COVID-19 information: the 5th edition of Spotlight Nigeria moved to 2021"
 ---
 
 In the wake of the COVID-19 pandemic, we’ve all witnessed how rapidly the world has changed overnight, forcing countries to close borders in a bid to safeguard the health and wellbeing of their citizens.

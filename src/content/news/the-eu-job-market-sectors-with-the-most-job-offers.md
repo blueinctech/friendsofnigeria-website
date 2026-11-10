@@ -1,10 +1,10 @@
 ---
-title: "THE EU JOB MARKET – SECTORS WITH THE MOST JOB OFFERS"
+title: "The EU job market – sectors with the most job offers"
 date: "2020-12-20"
 category: "Careers"
 excerpt: "The EU Job Market – Sectors with the most job offers For part 3, I’ll be outlining the most “in-demand” job sectors in Europe. This is based on data analysis of the job offers on most European job search websites. The world is constantly changing,…"
 image: "../../assets/news/the-eu-job-market-sectors-with-the-most-job-offers.jpg"
-imageAlt: "THE EU JOB MARKET – SECTORS WITH THE MOST JOB OFFERS"
+imageAlt: "The EU job market – sectors with the most job offers"
 ---
 
 ## The EU Job Market – Sectors with the most job offers
