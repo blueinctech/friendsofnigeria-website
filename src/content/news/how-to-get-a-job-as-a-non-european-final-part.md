@@ -1,10 +1,10 @@
 ---
-title: "HOW TO GET A JOB AS A NON-EUROPEAN – FINAL PART"
+title: "How to get a job as a non-European – Final part"
 date: "2020-12-30"
 category: "Careers"
 excerpt: "USEFUL TIPS ON CAREER DEVELOPMENT In this final post we will be sharing some skill development resources to support your career as a non-EU citizen. As much as obtaining a master’s degree is very important, acquiring additional skills always gives…"
 image: "../../assets/news/how-to-get-a-job-as-a-non-european-final-part.jpg"
-imageAlt: "HOW TO GET A JOB AS A NON-EUROPEAN – FINAL PART"
+imageAlt: "How to get a job as a non-European – Final part"
 ---
 
 ## Useful Tips on Career Development

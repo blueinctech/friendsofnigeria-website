@@ -1,10 +1,10 @@
 ---
-title: "HOW TO GET A JOB IN EUROPE AS A NON-EUROPEAN – Part I"
+title: "How to get a job in Europe as a non-European – Part I"
 date: "2020-12-05"
 category: "Careers"
 excerpt: "TOP 6 EASIEST COUNTRIES TO FIND A JOB IN EUROPE Are you getting frustrated and even feeling stuck with finding a job after graduation? Or maybe you simply feel it’s time to make a move and explore better opportunities in different countries but…"
 image: "../../assets/news/how-to-get-a-job-in-europe-as-a-non-european-part-i.jpg"
-imageAlt: "HOW TO GET A JOB IN EUROPE AS A NON-EUROPEAN – Part I"
+imageAlt: "How to get a job in Europe as a non-European – Part I"
 ---
 
 ## Top 6 Easiest Countries to Find a Job in Europe
