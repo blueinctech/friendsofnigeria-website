@@ -11,13 +11,37 @@ import about from '../data/about.json';
 import membership from '../data/membership.json';
 import site from '../data/site.json';
 
+import { getImage } from 'astro:assets';
 import heroMain from '../assets/site/area-investment.jpg';
+import slideConversation from '../assets/site/hero-conversation.jpg';
+import slideSpeaker from '../assets/activities/extra-2.jpg';
+import slideNetworking from '../assets/activities/extra-1.jpg';
+import slideAudience from '../assets/site/audience-2022.jpg';
+import slideExchange from '../assets/activities/extra-4.jpg';
 import heroPanel from '../assets/site/hero-panel.jpg';
 import heroBrand from '../assets/activities/extra-3.jpg';
 import heroCity from '../assets/site/hero-city.jpg';
 import teamPhoto from '../assets/site/team-spotlight-2022.jpg';
 import spotlightImg from '../assets/site/spotlight-banner-2023.jpg';
 import nidaImg from '../assets/events/nida-og.jpg';
+
+// Hero slideshow: photos from Friends of Nigeria events. The first slide is
+// rendered normally (it is the LCP image); the rest carry their srcset in data
+// attributes and are only fetched by the script just before they are shown.
+const slideSizes = '(min-width: 1100px) 460px, (min-width: 640px) 430px, 90vw';
+const slideDefs = [
+  { src: slideConversation, pos: '62% 32%', alt: 'Two women in conversation during a networking break at Spotlight Nigeria in Paris' },
+  { src: slideSpeaker, pos: '50% 30%', alt: 'A speaker addresses delegates from the podium at a Friends of Nigeria event in Paris' },
+  { src: slideNetworking, pos: '50% 45%', alt: 'Guests networking over refreshments at a Friends of Nigeria event in Paris' },
+  { src: slideAudience, pos: '45% 50%', alt: 'Nigerian and European delegates listening to a session at Spotlight Nigeria in Paris' },
+  { src: slideExchange, pos: '50% 40%', alt: 'Professionals exchanging ideas at a Friends of Nigeria networking evening' },
+];
+const slides = await Promise.all(
+  slideDefs.map(async (d) => {
+    const img = await getImage({ src: d.src, widths: [600, 900, 1200], sizes: slideSizes, format: 'webp' });
+    return { ...d, url: img.src, srcset: img.srcSet.attribute };
+  }),
+);
 
 const areas = (await getCollection('areas')).sort((a, b) => a.data.order - b.data.order);
 const exec = (await getCollection('team', (p) => p.data.group === 'executive-board-europe')).sort((a, b) => a.data.order - b.data.order);
@@ -100,15 +124,32 @@ const iconFor: Record<string, string> = {
       <div class="hero-stage" data-hero-stage>
         <div class="hs-layer hs-main" data-depth="0.6">
           <div class="hs-float">
-            <figure class="hs-frame hs-frame--main">
-              <Image
-                src={heroMain}
-                alt="Nigerian and European business leaders in conversation at the Spotlight Nigeria forum in Paris"
-                widths={[600, 900, 1200, 1600]}
-                sizes="(min-width: 1100px) 880px, (min-width: 640px) 820px, 150vw"
-                loading="eager"
-                fetchpriority="high"
-              />
+            <figure class="hs-frame hs-frame--main" data-slideshow>
+              <div class="hs-slide is-active is-first" data-slide style="--pos:48% 40%">
+                <Image
+                  src={heroMain}
+                  alt="Nigerian and European business leaders in conversation at the Spotlight Nigeria forum in Paris"
+                  widths={[600, 900, 1200, 1600]}
+                  sizes="(min-width: 1100px) 880px, (min-width: 640px) 820px, 150vw"
+                  loading="eager"
+                  fetchpriority="high"
+                />
+              </div>
+              {
+                slides.map((sl, i) => (
+                  <div class="hs-slide" data-slide data-kb={i % 2 ? 'a' : 'b'} style={`--pos:${sl.pos}`} aria-hidden="true">
+                    <img alt={sl.alt} data-src={sl.url} data-srcset={sl.srcset} sizes={slideSizes} decoding="async" width="900" height="600" />
+                  </div>
+                ))
+              }
+              <button class="hs-toggle" type="button" data-slideshow-toggle aria-label="Pause slideshow" hidden>
+                <svg class="hs-ring" viewBox="0 0 36 36" aria-hidden="true">
+                  <circle class="hs-ring-track" cx="18" cy="18" r="16" />
+                  <circle class="hs-ring-fill" cx="18" cy="18" r="16" pathLength="1" />
+                </svg>
+                <svg class="hs-icon hs-icon--pause" viewBox="0 0 16 16" aria-hidden="true"><rect x="4.5" y="3.5" width="2.2" height="9" rx="0.6" /><rect x="9.3" y="3.5" width="2.2" height="9" rx="0.6" /></svg>
+                <svg class="hs-icon hs-icon--play" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 3.6v8.8a.6.6 0 0 0 .9.5l6.8-4.4a.6.6 0 0 0 0-1L6.4 3.1a.6.6 0 0 0-.9.5Z" /></svg>
+              </button>
             </figure>
           </div>
         </div>
@@ -808,13 +849,131 @@ const iconFor: Record<string, string> = {
     inset: 0;
     background: linear-gradient(180deg, transparent 62%, rgb(13 22 25 / 0.18));
     pointer-events: none;
+    z-index: 2;
   }
-  .hs-frame--main :global(img) {
-    object-position: 48% 40%;
+  /* ---------- Hero slideshow ----------
+     Slides are stacked; the active one fades in over the previous one while
+     each photo slowly zooms and drifts (Ken Burns). */
+  .hs-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 1600ms cubic-bezier(0.45, 0, 0.2, 1);
+  }
+  .hs-slide.is-active {
+    opacity: 1;
+    z-index: 1;
+  }
+  .hs-slide.is-leaving {
+    opacity: 0;
+    z-index: 0;
+  }
+  .hs-slide :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--pos, 50% 50%);
+    transform: scale(1.04);
     transform-origin: 55% 45%;
+    will-change: transform;
+  }
+  .hs-slide.is-first :global(img) {
     animation:
       img-settle 2400ms var(--ease) 200ms both,
-      img-breathe 18s ease-in-out 2.6s infinite alternate;
+      kb-in 9s linear 2.6s forwards;
+  }
+  .hs-slide[data-kb='a']:is(.is-active, .is-leaving) :global(img) {
+    animation: kb-in 8.2s linear both;
+  }
+  .hs-slide[data-kb='b']:is(.is-active, .is-leaving) :global(img) {
+    animation: kb-out 8.2s linear both;
+  }
+  @keyframes kb-in {
+    from {
+      transform: scale(1.04) translate3d(0, 0, 0);
+    }
+    to {
+      transform: scale(1.14) translate3d(-1.2%, -0.8%, 0);
+    }
+  }
+  @keyframes kb-out {
+    from {
+      transform: scale(1.15) translate3d(1.2%, 0.6%, 0);
+    }
+    to {
+      transform: scale(1.05) translate3d(0, 0, 0);
+    }
+  }
+
+  /* Pause control with a ring that fills until the next photo. */
+  .hs-toggle {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: var(--white);
+    background: rgb(13 22 25 / 0.32);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    opacity: 0.85;
+    transition:
+      opacity 300ms var(--ease),
+      background-color 300ms var(--ease),
+      transform 400ms var(--ease-spring);
+  }
+  .hs-toggle[hidden] {
+    display: none;
+  }
+  .hs-toggle:hover {
+    opacity: 1;
+    background: rgb(13 22 25 / 0.5);
+    transform: scale(1.06);
+  }
+  .hs-toggle > svg {
+    grid-area: 1 / 1;
+  }
+  .hs-ring {
+    width: 38px;
+    height: 38px;
+    transform: rotate(-90deg);
+    fill: none;
+    stroke-width: 2;
+  }
+  .hs-ring-track {
+    stroke: rgb(255 255 255 / 0.22);
+  }
+  .hs-ring-fill {
+    stroke: var(--white);
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  .hs-toggle.is-timing .hs-ring-fill {
+    animation: ring-fill var(--slide-ms, 5000ms) linear forwards;
+  }
+  @keyframes ring-fill {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  .hs-icon {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+  }
+  .hs-icon--play,
+  .hs-toggle[aria-pressed='true'] .hs-icon--pause {
+    display: none;
+  }
+  .hs-toggle[aria-pressed='true'] .hs-icon--play {
+    display: block;
   }
   @keyframes frame-reveal {
     from {
@@ -830,14 +989,6 @@ const iconFor: Record<string, string> = {
     }
     to {
       transform: scale(1.04);
-    }
-  }
-  @keyframes img-breathe {
-    from {
-      transform: scale(1.04);
-    }
-    to {
-      transform: scale(1.09);
     }
   }
 
@@ -1064,8 +1215,11 @@ const iconFor: Record<string, string> = {
     .hc-drift {
       transform: scale(1.04);
     }
-    .hs-frame--main :global(img) {
+    .hs-slide :global(img) {
       transform: scale(1.04);
+    }
+    .hs-toggle {
+      display: none;
     }
   }
 
@@ -1538,6 +1692,104 @@ const iconFor: Record<string, string> = {
 </style>
 
 <script>
+  // Hero slideshow: crossfade between event photos every few seconds.
+  // Lazy-loads each upcoming photo and waits until it is decoded before
+  // fading it in, pauses when off screen or in a background tab, and never
+  // starts for visitors who prefer reduced motion.
+  const show = document.querySelector<HTMLElement>('[data-slideshow]');
+  if (show && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const slides = Array.from(show.querySelectorAll<HTMLElement>('[data-slide]'));
+    const toggle = show.querySelector<HTMLButtonElement>('[data-slideshow-toggle]');
+    const HOLD = 5000;
+    const FADE = 1600;
+    let index = 0;
+    let timer = 0;
+    let paused = false;
+    let visible = true;
+
+    const load = (slide: HTMLElement) => {
+      const img = slide.querySelector('img')!;
+      if (img.dataset.src) {
+        img.srcset = img.dataset.srcset ?? '';
+        img.src = img.dataset.src;
+        delete img.dataset.src;
+        delete img.dataset.srcset;
+      }
+      return img.decode().catch(() => undefined);
+    };
+
+    const restartRing = () => {
+      if (!toggle) return;
+      toggle.classList.remove('is-timing');
+      void toggle.offsetWidth;
+      if (!paused && visible) toggle.classList.add('is-timing');
+    };
+
+    const schedule = () => {
+      window.clearTimeout(timer);
+      if (paused || !visible || document.hidden) return;
+      restartRing();
+      // Warm up the photo after the next one while this one is on screen.
+      load(slides[(index + 1) % slides.length]);
+      timer = window.setTimeout(advance, HOLD);
+    };
+
+    const advance = async () => {
+      const prev = slides[index];
+      const nextIndex = (index + 1) % slides.length;
+      const next = slides[nextIndex];
+      await load(next);
+      if (paused || !visible) return;
+      next.classList.remove('is-leaving');
+      next.classList.add('is-active');
+      next.removeAttribute('aria-hidden');
+      prev.classList.remove('is-active');
+      prev.classList.add('is-leaving');
+      prev.setAttribute('aria-hidden', 'true');
+      index = nextIndex;
+      window.setTimeout(() => {
+        prev.classList.remove('is-leaving', 'is-first');
+      }, FADE + 50);
+      schedule();
+    };
+
+    if (slides.length > 1) {
+      show.style.setProperty('--slide-ms', `${HOLD}ms`);
+      if (toggle) {
+        toggle.hidden = false;
+        toggle.setAttribute('aria-pressed', 'false');
+        toggle.addEventListener('click', () => {
+          paused = !paused;
+          toggle.setAttribute('aria-pressed', String(paused));
+          toggle.setAttribute('aria-label', paused ? 'Play slideshow' : 'Pause slideshow');
+          if (paused) {
+            window.clearTimeout(timer);
+            toggle.classList.remove('is-timing');
+          } else {
+            schedule();
+          }
+        });
+      }
+      new IntersectionObserver(
+        ([entry]) => {
+          visible = entry.isIntersecting;
+          if (visible) schedule();
+          else {
+            window.clearTimeout(timer);
+            toggle?.classList.remove('is-timing');
+          }
+        },
+        { threshold: 0.15 },
+      ).observe(show);
+      document.addEventListener('visibilitychange', () => (document.hidden ? window.clearTimeout(timer) : schedule()));
+      // Let the opening animation finish before the first change.
+      window.setTimeout(() => {
+        load(slides[1]);
+        schedule();
+      }, 1800);
+    }
+  }
+
   // "What we do": swap the preview image as the visitor moves through the list.
   const root = document.querySelector<HTMLElement>('[data-areas]');
   if (root) {
