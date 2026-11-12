@@ -2,7 +2,7 @@
 title: "FON partners with Aldelia to host job fair webinar for professional Nigerians in Europe"
 date: "2020-12-01"
 category: "Events"
-excerpt: "As the Covid-19 health crisis continues to impact economic activities across industries, Friends of Nigeria (FON) in partnership with Aldelia, a renowned European recruitment agency has organized a job fair webinar for young Nigerians in Europe. The…"
+excerpt: "Friends of Nigeria and the European recruitment agency Aldelia hosted “Hiring African Talents”, a job fair webinar on opportunities for Nigerian professionals across Europe."
 image: "../../assets/news/fon-partners-with-aldelia-to-host-job-fair-webinar-for-profe.jpg"
 imageAlt: "FON partners with Aldelia to host job fair webinar for professional Nigerians in Europe"
 ---

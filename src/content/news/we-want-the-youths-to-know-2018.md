@@ -2,7 +2,7 @@
 title: "We Want the Youths to Know – 2018"
 date: "2018-06-21"
 category: "Events"
-excerpt: "SME’s and young entrepreneurs in Nigeria face numerous challenges."
+excerpt: "SMEs and young entrepreneurs in Nigeria face numerous challenges. #WeWantTheYouthsToKnow believes access to education and guidance can change that."
 image: "../../assets/news/we-want-the-youths-to-know-2018.jpg"
 imageAlt: "We Want the Youths to Know – 2018"
 ---

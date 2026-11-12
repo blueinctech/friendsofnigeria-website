@@ -48,6 +48,33 @@ if (reduce || !('IntersectionObserver' in window)) {
     { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
   );
   revealEls.forEach((el) => io.observe(el));
+
+  // Safety net: a fast fling, an anchor jump or the End key can carry an
+  // element past the viewport between two observer checks. Anything that is
+  // already above the bottom of the screen is shown straight away.
+  let pending = Array.from(revealEls);
+  let queued = false;
+  const sweep = () => {
+    queued = false;
+    const limit = window.innerHeight;
+    pending = pending.filter((el) => {
+      if (el.classList.contains('is-visible')) return false;
+      if (el.getBoundingClientRect().top < limit) {
+        el.classList.add('is-visible');
+        io.unobserve(el);
+        return false;
+      }
+      return true;
+    });
+    if (!pending.length) window.removeEventListener('scroll', onScroll);
+  };
+  const onScroll = () => {
+    if (!queued) {
+      queued = true;
+      window.setTimeout(() => requestAnimationFrame(sweep), 120);
+    }
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
 }
 
 /* Count numbers up when they come into view. */
