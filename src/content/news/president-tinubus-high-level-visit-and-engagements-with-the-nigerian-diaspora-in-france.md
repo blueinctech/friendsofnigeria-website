@@ -2,7 +2,7 @@
 title: "President Tinubu’s High-Level Visit and Engagements with the Nigerian Diaspora in France"
 date: "2023-06-27"
 category: "Diaspora"
-excerpt: "President Bola Tinubu embarked on his first official international trip as the President of Nigeria, visiting France for the Summit for a New Global Financing Pact hosted by President Emmanuel Macron. During this visit, President Tinubu had a…"
+excerpt: "During his first official trip abroad as President, Bola Tinubu met the Nigerian diaspora in Paris to discuss key reforms and crucial matters."
 image: "../../assets/news/president-tinubus-high-level-visit-and-engagements-with-the-.jpg"
 imageAlt: "President Tinubu’s High-Level Visit and Engagements with the Nigerian Diaspora in France"
 ---

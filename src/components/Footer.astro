@@ -129,6 +129,12 @@ const year = new Date().getFullYear();
     color: transparent;
     transform: translateY(18%);
   }
+  /* On phones the cropped wordmark reads as a rendering glitch: leave it out. */
+  @media (max-width: 639px) {
+    .footer-mark {
+      display: none;
+    }
+  }
   .footer-top {
     display: grid;
     gap: var(--s-7);

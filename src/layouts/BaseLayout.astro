@@ -20,7 +20,7 @@ interface Props {
 
 const {
   title,
-  description = site.description,
+  description: rawDescription = site.description,
   image = defaultOg,
   imageAlt = 'Friends of Nigeria members and guests at Spotlight Nigeria in Paris',
   type = 'website',
@@ -28,6 +28,10 @@ const {
   noindex = false,
   jsonLd,
 } = Astro.props;
+
+// Search results show about 160 characters: cut longer descriptions at a word.
+const clean = rawDescription.replace(/\s+/g, ' ').trim();
+const description = clean.length <= 160 ? clean : `${clean.slice(0, 157).replace(/[\s,;:.–—-]+\S*$/, '')}…`;
 
 const fullTitle = title === site.name ? `${site.name} | Connecting Nigeria and Europe` : `${title} | ${site.name}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);

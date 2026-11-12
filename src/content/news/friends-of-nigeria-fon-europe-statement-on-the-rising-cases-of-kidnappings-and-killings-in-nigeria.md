@@ -2,7 +2,7 @@
 title: "Friends of Nigeria (FON) Europe Statement on the Rising Cases of Kidnappings and Killings in Nigeria"
 date: "2026-06-12"
 category: "Statement"
-excerpt: "Friends of Nigeria Europe expresses deep concern over the recurring incidents of kidnappings, violent attacks, and killings reported across parts of Nigeria. These incidents are more than security headlines. They represent families in grief,…"
+excerpt: "Friends of Nigeria Europe expresses deep concern over the recurring incidents of kidnappings, violent attacks and killings reported across parts of Nigeria."
 image: "../../assets/news/friends-of-nigeria-fon-europe-statement-on-the-rising-cases-.jpg"
 imageAlt: "Friends of Nigeria (FON) Europe Statement on the Rising Cases of Kidnappings and Killings in Nigeria"
 ---

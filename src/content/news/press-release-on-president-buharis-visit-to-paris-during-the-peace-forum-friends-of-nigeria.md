@@ -2,7 +2,7 @@
 title: "Press release on President Buhari’s visit to Paris during the Peace Forum: Friends of Nigeria"
 date: "2018-11-13"
 category: "Press release"
-excerpt: "Yesterday, the 12th of November, 2018, Friends of Nigeria(FON) members"
+excerpt: "On 12 November 2018, Friends of Nigeria led a delegation of Nigerian professionals to the President’s interactive session with the Nigerian community in France."
 image: "../../assets/news/press-release-on-president-buharis-visit-to-paris-during-the.jpg"
 imageAlt: "Press release on President Buhari’s visit to Paris during the Peace Forum: Friends of Nigeria"
 ---

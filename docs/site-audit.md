@@ -55,6 +55,9 @@ Brand: the original FON logo (Europe and standard versions) and the brand green 
 - FONEN and FONPRO benefit lists were put together from the activities described on the old site (business breakfasts, trade missions, matchmaking, training, Spotlight Nigeria). Please check they match what members actually receive.
 - "Where we work" descriptions for France, Germany, Belgium & Luxembourg and Nigeria are short summaries based on the team page. Please check.
 - News categories (Statement, Press release, Diaspora, Events, Careers, Interview, Opinion) were assigned during migration.
+- News summaries (the short text on news cards and in search results) were rewritten in November 2026 from each article's own opening, because the migrated WordPress summaries were cut mid-sentence or started with dates and all-caps headings. Please check they read well.
+- Small spelling fixes in bios: "Sates Governments" → "State Governments" (Abiodun Odunuga), "Due Dilligence" → "Due Diligence" and "Société General" → "Société Générale" (Oyindamola Olusunmade).
+- The NCAE 2018 article linked to the full speech as a PDF on the old site (`/wp-content/uploads/2018/06/FON-SPEECH-AT-NCAE-2018-1.pdf`). That file no longer exists on the old site either, so the link was removed. Please send the PDF if it should be offered again.
 
 ### 3.4 Dates and names
 - Album dates are taken from the old gallery and article dates. Where only a year was known, the site shows the year only. Please correct any wrong dates.

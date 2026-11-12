@@ -2,12 +2,12 @@
 title: "How to get a job in Europe as a non-European – Part II"
 date: "2020-12-14"
 category: "Careers"
-excerpt: "In our previous blog post, we touched on the easiest countries to find a job and the available work permit options for non-EU citizens. In this post, we will dive into the available resources and useful links you need to simplify the job search…"
+excerpt: "Resources and useful links to simplify the job search in Europe for non-EU citizens, country by country."
 image: "../../assets/news/how-to-get-a-job-in-europe-as-a-non-european-part-ii.jpg"
 imageAlt: "How to get a job in Europe as a non-European – Part II"
 ---
 
-In our previous blog [post](https://friendsofnigeria.net/how-to-get-a-job-in-europe-as-a-non-european-part-1/), we touched on the easiest countries to find a job and the available work permit options for non-EU citizens. In this post, we will dive into the available resources and useful links you need to simplify the job search process.
+In our previous blog [post](/news/how-to-get-a-job-in-europe-as-a-non-european-part-i/), we touched on the easiest countries to find a job and the available work permit options for non-EU citizens. In this post, we will dive into the available resources and useful links you need to simplify the job search process.
 
 - ### **THE NETHERLANDS**
 
