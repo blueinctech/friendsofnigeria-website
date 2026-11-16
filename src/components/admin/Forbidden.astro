@@ -1,0 +1,17 @@
+---
+import Icon from './Icon';
+interface Props {
+  message?: string;
+}
+const { message = 'Your account does not have access to this section. Ask a super administrator if you need it.' } = Astro.props;
+Astro.response.status = 403;
+---
+
+<div class="card">
+  <div class="empty">
+    <Icon name="admins" size={32} />
+    <h2>No access</h2>
+    <p>{message}</p>
+    <a class="btn btn--ghost" href="/admin/">Back to the dashboard</a>
+  </div>
+</div>

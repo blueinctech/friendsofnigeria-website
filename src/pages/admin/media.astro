@@ -1,0 +1,29 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import Forbidden from '../../components/admin/Forbidden.astro';
+import MediaLibraryPage from '../../components/admin/MediaBrowser';
+import { can } from '../../lib/cms/permissions';
+import { MAX_UPLOAD_BYTES } from '../../lib/server/media';
+const admin = Astro.locals.admin!;
+const mb = Math.round((MAX_UPLOAD_BYTES / 1024 / 1024) * 10) / 10;
+---
+
+<AdminLayout title="Media Library" active="media">
+  {
+    can(admin, 'media', 'view') ? (
+      <>
+        <div class="page-head">
+          <div>
+            <h1>Media Library</h1>
+            <p>
+              Every image and document used on the website. Upload JPG, PNG, WebP, GIF, SVG or PDF files up to {mb} MB. Large photos are resized in your browser before upload, and the website serves optimised WebP copies automatically. A file can only be deleted when nothing uses it.
+            </p>
+          </div>
+        </div>
+        <MediaLibraryPage client:load canDelete={can(admin, 'media', 'delete')} canEdit={can(admin, 'media', 'edit')} />
+      </>
+    ) : (
+      <Forbidden />
+    )
+  }
+</AdminLayout>

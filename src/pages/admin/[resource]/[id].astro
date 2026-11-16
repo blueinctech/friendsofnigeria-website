@@ -1,0 +1,21 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import Forbidden from '../../../components/admin/Forbidden.astro';
+import ResourceEditor from '../../../components/admin/ResourceEditor';
+import { resourceFor } from '../../../lib/cms/resources';
+import { can } from '../../../lib/cms/permissions';
+import { one } from '../../../lib/server/db';
+import { isUuid } from '../../../lib/server/validate';
+
+const r = resourceFor(Astro.params.resource ?? '');
+const id = Astro.params.id ?? '';
+if (!r || !isUuid(id)) return new Response(null, { status: 404 });
+const admin = Astro.locals.admin!;
+const allowed = can(admin, r.module, 'view');
+const row = allowed ? await one<Record<string, unknown>>(`SELECT ${r.labelField} AS label FROM ${r.table} WHERE id = $1`, [id]) : null;
+if (allowed && !row) return Astro.redirect(`/admin/${r.key}/`);
+---
+
+<AdminLayout title={row ? String(row.label) : r.label} active={r.module}>
+  {allowed ? <ResourceEditor client:load resource={r.key} id={id} canDelete={can(admin, r.module, 'delete')} siteOrigin={Astro.url.origin} /> : <Forbidden />}
+</AdminLayout>

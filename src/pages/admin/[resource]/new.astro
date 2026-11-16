@@ -1,0 +1,15 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import Forbidden from '../../../components/admin/Forbidden.astro';
+import ResourceEditor from '../../../components/admin/ResourceEditor';
+import { resourceFor } from '../../../lib/cms/resources';
+import { can } from '../../../lib/cms/permissions';
+
+const r = resourceFor(Astro.params.resource ?? '');
+if (!r) return new Response(null, { status: 404 });
+const admin = Astro.locals.admin!;
+---
+
+<AdminLayout title={`New ${r.singular}`} active={r.module}>
+  {can(admin, r.module, 'create') ? <ResourceEditor client:load resource={r.key} id={null} canDelete={false} siteOrigin={Astro.url.origin} /> : <Forbidden />}
+</AdminLayout>

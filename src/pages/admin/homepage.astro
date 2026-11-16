@@ -1,0 +1,25 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import Forbidden from '../../components/admin/Forbidden.astro';
+import SettingsEditor from '../../components/admin/SettingsEditor';
+import { can } from '../../lib/cms/permissions';
+const admin = Astro.locals.admin!;
+---
+
+<AdminLayout title="Homepage" active="homepage">
+  {
+    can(admin, 'homepage', 'view') ? (
+      <>
+        <div class="page-head">
+          <div>
+            <h1>Homepage</h1>
+            <p>The hero, slideshow, floating cards, about section, featured events and the headings of every homepage section. News, events, team members and partners shown on the homepage come from their own sections.</p>
+          </div>
+        </div>
+        <SettingsEditor client:load settingsKey="home" previewUrl="/" />
+      </>
+    ) : (
+      <Forbidden />
+    )
+  }
+</AdminLayout>

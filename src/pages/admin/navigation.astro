@@ -1,0 +1,25 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import Forbidden from '../../components/admin/Forbidden.astro';
+import NavigationEditor from '../../components/admin/NavigationEditor';
+import { can } from '../../lib/cms/permissions';
+const admin = Astro.locals.admin!;
+---
+
+<AdminLayout title="Navigation" active="navigation">
+  {
+    can(admin, 'navigation', 'view') ? (
+      <>
+        <div class="page-head">
+          <div>
+            <h1>Navigation</h1>
+            <p>The menus at the top of every page, the Membership dropdown and the footer links. Add, rename, reorder, nest under a parent, or hide links without deleting them.</p>
+          </div>
+        </div>
+        <NavigationEditor client:load />
+      </>
+    ) : (
+      <Forbidden />
+    )
+  }
+</AdminLayout>

@@ -105,6 +105,16 @@ export function MediaBrowser({ mode, multiple, accept = 'image', onPick, canEdit
     return () => clearTimeout(t);
   }, [q, kind, missingAlt]);
 
+  // Open a file directly from a link such as /admin/media/?id=… (used by the activity log).
+  useEffect(() => {
+    if (mode !== 'manage' || typeof location === 'undefined') return;
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) return;
+    api(`/api/admin/media/${encodeURIComponent(id)}/`)
+      .then((data) => setActive(data.item))
+      .catch(() => toast('That file no longer exists.', 'error'));
+  }, []);
+
   async function upload(files: FileList | File[]) {
     const list = [...files];
     if (!list.length) return;

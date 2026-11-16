@@ -1,0 +1,23 @@
+---
+import type { Resource } from '../../lib/cms/resources';
+import { RESOURCES } from '../../lib/cms/resources';
+interface Props {
+  resource: Resource;
+}
+const { resource } = Astro.props;
+const tabs = resource.tabs ?? [];
+---
+
+{
+  tabs.length > 1 && (
+    <nav class="tabs" aria-label={`${resource.label} sections`}>
+      {tabs
+        .filter((t) => RESOURCES[t.key])
+        .map((t) => (
+          <a href={`/admin/${t.key}/`} aria-current={t.key === resource.key ? 'page' : undefined}>
+            {t.label}
+          </a>
+        ))}
+    </nav>
+  )
+}

@@ -1,0 +1,53 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import Forbidden from '../../components/admin/Forbidden.astro';
+import SettingsEditor from '../../components/admin/SettingsEditor';
+import { can } from '../../lib/cms/permissions';
+import { mailConfigured } from '../../lib/server/mail';
+import { storageDriver } from '../../lib/server/media';
+const admin = Astro.locals.admin!;
+const mail = mailConfigured();
+const storage = storageDriver();
+---
+
+<AdminLayout title="General Settings" active="settings">
+  {
+    can(admin, 'settings', 'view') ? (
+      <>
+        <div class="page-head">
+          <div>
+            <h1>General Settings</h1>
+            <p>Organisation details, contact information, social links, the footer and where form notifications are sent. These appear across the whole website.</p>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-head">
+            <div>
+              <h2>Server status</h2>
+              <p>Set in the hosting environment, not here. See docs/admin-cms.md.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <ul class="list-plain">
+              <li>
+                <span>Database</span>
+                <span class="badge badge--green">Connected</span>
+              </li>
+              <li>
+                <span>Email sending (Resend) for form notifications and password links</span>
+                {mail ? <span class="badge badge--green">Configured</span> : <span class="badge badge--amber">Not configured</span>}
+              </li>
+              <li>
+                <span>File storage</span>
+                <span class="badge badge--blue">{storage === 'blob' ? 'Vercel Blob' : 'Database'}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <SettingsEditor client:load settingsKey="site" previewUrl="/" />
+      </>
+    ) : (
+      <Forbidden />
+    )
+  }
+</AdminLayout>
