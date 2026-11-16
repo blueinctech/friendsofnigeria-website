@@ -152,6 +152,7 @@ export const HOME_SCHEMA: BlockSchema = {
           max: 4,
           fields: [
             { name: 'event', label: 'Event', type: 'reference', ref: 'events', required: true },
+            text('heading', 'Title', '', { max: 100, help: 'Leave empty to use the event short name.' }),
             text('kicker', 'Small label above the title', '', { max: 100 }),
             area('text', 'Description', '', { max: 600, help: 'Leave empty to use the event summary.' }),
             {
@@ -171,6 +172,7 @@ export const HOME_SCHEMA: BlockSchema = {
           default: [
             {
               event: 'event:spotlight-nigeria',
+              heading: 'Spotlight Nigeria',
               kicker: 'Business and Investment Forum · Since 2014',
               text: 'An annual conference and exhibition that gives private sector companies and investors from France and Nigeria a platform to collaborate, exchange ideas, build business contacts and sign deals, with a focus each year on key sectors of the Nigerian economy and key state governments.',
               facts: [
@@ -182,6 +184,7 @@ export const HOME_SCHEMA: BlockSchema = {
             },
             {
               event: 'event:nida',
+              heading: 'Nigerians in Diaspora Awards',
               kicker: 'Gala and awards night · Since 2023',
               text: 'A first-of-its-kind gala celebrating trailblazing Nigerians who are rewriting the narrative of what it means to be a Nigerian abroad, with awards, music, performances and an evening of networking for professionals across the diaspora in Europe.',
               facts: [

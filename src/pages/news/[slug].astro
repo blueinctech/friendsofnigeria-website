@@ -1,34 +1,30 @@
 ---
-import { Image } from 'astro:assets';
-import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Icon from '../../components/Icon.astro';
 import NewsCard from '../../components/NewsCard.astro';
-import { formatDate, readingTime } from '../../lib/format';
-import { sortByDateDesc } from '../../lib/related';
+import { formatDate } from '../../lib/format';
+import { getNews, getSite, img, listNews, readingTime } from '../../lib/server/public';
 
-export async function getStaticPaths() {
-  const posts = await getCollection('news', (p) => !p.data.draft);
-  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
-}
-const { post } = Astro.props;
-const d = post.data;
-const { Content } = await render(post);
+const preview = Astro.locals.preview;
+const d = await getNews(Astro.params.slug ?? '', preview);
+if (!d) return Astro.rewrite('/404/');
+const { site, seo } = await getSite(Astro.locals);
 // Skip the standfirst when the article already opens with the same sentence.
-const plainBody = (post.body ?? '')
-  .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-  .replace(/[>*_#]/g, '')
+const plainBody = d.body
+  .replace(/<[^>]+>/g, ' ')
+  .replace(/&[a-z#0-9]+;/gi, ' ')
   .replace(/\s+/g, ' ')
   .trim()
   .toLowerCase();
-const showLead = !plainBody.startsWith(d.excerpt.toLowerCase().slice(0, 60));
-const all = sortByDateDesc(await getCollection('news', (p) => !p.data.draft && p.id !== post.id));
-const related = [...all.filter((p) => p.data.category === d.category), ...all.filter((p) => p.data.category !== d.category)].slice(0, 3);
-const url = new URL(Astro.url.pathname, Astro.site).toString();
+const showLead = Boolean(d.excerpt) && !plainBody.startsWith(d.excerpt.toLowerCase().slice(0, 60));
+const all = (await listNews(preview, 40)).filter((p) => p.id !== d.id);
+const related = [...all.filter((p) => p.category === d.category), ...all.filter((p) => p.category !== d.category)].slice(0, 3);
+const url = d.canonical_url || new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString();
+const via = String(seo.twitter_handle ?? '').replace(/^@/, '');
 const share = [
   { name: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}` },
-  { name: 'X', href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(d.title)}&via=FON_EUROPE` },
+  { name: 'X', href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(d.title)}${via ? `&via=${via}` : ''}` },
   { name: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}` },
 ];
 const ld = {
@@ -36,40 +32,42 @@ const ld = {
   '@type': 'NewsArticle',
   headline: d.title,
   datePublished: d.date.toISOString(),
+  dateModified: new Date(d.updated_at).toISOString(),
   description: d.excerpt,
-  author: { '@type': 'Organization', name: 'Friends of Nigeria Europe' },
-  publisher: { '@type': 'Organization', name: 'Friends of Nigeria', logo: { '@type': 'ImageObject', url: new URL('/icon-512.png', Astro.site).toString() } },
+  author: { '@type': 'Organization', name: `${site.name}${site.short_name ? ` (${site.short_name})` : ''}` },
+  publisher: { '@type': 'Organization', name: site.name, logo: { '@type': 'ImageObject', url: new URL('/icon-512.png', Astro.site ?? Astro.url).toString() } },
   mainEntityOfPage: url,
 };
+const hero = img(d.image, { alt: d.image_alt, sizes: '(min-width: 1100px) 1040px, 100vw', loading: 'eager', fetchpriority: 'high' });
 ---
 
-<BaseLayout title={d.title} description={d.excerpt} image={d.image} imageAlt={d.imageAlt} type="article" publishedTime={d.date} jsonLd={ld}>
+<BaseLayout title={d.seo_title || d.title} description={d.seo_description || d.excerpt} image={d.og ?? d.image} imageAlt={d.image_alt} canonical={d.canonical_url} type="article" publishedTime={d.date} jsonLd={ld}>
   <article>
     <header class="art-head">
       <div class="container container--narrow">
         <Breadcrumbs items={[{ label: 'News', href: '/news/' }, { label: d.title }]} />
         <p class="meta art-meta">
-          <span class="tag">{d.category}</span>
+          <span class="tag">{d.category ?? 'News'}</span>
           <time datetime={d.date.toISOString()}>{formatDate(d.date)}</time>
           <span class="dot" aria-hidden="true"></span>
-          <span>{readingTime(post.body)} min read</span>
+          <span>{readingTime(d.body)} min read</span>
         </p>
         <h1>{d.title}</h1>
         {showLead && <p class="lead art-lead">{d.excerpt}</p>}
       </div>
     </header>
     {
-      d.image && (
+      hero && (
         <div class="container art-figure">
           <div class="media art-media">
-            <Image src={d.image} alt={d.imageAlt ?? ''} widths={[640, 960, 1280, 1600]} sizes="(min-width: 1100px) 1040px, 100vw" loading="eager" fetchpriority="high" />
+            <img {...hero} />
           </div>
         </div>
       )
     }
     <div class="container container--narrow art-body">
       <div class="prose">
-        <Content />
+        <Fragment set:html={d.body} />
       </div>
       <footer class="art-foot">
         <span>Share this article</span>

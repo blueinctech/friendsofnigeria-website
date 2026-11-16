@@ -1,26 +1,25 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../../components/PageHero.astro';
 import AlbumCard from '../../components/AlbumCard.astro';
-import { sortByDateDesc } from '../../lib/related';
+import { getPage, listAlbums, pageSeo } from '../../lib/server/public';
 
-const albums = sortByDateDesc(await getCollection('albums'));
-const total = albums.reduce((n, a) => n + a.data.photos.length, 0);
-const flagship = albums.filter((a) => a.data.type === 'Flagship event');
-const others = albums.filter((a) => a.data.type !== 'Flagship event');
+const preview = Astro.locals.preview;
+const page = await getPage('gallery', preview);
+if (!page) return Astro.rewrite('/404/');
+const albums = await listAlbums(preview);
+const total = albums.reduce((n, a) => n + a.photo_total, 0);
+const flagship = albums.filter((a) => a.type === 'Flagship event');
+const others = albums.filter((a) => a.type !== 'Flagship event');
+const lead = (page.lead ?? '').replace('{albums}', String(albums.length)).replace('{photos}', String(total));
 ---
 
-<BaseLayout title="Photo gallery" description="Photo albums from Spotlight Nigeria, NIDA, delegations, trade missions and diaspora engagements organised or supported by Friends of Nigeria.">
-  <PageHero
-    title="Photo gallery"
-    lead={`${albums.length} albums and ${total} photographs from our forums, delegations, missions and community engagements.`}
-    crumbs={[{ label: 'Our activities', href: '/our-activities/' }, { label: 'Photo gallery' }]}
-  />
+<BaseLayout {...pageSeo(page)} description={page.seo_description || lead}>
+  <PageHero title={page.title} lead={lead} crumbs={[{ label: 'Our activities', href: '/our-activities/' }, { label: page.title }]} image={page.hero} imageAlt={page.hero_alt} />
 
   <section class="section">
     <div class="container">
-      <h2 class="group-title">Spotlight Nigeria</h2>
+      {flagship.length > 0 && <h2 class="group-title">{page.content.flagship_heading}</h2>}
       <ul class="album-grid" role="list">
         {
           flagship.map((a, i) => (
@@ -30,7 +29,7 @@ const others = albums.filter((a) => a.data.type !== 'Flagship event');
           ))
         }
       </ul>
-      <h2 class="group-title">Engagements, delegations and missions</h2>
+      {others.length > 0 && <h2 class="group-title">{page.content.others_heading}</h2>}
       <ul class="album-grid" role="list">
         {
           others.map((a, i) => (

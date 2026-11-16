@@ -1,13 +1,17 @@
 ---
 import Icon from './Icon.astro';
+import { getSite } from '../lib/server/public';
 interface Props {
-  title?: string;
-  text?: string;
+  title?: string | null;
+  text?: string | null;
+  primary?: { label: string; url: string } | null;
+  secondary?: { label: string; url: string } | null;
 }
-const {
-  title = 'Be part of a network creating opportunities between Nigeria and Europe.',
-  text = 'Join Nigerian professionals and European companies building partnerships, sharing expertise and opening doors on both continents.',
-} = Astro.props;
+const { site } = await getSite(Astro.locals);
+const title = Astro.props.title || site.cta_title;
+const text = Astro.props.text || site.cta_text;
+const primary = Astro.props.primary?.label ? Astro.props.primary : { label: site.header_cta_label || 'Become a Member', url: site.header_cta_url || '/membership/' };
+const secondary = Astro.props.secondary?.label ? Astro.props.secondary : { label: 'Contact us', url: '/contact/' };
 ---
 
 <section class="cta-wrap">
@@ -27,8 +31,8 @@ const {
           <p data-reveal style="--reveal-delay:120">{text}</p>
         </div>
         <div class="btn-row cta-actions" data-reveal style="--reveal-delay:200">
-          <a href="/membership/" class="btn btn--light">Become a Member <Icon name="arrow-right" size={16} class="arrow" /></a>
-          <a href="/contact/" class="btn btn--ghost-light">Contact us</a>
+          <a href={primary.url} class="btn btn--light">{primary.label} <Icon name="arrow-right" size={16} class="arrow" /></a>
+          <a href={secondary.url} class="btn btn--ghost-light">{secondary.label}</a>
         </div>
       </div>
     </div>

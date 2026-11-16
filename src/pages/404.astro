@@ -1,7 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
+import { getPage } from '../lib/server/public';
 
+Astro.response.status = 404;
+// The 404 page is always shown, even if it is unpublished in the dashboard.
+const page = await getPage('not-found', true).catch(() => null);
 const links = [
   { href: '/about/', label: 'About us' },
   { href: '/what-we-do/', label: 'What we do' },
@@ -12,12 +16,12 @@ const links = [
 ];
 ---
 
-<BaseLayout title="Page not found" description="The page you were looking for could not be found." noindex>
+<BaseLayout title={page?.seo_title || 'Page not found'} description={page?.seo_description || 'The page you were looking for could not be found.'} noindex>
   <section class="section status-page">
     <div class="container narrow">
       <p class="code" aria-hidden="true">404</p>
-      <h1>We couldn't find that page</h1>
-      <p class="lead">It may have moved when we rebuilt our website. These pages are a good place to continue.</p>
+      <h1>{page?.title ?? "We couldn't find that page"}</h1>
+      {page?.lead && <p class="lead">{page.lead}</p>}
       <ul class="quick" role="list">
         {links.map((l) => <li><a href={l.href}>{l.label} <Icon name="arrow-right" size={16} /></a></li>)}
       </ul>

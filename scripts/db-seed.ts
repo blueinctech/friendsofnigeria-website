@@ -147,7 +147,7 @@ async function importTeam() {
     const res = await query(
       `INSERT INTO team_members (slug, name, role, group_id, photo, summary, bio, linkedin, website, show_on_home, sort_order, status, published_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'published', now()) ON CONFLICT (slug) DO NOTHING RETURNING id`,
-      [p.slug, p.data.name, p.data.role, groupId.get(p.data.group), photo, p.data.summary ?? null, p.body.trim() ? markdownToHtml(p.body) : '', p.data.linkedin ?? null, p.data.website ?? null, Boolean(p.data.showOnHome), p.data.order ?? 99],
+      [p.slug, p.data.name, p.data.role, groupId.get(p.data.group), photo, p.data.summary ?? null, p.body.trim() ? markdownToHtml(p.body) : '', p.data.linkedin ?? null, p.data.website ?? null, Boolean(p.data.showOnHome ?? p.data.group === 'executive-board-europe'), p.data.order ?? 99],
     );
     added += res.length;
   }
@@ -364,7 +364,7 @@ async function main() {
   await importMedia();
   await importEvents();
   await importNews();
-  await importTeam();
+  await importTeam(); // the homepage has always shown the executive board
   await importProgrammes();
   await importAlbums();
   await importPartners();

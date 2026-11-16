@@ -2,6 +2,13 @@
 import { defineConfig } from 'astro/config';
 import vercel from '@astrojs/vercel';
 import preact from '@astrojs/preact';
+import { loadEnv } from 'vite';
+
+// Server code reads settings from process.env. Fill it from a local .env file
+// during development (hosting platforms set real environment variables).
+for (const [key, value] of Object.entries(loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), ''))) {
+  if (process.env[key] === undefined) process.env[key] = value;
+}
 
 // Every page is rendered on request so the website always shows what is in the
 // database that the admin dashboard edits. Vercel's CDN caches public pages for
@@ -18,7 +25,9 @@ export default defineConfig({
   site: 'https://friendsofnigeria.net',
   output: 'server',
   adapter,
-  trailingSlash: 'always',
+  // Page addresses end with a slash (see the redirect in src/middleware.ts); file
+  // addresses such as /media/<id>/photo.webp and /robots.txt do not.
+  trailingSlash: 'ignore',
   integrations: [preact({ include: ['**/components/admin/**'] })],
   security: { checkOrigin: true },
   prefetch: {

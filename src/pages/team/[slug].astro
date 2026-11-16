@@ -1,40 +1,36 @@
 ---
-import { Image } from 'astro:assets';
-import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Icon from '../../components/Icon.astro';
 import TeamCard from '../../components/TeamCard.astro';
-import { groupLabels } from '../../lib/format';
+import { getPerson, getSite, img, listTeam } from '../../lib/server/public';
 
-export async function getStaticPaths() {
-  const people = await getCollection('team');
-  // Only members with a biography get a profile page.
-  return people.filter((p) => p.body && p.body.trim()).map((p) => ({ params: { slug: p.id }, props: { person: p } }));
-}
-const { person } = Astro.props;
-const d = person.data;
-const { Content } = await render(person);
-const group = groupLabels[d.group];
-const colleagues = (await getCollection('team', (p) => p.data.group === d.group && p.id !== person.id)).sort((a, b) => a.data.order - b.data.order).slice(0, 4);
+const preview = Astro.locals.preview;
+const d = await getPerson(Astro.params.slug ?? '', preview);
+// Only members with a biography get a profile page.
+if (!d || !d.bio.replace(/<[^>]+>/g, '').trim()) return Astro.rewrite('/404/');
+const { site } = await getSite(Astro.locals);
+const group = (await listTeam(preview)).find((g) => g.slug === d.group_slug);
+const colleagues = (group?.people ?? []).filter((p) => p.id !== d.id).slice(0, 4);
 const ld = {
   '@context': 'https://schema.org',
   '@type': 'Person',
   name: d.name,
   jobTitle: d.role,
-  worksFor: { '@type': 'Organization', name: 'Friends of Nigeria' },
+  worksFor: { '@type': 'Organization', name: site.name },
   sameAs: [d.linkedin, d.website].filter(Boolean),
 };
+const photo = img(d.photo, { alt: `Portrait of ${d.name}`, sizes: '(min-width: 900px) 360px, 80vw', loading: 'eager' });
 ---
 
-<BaseLayout title={`${d.name}, ${d.role}`} description={d.summary ?? `${d.name} — ${d.role}, Friends of Nigeria.`} image={d.photo} imageAlt={`Portrait of ${d.name}`} jsonLd={ld}>
+<BaseLayout title={`${d.name}, ${d.role}`} description={d.summary || `${d.name} — ${d.role}, ${site.name}.`} image={d.photo} imageAlt={`Portrait of ${d.name}`} jsonLd={ld}>
   <article class="section profile">
     <div class="container">
       <Breadcrumbs items={[{ label: 'Management team', href: '/team/' }, { label: d.name }]} />
       <div class="profile-grid">
         <aside class="profile-aside">
           <div class="media profile-photo" data-reveal="image">
-            <Image src={d.photo} alt={`Portrait of ${d.name}`} widths={[360, 540, 720]} sizes="(min-width: 900px) 360px, 80vw" loading="eager" />
+            {photo && <img {...photo} />}
           </div>
           <div class="profile-links">
             {
@@ -54,11 +50,11 @@ const ld = {
           </div>
         </aside>
         <div class="profile-main">
-          <p class="profile-group">{group.title}</p>
+          <p class="profile-group">{d.group_title}</p>
           <h1>{d.name}</h1>
           <p class="profile-role">{d.role}</p>
           <div class="prose">
-            <Content />
+            <Fragment set:html={d.bio} />
           </div>
           <a href="/team/" class="link-arrow back"><Icon name="arrow-left" /> Back to the team</a>
         </div>
@@ -71,7 +67,7 @@ const ld = {
       <section class="section section--subtle">
         <div class="container">
           <div class="section-head">
-            <h2>Also on the {group.title.replace(', FON Europe', '')}</h2>
+            <h2>Also on the {d.group_title.replace(', FON Europe', '')}</h2>
           </div>
           <ul class="colleagues" role="list">
             {colleagues.map((p) => (

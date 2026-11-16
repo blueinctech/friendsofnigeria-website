@@ -1,4 +1,4 @@
-import type { CollectionEntry } from 'astro:content';
+import type { Album } from './server/public';
 
 /** Which album types illustrate each area of work. */
 const areaAlbumTypes: Record<string, string[]> = {
@@ -8,18 +8,16 @@ const areaAlbumTypes: Record<string, string[]> = {
   'training-and-professional-development': ['Flagship event'],
   'bilateral-engagements': ['Bilateral engagement', 'Delegation'],
 };
-const areaAlbumIds: Record<string, string[]> = {
+const areaAlbumSlugs: Record<string, string[]> = {
   'social-support-and-integration': ['educational-partnership-between-nigeria-and-france'],
 };
 
-export function albumsForArea(areaId: string, albums: CollectionEntry<'albums'>[], limit = 3) {
-  const ids = areaAlbumIds[areaId] ?? [];
-  const types = areaAlbumTypes[areaId] ?? [];
+/** Albums (newest first) that illustrate an area of work. */
+export function albumsForArea(areaSlug: string, albums: Album[], limit = 3) {
+  const slugs = areaAlbumSlugs[areaSlug] ?? [];
+  const types = areaAlbumTypes[areaSlug] ?? [];
   return albums
-    .filter((a) => ids.includes(a.id) || types.includes(a.data.type))
-    .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+    .filter((a) => slugs.includes(a.slug) || types.includes(a.type))
+    .sort((a, b) => b.date.valueOf() - a.date.valueOf())
     .slice(0, limit);
 }
-
-export const sortByDateDesc = <T extends { data: { date: Date } }>(items: T[]) =>
-  [...items].sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());

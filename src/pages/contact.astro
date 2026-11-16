@@ -3,14 +3,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
 import Icon from '../components/Icon.astro';
 import ContactForm from '../components/forms/ContactForm.astro';
-import site from '../data/site.json';
+import { getPage, getSite, pageSeo, telHref } from '../lib/server/public';
 
-const c = site.contact;
+const page = await getPage('contact', Astro.locals.preview);
+if (!page) return Astro.rewrite('/404/');
+const { site: c } = await getSite(Astro.locals);
 const mapQuery = encodeURIComponent(`${c.address}, ${c.postcode} ${c.city}, ${c.country}`);
 ---
 
-<BaseLayout title="Contact us" description="Get in touch with Friends of Nigeria in Paris about membership, partnerships, Spotlight Nigeria, NIDA or press enquiries.">
-  <PageHero title="Contact us" lead="Questions about membership, partnerships, our events or the press? Write to us and the right person on our team will reply." crumbs={[{ label: 'Contact us' }]} />
+<BaseLayout {...pageSeo(page)}>
+  <PageHero title={page.title} lead={page.lead} crumbs={[{ label: 'Contact us' }]} image={page.hero} imageAlt={page.hero_alt} />
 
   <section class="section">
     <div class="container contact">
@@ -27,7 +29,7 @@ const mapQuery = encodeURIComponent(`${c.address}, ${c.postcode} ${c.city}, ${c.
           <div>
             <h2>Phone</h2>
             <ul role="list">
-              {c.phones.map((p) => <li><span>{p.label}</span> <a href={`tel:${p.tel}`}>{p.display}</a></li>)}
+              {(c.phones ?? []).map((p: { label: string; display: string }) => <li><span>{p.label}</span> <a href={telHref(p.display)}>{p.display}</a></li>)}
             </ul>
           </div>
         </div>
@@ -36,7 +38,7 @@ const mapQuery = encodeURIComponent(`${c.address}, ${c.postcode} ${c.city}, ${c.
           <div>
             <h2>Office</h2>
             <address>{c.address}<br />{c.postcode} {c.city}, {c.country}</address>
-            <p class="note">{c.note}</p>
+            {c.note && <p class="note">{c.note}</p>}
             <a class="link-arrow" href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`} target="_blank" rel="noopener noreferrer">Open in Google Maps <Icon name="arrow-up-right" size={14} /></a>
           </div>
         </div>
@@ -45,14 +47,14 @@ const mapQuery = encodeURIComponent(`${c.address}, ${c.postcode} ${c.city}, ${c.
           <div>
             <h2>Follow us</h2>
             <ul class="social" role="list">
-              {site.social.map((s) => <li><a href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`${s.name} (opens in a new tab)`}><Icon name={s.name} size={16} /></a></li>)}
+              {(c.social ?? []).map((s: { name: string; url: string }) => <li><a href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`${s.name} (opens in a new tab)`}><Icon name={s.name} size={16} /></a></li>)}
             </ul>
           </div>
         </div>
       </aside>
       <div class="form-card spotlight" data-reveal style="--reveal-delay:100">
-        <h2 class="form-title">Send us a message</h2>
-        <p class="form-sub">All fields are required unless marked optional.</p>
+        <h2 class="form-title">{page.content.form_title}</h2>
+        {page.content.form_sub && <p class="form-sub">{page.content.form_sub}</p>}
         <ContactForm />
       </div>
     </div>

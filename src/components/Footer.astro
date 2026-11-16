@@ -1,12 +1,14 @@
 ---
-import { Image } from 'astro:assets';
 import Icon from './Icon.astro';
 import NewsletterForm from './forms/NewsletterForm.astro';
-import logoLight from '../assets/brand/logo-europe-light.png';
-import site from '../data/site.json';
-import { footerNav } from '../data/navigation';
+import { getSite, img, telHref } from '../lib/server/public';
 
+const { site, nav, media } = await getSite(Astro.locals);
 const year = new Date().getFullYear();
+const logo = media[site.footer_logo] ?? media[site.logo];
+const logoH = logo?.width && logo?.height ? Math.round((110 * logo.height) / logo.width) : 80;
+const logoAttrs = logo ? { ...img(logo, { alt: site.short_name ? `${site.name} ${site.short_name.replace(/^FON\s*/, '')}`.trim() : site.name, sizes: '110px', maxWidth: 220 }), width: 110, height: logoH } : null;
+const columns = nav.footer.filter((c) => c.children.length);
 ---
 
 <footer class="site-footer grain">
@@ -14,15 +16,15 @@ const year = new Date().getFullYear();
   <div class="container">
     <div class="footer-top">
       <div class="footer-brand">
-        <a href="/" aria-label="Friends of Nigeria — home" class="footer-logo">
-          <Image src={logoLight} alt="Friends of Nigeria Europe" width={110} height={80} densities={[1, 2]} loading="lazy" />
+        <a href="/" aria-label={`${site.name} — home`} class="footer-logo">
+          {logoAttrs ? <img {...logoAttrs} /> : <span>{site.name}</span>}
         </a>
         <p class="footer-desc">{site.description}</p>
         <ul class="social" role="list">
           {
-            site.social.map((s) => (
+            (site.social ?? []).map((s: { name: string; url: string }) => (
               <li>
-                <a href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`Friends of Nigeria on ${s.name} (opens in a new tab)`}>
+                <a href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`${site.name} on ${s.name} (opens in a new tab)`}>
                   <Icon name={s.name} size={16} />
                 </a>
               </li>
@@ -31,22 +33,28 @@ const year = new Date().getFullYear();
         </ul>
       </div>
 
-      <div class="footer-news">
-        <h2 class="footer-heading-lg">Stay informed</h2>
-        <p>News, event invitations and opportunities between Nigeria and Europe, in your inbox.</p>
-        <NewsletterForm id="footer-newsletter" />
-      </div>
+      {
+        site.newsletter_enabled !== false && (
+          <div class="footer-news">
+            <h2 class="footer-heading-lg">{site.footer_newsletter_heading}</h2>
+            <p>{site.footer_newsletter_text}</p>
+            <NewsletterForm id="footer-newsletter" />
+          </div>
+        )
+      }
     </div>
 
     <div class="footer-grid">
       {
-        footerNav.map((col) => (
-          <nav aria-label={col.title}>
-            <h2 class="footer-heading">{col.title}</h2>
+        columns.map((col) => (
+          <nav aria-label={col.label}>
+            <h2 class="footer-heading">{col.label}</h2>
             <ul role="list">
-              {col.links.map((l) => (
+              {col.children.map((l) => (
                 <li>
-                  <a href={l.href}>{l.label}</a>
+                  <a href={l.url} target={l.new_tab ? '_blank' : undefined} rel={l.new_tab ? 'noopener' : undefined}>
+                    {l.label}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -58,31 +66,33 @@ const year = new Date().getFullYear();
         <address>
           <p class="contact-line">
             <Icon name="map-pin" size={16} />
-            <span>{site.contact.address}<br />{site.contact.postcode} {site.contact.city}, {site.contact.country}</span>
+            <span>{site.address}<br />{[site.postcode, site.city].filter(Boolean).join(' ')}{site.country ? `, ${site.country}` : ''}</span>
           </p>
           {
-            site.contact.phones.map((p) => (
+            (site.phones ?? []).map((p: { label: string; display: string }) => (
               <p class="contact-line">
                 <Icon name="phone" size={16} />
-                <a href={`tel:${p.tel}`}>{p.display}</a>
+                <a href={telHref(p.display)}>{p.display}</a>
               </p>
             ))
           }
-          <p class="contact-line">
-            <Icon name="mail" size={16} />
-            <a href={`mailto:${site.contact.email}`}>{site.contact.email}</a>
-          </p>
+          {site.email && (
+            <p class="contact-line">
+              <Icon name="mail" size={16} />
+              <a href={`mailto:${site.email}`}>{site.email}</a>
+            </p>
+          )}
         </address>
       </div>
     </div>
 
     <div class="footer-bottom">
-      <p>© {year} Friends of Nigeria Europe. All rights reserved.</p>
-      <p>Website by <a href="https://blueinctech.com" target="_blank" rel="noopener">Blueinc Technologies</a></p>
+      <p>© {year} {site.copyright}</p>
+      {site.credit_label && <p>Website by {site.credit_url ? <a href={site.credit_url} target="_blank" rel="noopener">{site.credit_label}</a> : site.credit_label}</p>}
     </div>
   </div>
   <div class="footer-mark" aria-hidden="true">
-    <span>Friends of Nigeria</span>
+    <span>{site.name}</span>
   </div>
 </footer>
 

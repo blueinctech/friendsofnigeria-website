@@ -47,6 +47,11 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
   locals.session = null;
   locals.preview = false;
 
+  // One address per page: /about -> /about/ (files and API endpoints are left alone).
+  if ((request.method === 'GET' || request.method === 'HEAD') && !path.endsWith('/') && !path.startsWith('/api/') && !/\.[a-z0-9]{2,5}$/i.test(path)) {
+    return new Response(null, { status: 301, headers: { Location: `${path}/${url.search}` } });
+  }
+
   const isAdminPage = path === '/admin' || path.startsWith('/admin/');
   const isAdminApi = path.startsWith('/api/admin/');
   const wantsPreview = url.searchParams.has('preview');

@@ -1,14 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
+import { getPage, pageSeo } from '../lib/server/public';
+
+const page = await getPage('thank-you', Astro.locals.preview);
+const seo = page ? pageSeo(page) : { title: 'Thank you', noindex: true };
 ---
 
-<BaseLayout title="Thank you" description="Your submission has been received by Friends of Nigeria." noindex>
+<BaseLayout {...seo}>
   <section class="section status-page">
     <div class="container narrow">
       <span class="ok-icon"><Icon name="check-circle" size={32} /></span>
-      <h1>Thank you</h1>
-      <p class="lead">Your submission has reached our team. If you asked a question, we will reply by email as soon as we can.</p>
+      <h1>{page?.title ?? 'Thank you'}</h1>
+      <p class="lead">{page?.lead ?? 'Your submission has reached our team.'}</p>
       <div class="btn-row">
         <a href="/" class="btn">Back to the homepage <Icon name="arrow-right" size={16} class="arrow" /></a>
         <a href="/news/" class="btn btn--ghost">Read our latest news</a>

@@ -3,26 +3,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../../components/PageHero.astro';
 import Icon from '../../components/Icon.astro';
 import FonenForm from '../../components/forms/FonenForm.astro';
-import membership from '../../data/membership.json';
-import img from '../../assets/site/hero-networking.jpg';
+import { getProgramme } from '../../lib/server/public';
 
-const m = membership.fonen;
-const benefits = [
-  'Business breakfast meetings and bespoke trade missions to understand the Nigerian business environment',
-  'Matchmaking with the right advisory and market research to introduce your products and services in Nigeria',
-  'In-house training on investing in Nigeria, its business culture and business environment',
-  'Access to Spotlight Nigeria and its community of Nigerian and European business leaders and investors',
-];
+const m = await getProgramme('membership', 'fonen', Astro.locals.preview);
+if (!m) return Astro.rewrite('/404/');
 ---
 
-<BaseLayout title="FONEN – corporate membership" description={`${m.fullName}: ${m.summary}`} image={img}>
+<BaseLayout title={m.seo_title || `${m.title} – ${(m.audience ?? 'membership').toLowerCase()}`} description={m.seo_description || `${m.full_name}: ${m.summary}`} image={m.og ?? m.image} canonical={m.canonical_url}>
   <PageHero
-    title={`${m.name}: ${m.fullName}`}
+    title={m.full_name ? `${m.title}: ${m.full_name}` : m.title}
     lead={m.summary}
-    crumbs={[{ label: 'Become a member', href: '/membership/' }, { label: 'FONEN' }]}
+    crumbs={[{ label: 'Become a member', href: '/membership/' }, { label: m.title }]}
   >
     <div class="btn-row">
-      <a href="#register" class="btn">Register your company <Icon name="arrow-right" size={16} class="arrow" /></a>
+      <a href="#register" class="btn">{m.link_label || 'Register your company'} <Icon name="arrow-right" size={16} class="arrow" /></a>
     </div>
   </PageHero>
 
@@ -30,19 +24,20 @@ const benefits = [
     <div class="container cols">
       <div>
         <h2 data-reveal>What membership offers</h2>
-        <p class="lead" data-reveal>{m.details}</p>
+        {m.details && <p class="lead" data-reveal>{m.details}</p>}
+        {m.body && <div class="prose" data-reveal set:html={m.body} />}
         <ul class="benefits" role="list">
-          {benefits.map((b, i) => <li data-reveal style={`--reveal-delay:${i * 60}`}><Icon name="check" size={18} />{b}</li>)}
+          {m.benefits.map((b, i) => <li data-reveal style={`--reveal-delay:${i * 60}`}><Icon name="check" size={18} />{b}</li>)}
         </ul>
         <p class="note" data-reveal>These benefits reflect the investment promotion and training activities FON runs for its member companies.</p>
       </div>
-      <aside class="fees" data-reveal style="--reveal-delay:100">
+      {m.categories.length > 0 && <aside class="fees" data-reveal style="--reveal-delay:100">
         <h3>Membership categories</h3>
         <ul role="list">
           {m.categories.map((c) => <li><span>{c.name}</span><strong>{c.fee}</strong></li>)}
         </ul>
-        <p>Membership is paid. Once your registration is received, our team confirms your membership and sends payment details.</p>
-      </aside>
+        {m.fees_note && <p>{m.fees_note}</p>}
+      </aside>}
     </div>
   </section>
 

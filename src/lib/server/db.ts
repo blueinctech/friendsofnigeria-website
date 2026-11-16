@@ -10,6 +10,10 @@ import pg from 'pg';
 
 export type Row = Record<string, any>;
 
+// Return DATE columns as 'YYYY-MM-DD' strings. The default turns them into a
+// Date at local midnight, which shifts the day in any timezone east of UTC.
+pg.types.setTypeParser(1082, (v: string) => v);
+
 declare global {
   // Reuse one pool per server instance (and across dev reloads).
   var __fonPool: pg.Pool | undefined;

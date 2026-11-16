@@ -1,20 +1,20 @@
 ---
-import { Image } from 'astro:assets';
-import type { ImageMetadata } from 'astro';
 import Breadcrumbs from './Breadcrumbs.astro';
+import { img, type Media } from '../lib/server/public';
 
 interface Props {
   title: string;
-  lead?: string;
+  lead?: string | null;
   crumbs: { label: string; href?: string }[];
-  image?: ImageMetadata;
-  imageAlt?: string;
+  image?: Media | null;
+  imageAlt?: string | null;
   imagePosition?: string;
 }
 const { title, lead, crumbs, image, imageAlt = '', imagePosition = 'center' } = Astro.props;
+const heroImg = img(image, { alt: imageAlt ?? '', sizes: '(min-width: 1320px) 1240px, 100vw', loading: 'eager', fetchpriority: 'high', style: `object-position:${imagePosition}` });
 ---
 
-<section class:list={['page-hero', { 'has-image': image }]}>
+<section class:list={['page-hero', { 'has-image': heroImg }]}>
   <div class="ph-backdrop" aria-hidden="true"></div>
   <div class="container">
     <Breadcrumbs items={crumbs} />
@@ -31,18 +31,10 @@ const { title, lead, crumbs, image, imageAlt = '', imagePosition = 'center' } = 
     </div>
   </div>
   {
-    image && (
+    heroImg && (
       <div class="container hero-media-wrap">
         <div class="media hero-media" data-reveal="image" data-parallax>
-          <Image
-            src={image}
-            alt={imageAlt}
-            widths={[640, 960, 1280, 1600, 2000]}
-            sizes="(min-width: 1320px) 1240px, 100vw"
-            loading="eager"
-            fetchpriority="high"
-            style={`object-position:${imagePosition}`}
-          />
+          <img {...heroImg} />
         </div>
       </div>
     )

@@ -10,10 +10,10 @@
     "build:node": "CMS_ADAPTER=node astro build",
     "preview": "node dist/server/entry.mjs",
     "check": "astro check",
-    "db:migrate": "node --experimental-strip-types --no-warnings scripts/db-migrate.ts",
-    "db:seed": "node --experimental-strip-types --no-warnings scripts/db-seed.ts",
-    "admin:create": "node --experimental-strip-types --no-warnings scripts/admin-create.ts",
-    "admin:reset-password": "node --experimental-strip-types --no-warnings scripts/admin-reset-password.ts",
+    "db:migrate": "node --env-file-if-exists=.env --experimental-strip-types --no-warnings scripts/db-migrate.ts",
+    "db:seed": "node --env-file-if-exists=.env --experimental-strip-types --no-warnings scripts/db-seed.ts",
+    "admin:create": "node --env-file-if-exists=.env --experimental-strip-types --no-warnings scripts/admin-create.ts",
+    "admin:reset-password": "node --env-file-if-exists=.env --experimental-strip-types --no-warnings scripts/admin-reset-password.ts",
     "test": "node --experimental-strip-types --no-warnings --test tests/*.test.ts"
   },
   "dependencies": {

@@ -1,38 +1,29 @@
 ---
-import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
 import Icon from '../components/Icon.astro';
 import TeamCard from '../components/TeamCard.astro';
 import CtaBand from '../components/CtaBand.astro';
-import about from '../data/about.json';
-import site from '../data/site.json';
-import heroImg from '../assets/site/team-spotlight-2022.jpg';
-import imgVision from '../assets/site/hero-conversation.jpg';
-import imgMission from '../assets/about/team-group-2.png';
+import { getPage, getSite, homeTeam, img, listTeam, pageSeo } from '../lib/server/public';
 
-const exec = (await getCollection('team', (p) => p.data.group === 'executive-board-europe')).sort((a, b) => a.data.order - b.data.order);
-const chapters = [
-  { name: 'France', text: 'Our headquarters in Paris, home to Spotlight Nigeria and NIDA, with business, professional and governance committees.' },
-  { name: 'Germany', text: 'A country chapter connecting Nigerian professionals and communities across Germany.' },
-  { name: 'Belgium & Luxembourg', text: 'A chapter serving Nigerian professionals and partners in Belgium and Luxembourg.' },
-  { name: 'Nigeria', text: 'A liaison office coordinating operations and communications with partners in Nigeria.' },
-];
+const preview = Astro.locals.preview;
+const page = await getPage('about', preview);
+if (!page) return Astro.rewrite('/404/');
+const c = page.content;
+const { site } = await getSite(Astro.locals);
+const groups = await listTeam(preview);
+// The executive board is the first board on the team page.
+const board = groups[0]?.people ?? (await homeTeam(preview));
+const visionImg = img(page.media[c.vision_image], { alt: c.vision_image_alt, sizes: '(min-width: 900px) 560px, 100vw' });
+const missionImg = img(page.media[c.mission_image], { alt: c.mission_image_alt, sizes: '(min-width: 900px) 560px, 100vw', style: 'object-position:center 80%' });
+const num = (i: number) => String(i + 1).padStart(2, '0');
 ---
 
-<BaseLayout title="About us" description={about.intro} image={heroImg}>
-  <PageHero
-    title="About Friends of Nigeria"
-    lead={about.intro}
-    crumbs={[{ label: 'About us' }]}
-    image={heroImg}
-    imageAlt="The Friends of Nigeria team with speakers and guests at Spotlight Nigeria 2022 in Paris"
-    imagePosition="center 40%"
-  >
+<BaseLayout {...pageSeo(page)}>
+  <PageHero title={page.title} lead={page.lead} crumbs={[{ label: 'About us' }]} image={page.hero} imageAlt={page.hero_alt} imagePosition="center 40%">
     <div class="btn-row">
-      <a href="/team/" class="btn">Meet the team <Icon name="arrow-right" size={16} class="arrow" /></a>
-      <a href="/contact/" class="btn btn--ghost">Contact us</a>
+      {c.primary_cta_label && <a href={c.primary_cta_url} class="btn">{c.primary_cta_label} <Icon name="arrow-right" size={16} class="arrow" /></a>}
+      {c.secondary_cta_label && <a href={c.secondary_cta_url} class="btn btn--ghost">{c.secondary_cta_label}</a>}
     </div>
   </PageHero>
 
@@ -40,25 +31,25 @@ const chapters = [
     <div class="container vm">
       <article class="vm-item" data-reveal>
         <div class="media vm-media" data-parallax>
-          <Image src={imgVision} alt="A Nigerian business leader in conversation with a European guest at Spotlight Nigeria" widths={[480, 720, 960]} sizes="(min-width: 900px) 560px, 100vw" />
+          {visionImg && <img {...visionImg} />}
         </div>
         <div class="vm-copy">
-          <h2>Our vision</h2>
-          <p class="lead">{about.vision}</p>
+          <h2>{c.vision_heading}</h2>
+          <p class="lead">{c.vision}</p>
         </div>
       </article>
       <article class="vm-item vm-item--flip" data-reveal>
         <div class="media vm-media" data-parallax>
-          <Image src={imgMission} alt="Friends of Nigeria members and volunteers at Spotlight Nigeria" widths={[480, 720, 960, 1280]} sizes="(min-width: 900px) 560px, 100vw" style="object-position:center 80%" />
+          {missionImg && <img {...missionImg} />}
         </div>
         <div class="vm-copy">
-          <h2>Our mission, in two parts</h2>
-          <p class="vm-sub">Our mission guides and inspires every decision we make.</p>
+          <h2>{c.mission_heading}</h2>
+          {c.mission_sub && <p class="vm-sub">{c.mission_sub}</p>}
           <ol class="mission-list" role="list">
             {
-              about.mission.map((m, i) => (
+              (c.mission ?? []).map((m: { title: string; text: string }, i: number) => (
                 <li>
-                  <span class="m-num">0{i + 1}</span>
+                  <span class="m-num">{num(i)}</span>
                   <div>
                     <h3>{m.title}</h3>
                     <p>{m.text}</p>
@@ -75,14 +66,14 @@ const chapters = [
   <section class="section section--subtle">
     <div class="container">
       <div class="section-head">
-        <h2 data-reveal>Our values</h2>
-        <p data-reveal style="--reveal-delay:80">To achieve our goals and aspirations, we strive to abide by these core values and principles.</p>
+        <h2 data-reveal>{c.values_heading}</h2>
+        {c.values_lead && <p data-reveal style="--reveal-delay:80">{c.values_lead}</p>}
       </div>
       <ul class="values" role="list">
         {
-          about.values.map((v, i) => (
+          (c.values ?? []).map((v: { title: string; text: string }, i: number) => (
             <li class="spotlight" data-reveal style={`--reveal-delay:${i * 70}`}>
-              <span class="v-num">0{i + 1}</span>
+              <span class="v-num">{num(i)}</span>
               <h3>{v.title}</h3>
               <p>{v.text}</p>
             </li>
@@ -95,22 +86,22 @@ const chapters = [
   <section class="section">
     <div class="container">
       <div class="section-head">
-        <h2 data-reveal>Where we work</h2>
-        <p data-reveal style="--reveal-delay:80">A network of chapters across Europe, with a liaison office in Nigeria.</p>
+        <h2 data-reveal>{c.chapters_heading}</h2>
+        {c.chapters_lead && <p data-reveal style="--reveal-delay:80">{c.chapters_lead}</p>}
       </div>
       <ul class="chapters-grid" role="list">
         {
-          chapters.map((c, i) => (
+          (c.chapters ?? []).map((ch: { name: string; text: string }, i: number) => (
             <li data-reveal style={`--reveal-delay:${i * 70}`}>
               <Icon name="map-pin" size={20} />
-              <h3>{c.name}</h3>
-              <p>{c.text}</p>
+              <h3>{ch.name}</h3>
+              <p>{ch.text}</p>
             </li>
           ))
         }
       </ul>
       <p class="hq">
-        <strong>Head office:</strong> {site.contact.address}, {site.contact.postcode} {site.contact.city}, {site.contact.country}
+        <strong>Head office:</strong> {site.address}, {[site.postcode, site.city].filter(Boolean).join(' ')}, {site.country}
       </p>
     </div>
   </section>
@@ -119,14 +110,14 @@ const chapters = [
     <div class="container">
       <div class="section-head section-head--split">
         <div>
-          <h2 data-reveal>Executive board</h2>
-          <p data-reveal>The leadership of Friends of Nigeria Europe.</p>
+          <h2 data-reveal>{c.board_heading}</h2>
+          {c.board_lead && <p data-reveal>{c.board_lead}</p>}
         </div>
-        <a href="/team/" class="link-arrow">All boards and chapters <Icon name="arrow-right" /></a>
+        {c.board_link_label && <a href="/team/" class="link-arrow">{c.board_link_label} <Icon name="arrow-right" /></a>}
       </div>
       <ul class="team-grid" role="list">
         {
-          exec.map((p, i) => (
+          board.map((p, i) => (
             <li data-reveal style={`--reveal-delay:${i * 70}`}>
               <TeamCard person={p} />
             </li>

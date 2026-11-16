@@ -1,0 +1,222 @@
+---
+/** Detail page of an area of work or another programme. */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from './PageHero.astro';
+import Icon from './Icon.astro';
+import AlbumCard from './AlbumCard.astro';
+import CtaBand from './CtaBand.astro';
+import type { Album, Programme } from '../lib/server/public';
+
+interface Props {
+  area: Programme;
+  siblings: Programme[];
+  albums: Album[];
+}
+const { area, siblings, albums } = Astro.props;
+const type = area.type;
+const at = siblings.findIndex((a) => a.id === area.id);
+const prev = siblings[at - 1];
+const next = siblings[at + 1];
+const others = siblings.filter((a) => a.id !== area.id);
+const section =
+  type === 'area' ? { label: 'What we do', href: '/what-we-do/' } : type === 'membership' ? { label: 'Become a member', href: '/membership/' } : { label: 'Our activities', href: '/our-activities/' };
+---
+
+<BaseLayout title={area.seo_title || area.title} description={area.seo_description || area.summary} image={area.og ?? area.image} imageAlt={area.image_alt} canonical={area.canonical_url}>
+  <PageHero title={area.title} lead={area.headline || area.summary} crumbs={[section, { label: area.title }]} image={area.image} imageAlt={area.image_alt}>
+    {area.link_url && area.link_label && (
+      <div class="btn-row">
+        <a href={area.link_url} class="btn" target={/^https?:/.test(area.link_url) ? '_blank' : undefined} rel={/^https?:/.test(area.link_url) ? 'noopener' : undefined}>
+          {area.link_label} <Icon name="arrow-right" size={16} class="arrow" />
+        </a>
+      </div>
+    )}
+  </PageHero>
+
+  <section class="section">
+    <div class="container detail">
+      <div class="prose detail-body" data-reveal>
+        <Fragment set:html={area.body || `<p>${area.summary}</p>`} />
+        {area.benefits.length > 0 && (
+          <ul>
+            {area.benefits.map((b) => <li>{b}</li>)}
+          </ul>
+        )}
+      </div>
+      <aside class="detail-aside" data-reveal style="--reveal-delay:100">
+        {others.length > 0 && <h2 class="aside-title">{type === 'area' ? 'Other areas of work' : 'Other programmes'}</h2>}
+        <ul role="list">
+          {
+            others.map((o) => (
+              <li>
+                <a href={o.path}>
+                  {o.title} <Icon name="arrow-right" size={16} />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="aside-cta">
+          <p>Want to take part or work with us in this area?</p>
+          <a href="/contact/" class="btn btn--sm">Get in touch</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  {
+    albums.length > 0 && (
+      <section class="section section--subtle">
+        <div class="container">
+          <div class="section-head section-head--split">
+            <h2>Related activities</h2>
+            <a href="/our-activities/" class="link-arrow">
+              All activities <Icon name="arrow-right" />
+            </a>
+          </div>
+          <ul class="album-grid" role="list">
+            {albums.map((a) => (
+              <li>
+                <AlbumCard album={a} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <nav class="container pager" aria-label="Areas of work">
+    {
+      prev ? (
+        <a href={prev.path} class="pager-link">
+          <span>Previous</span>
+          <strong><Icon name="arrow-left" size={16} /> {prev.title}</strong>
+        </a>
+      ) : <span />
+    }
+    {
+      next && (
+        <a href={next.path} class="pager-link pager-link--next">
+          <span>Next</span>
+          <strong>{next.title} <Icon name="arrow-right" size={16} /></strong>
+        </a>
+      )
+    }
+  </nav>
+
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .detail {
+    display: grid;
+    gap: var(--s-8);
+  }
+  @media (min-width: 1000px) {
+    .detail {
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: var(--s-9);
+      align-items: start;
+    }
+  }
+  .detail-body {
+    max-width: 68ch;
+  }
+  .detail-body :global(p:first-child) {
+    font-size: var(--fs-xl);
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .detail-aside {
+    position: sticky;
+    top: calc(var(--header-h) + 32px);
+    display: grid;
+    gap: var(--s-4);
+  }
+  .aside-title {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .detail-aside ul {
+    list-style: none;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .detail-aside li a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--s-3);
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: var(--fs-sm);
+  }
+  .detail-aside li a :global(svg) {
+    color: var(--slate-400);
+    transition: transform 200ms var(--ease);
+  }
+  .detail-aside li a:hover {
+    color: var(--accent-ink);
+  }
+  .detail-aside li a:hover :global(svg) {
+    transform: translateX(3px);
+    color: var(--accent);
+  }
+  .aside-cta {
+    margin-top: var(--s-4);
+    padding: var(--s-5);
+    background: var(--paper);
+    border-radius: var(--r-sm);
+    display: grid;
+    gap: var(--s-3);
+    justify-items: start;
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .album-grid {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--s-6) var(--s-5);
+  }
+  @media (min-width: 700px) {
+    .album-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .pager {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-5);
+    padding-block: var(--s-7);
+  }
+  .pager-link {
+    display: grid;
+    gap: 4px;
+    text-decoration: none;
+  }
+  .pager-link span {
+    font-size: var(--fs-xs);
+    color: var(--ink-3);
+  }
+  .pager-link strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+  }
+  .pager-link:hover strong {
+    color: var(--accent-ink);
+  }
+  .pager-link--next {
+    text-align: right;
+    justify-items: end;
+  }
+</style>

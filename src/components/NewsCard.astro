@@ -1,37 +1,34 @@
 ---
-import { Image } from 'astro:assets';
-import type { CollectionEntry } from 'astro:content';
 import { formatDate } from '../lib/format';
+import { img, type NewsItem } from '../lib/server/public';
 
 interface Props {
-  post: CollectionEntry<'news'>;
+  post: NewsItem;
   variant?: 'default' | 'feature' | 'compact';
   headingLevel?: 'h2' | 'h3';
   eager?: boolean;
 }
-const { post, variant = 'default', headingLevel = 'h3', eager = false } = Astro.props;
-const d = post.data;
-const href = `/news/${post.id}/`;
+const { post: d, variant = 'default', headingLevel = 'h3', eager = false } = Astro.props;
+const href = `/news/${d.slug}/`;
 const H = headingLevel;
+const image = img(d.image, {
+  alt: d.image_alt,
+  sizes: variant === 'feature' ? '(min-width: 1000px) 720px, 100vw' : variant === 'compact' ? '160px' : '(min-width: 1000px) 400px, 100vw',
+  loading: eager ? 'eager' : 'lazy',
+});
 ---
 
 <article class:list={['news-card', `news-card--${variant}`]}>
   {
-    d.image && (
+    image && (
       <div class="media media--zoom news-media">
-        <Image
-          src={d.image}
-          alt={d.imageAlt ?? ''}
-          widths={variant === 'feature' ? [640, 960, 1280] : [320, 480, 720]}
-          sizes={variant === 'feature' ? '(min-width: 1000px) 720px, 100vw' : variant === 'compact' ? '160px' : '(min-width: 1000px) 400px, 100vw'}
-          loading={eager ? 'eager' : 'lazy'}
-        />
+        <img {...image} />
       </div>
     )
   }
   <div class="news-body">
     <p class="meta">
-      <span class="news-cat">{d.category}</span>
+      <span class="news-cat">{d.category ?? 'News'}</span>
       <span class="dot" aria-hidden="true"></span>
       <time datetime={d.date.toISOString()}>{formatDate(d.date)}</time>
     </p>
