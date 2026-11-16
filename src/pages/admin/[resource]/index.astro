@@ -1,0 +1,41 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import Forbidden from '../../../components/admin/Forbidden.astro';
+import ResourceTabs from '../../../components/admin/ResourceTabs.astro';
+import ResourceList from '../../../components/admin/ResourceList';
+import Icon from '../../../components/admin/Icon';
+import { resourceFor } from '../../../lib/cms/resources';
+import { can } from '../../../lib/cms/permissions';
+
+const r = resourceFor(Astro.params.resource ?? '');
+if (!r) return new Response(null, { status: 404 });
+const admin = Astro.locals.admin!;
+const allowed = can(admin, r.module, 'view');
+const canCreate = can(admin, r.module, 'create');
+---
+
+<AdminLayout title={r.label} active={r.module}>
+  {
+    !allowed ? (
+      <Forbidden />
+    ) : (
+      <>
+        <div class="page-head">
+          <div>
+            <h1>{r.label}</h1>
+            {r.description && <p>{r.description}</p>}
+          </div>
+          {canCreate && (
+            <div class="head-actions">
+              <a class="btn" href={`/admin/${r.key}/new/`}>
+                <Icon name="plus" size={16} /> Add {r.singular}
+              </a>
+            </div>
+          )}
+        </div>
+        <ResourceTabs resource={r} />
+        <ResourceList client:load resource={r.key} canCreate={canCreate} canEdit={can(admin, r.module, 'edit')} canDelete={can(admin, r.module, 'delete')} />
+      </>
+    )
+  }
+</AdminLayout>

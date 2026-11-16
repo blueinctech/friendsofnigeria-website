@@ -1,0 +1,113 @@
+---
+/** Dashboard-wide search across content, media and (where allowed) enquiries. */
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { can, type Module } from '../../lib/cms/permissions';
+import { query } from '../../lib/server/db';
+
+const admin = Astro.locals.admin!;
+const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 100);
+const like = `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+
+type Hit = { id: string; title: string; sub: string | null; status: string | null };
+const sources: { key: string; label: string; module: Module; href: (id: string) => string; sql: string }[] = [
+  { key: 'news', label: 'Articles', module: 'news', href: (id) => `/admin/news/${id}/`, sql: `SELECT id, title, to_char(published_at, 'DD Mon YYYY') AS sub, status FROM news WHERE title ILIKE $1 OR excerpt ILIKE $1 OR body ILIKE $1 ORDER BY published_at DESC NULLS FIRST LIMIT 10` },
+  { key: 'events', label: 'Events', module: 'events', href: (id) => `/admin/events/${id}/`, sql: `SELECT id, title, concat_ws(' · ', to_char(start_date, 'DD Mon YYYY'), city) AS sub, status FROM events WHERE title ILIKE $1 OR summary ILIKE $1 OR coalesce(venue, '') ILIKE $1 OR coalesce(city, '') ILIKE $1 ORDER BY start_date DESC NULLS FIRST LIMIT 10` },
+  { key: 'pages', label: 'Pages', module: 'pages', href: (id) => `/admin/pages/${id}/`, sql: `SELECT id, title, path AS sub, status FROM pages WHERE title ILIKE $1 OR coalesce(lead, '') ILIKE $1 OR coalesce(body, '') ILIKE $1 OR path ILIKE $1 ORDER BY sort_order LIMIT 10` },
+  { key: 'programmes', label: 'Programmes', module: 'programmes', href: (id) => `/admin/programmes/${id}/`, sql: `SELECT id, title, full_name AS sub, status FROM programmes WHERE title ILIKE $1 OR coalesce(full_name, '') ILIKE $1 OR summary ILIKE $1 OR body ILIKE $1 ORDER BY sort_order LIMIT 10` },
+  { key: 'albums', label: 'Activities & albums', module: 'programmes', href: (id) => `/admin/albums/${id}/`, sql: `SELECT id, title, to_char(date, 'DD Mon YYYY') AS sub, status FROM albums WHERE title ILIKE $1 OR coalesce(summary, '') ILIKE $1 ORDER BY date DESC LIMIT 10` },
+  { key: 'team', label: 'Team members', module: 'team', href: (id) => `/admin/team/${id}/`, sql: `SELECT m.id, m.name AS title, concat_ws(' · ', m.role, g.title) AS sub, m.status FROM team_members m LEFT JOIN team_groups g ON g.id = m.group_id WHERE m.name ILIKE $1 OR coalesce(m.role, '') ILIKE $1 OR coalesce(m.bio, '') ILIKE $1 ORDER BY m.name LIMIT 10` },
+  { key: 'partners', label: 'Partners', module: 'partners', href: (id) => `/admin/partners/${id}/`, sql: `SELECT id, name AS title, url AS sub, status FROM partners WHERE name ILIKE $1 OR coalesce(url, '') ILIKE $1 ORDER BY sort_order LIMIT 10` },
+  { key: 'media', label: 'Media', module: 'media', href: (id) => `/admin/media/?id=${id}`, sql: `SELECT id, filename AS title, alt AS sub, NULL AS status FROM media WHERE filename ILIKE $1 OR coalesce(alt, '') ILIKE $1 OR coalesce(original_name, '') ILIKE $1 ORDER BY created_at DESC LIMIT 10` },
+];
+
+const results: { label: string; href: (id: string) => string; hits: Hit[] }[] = [];
+let enquiryHits: (Hit & { type: string })[] = [];
+if (q.length >= 2) {
+  for (const s of sources) {
+    if (!can(admin, s.module)) continue;
+    const hits = await query<Hit>(s.sql, [like]);
+    if (hits.length) results.push({ label: s.label, href: s.href, hits });
+  }
+  if (can(admin, 'enquiries')) {
+    enquiryHits = await query(
+      `SELECT id, coalesce(nullif(name, ''), email) AS title, concat_ws(' · ', to_char(created_at, 'DD Mon YYYY'), email) AS sub, status, type
+         FROM enquiries WHERE name ILIKE $1 OR email ILIKE $1 OR coalesce(organisation, '') ILIKE $1 OR coalesce(subject, '') ILIKE $1 OR coalesce(message, '') ILIKE $1
+        ORDER BY created_at DESC LIMIT 10`,
+      [like],
+    );
+  }
+}
+const totalHits = results.reduce((s, r) => s + r.hits.length, 0) + enquiryHits.length;
+const badge = (status: string | null) =>
+  status === 'published' ? ['badge--green', 'Published'] : status === 'draft' ? ['badge--amber', 'Draft'] : status === 'pending' ? ['badge--amber', 'Pending'] : status ? ['', status.charAt(0).toUpperCase() + status.slice(1)] : null;
+---
+
+<AdminLayout title={q ? `Search: ${q}` : 'Search'}>
+  <div class="page-head">
+    <div>
+      <h1>{q ? `Results for “${q}”` : 'Search'}</h1>
+      <p>{q.length < 2 ? 'Type at least two characters in the search box above.' : `${totalHits} result${totalHits === 1 ? '' : 's'} (up to 10 per section).`}</p>
+    </div>
+  </div>
+  {
+    q.length >= 2 && !totalHits && (
+      <div class="card">
+        <div class="empty">
+          <h2>Nothing found</h2>
+          <p>Try a shorter word, or part of a name.</p>
+        </div>
+      </div>
+    )
+  }
+  {
+    results.map((r) => (
+      <section class="card">
+        <div class="card-head">
+          <h2>{r.label}</h2>
+        </div>
+        <div class="card-body">
+          <ul class="list-plain">
+            {r.hits.map((h) => {
+              const b = badge(h.status);
+              return (
+                <li>
+                  <span style="min-width:0">
+                    <a href={r.href(h.id)}>{h.title}</a>
+                    {h.sub && <div class="muted" style="font-size:12px">{h.sub}</div>}
+                  </span>
+                  {b && <span class={`badge ${b[0]}`}>{b[1]}</span>}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+    ))
+  }
+  {
+    enquiryHits.length > 0 && (
+      <section class="card">
+        <div class="card-head">
+          <h2>Enquiries</h2>
+        </div>
+        <div class="card-body">
+          <ul class="list-plain">
+            {enquiryHits.map((h) => {
+              const b = badge(h.status);
+              const group = h.type === 'membership' || h.type === 'fonen' ? 'membership' : 'contact';
+              return (
+                <li>
+                  <span style="min-width:0">
+                    <a href={`/admin/enquiries/${group}/?${h.type === 'newsletter' ? 'tab=newsletter&' : ''}id=${h.id}`}>{h.title}</a>
+                    {h.sub && <div class="muted" style="font-size:12px">{h.sub}</div>}
+                  </span>
+                  {b && <span class={`badge ${b[0]}`}>{b[1]}</span>}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+</AdminLayout>

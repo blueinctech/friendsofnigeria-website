@@ -2,7 +2,7 @@
 title: "Goodwill message to Ambassador Modupe Irele on new appointment"
 date: "2021-03-12"
 category: "Statement"
-excerpt: "March 10, 2021 Your Excellency, Dr. Modupe Irele, The Ambassador of Nigeria to France, Paris, France. GOODWILL MESSAGE ON NEW APPOINTMENT On behalf of the entire management, board of directors and members of Friends of Nigeria (FON), we would like…"
+excerpt: "On behalf of its management, board and members, Friends of Nigeria thanks Dr Modupe Irele, Ambassador of Nigeria to France, for her support, commitment and leadership."
 image: "../../assets/news/goodwill-message-to-ambassador-modupe-irele-on-new-appointme.jpg"
 imageAlt: "Goodwill message to Ambassador Modupe Irele on new appointment"
 ---

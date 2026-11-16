@@ -2,7 +2,7 @@
  * Progressive form handling for every <form data-form>.
  *
  * - Validates with the browser's constraint API and shows friendly inline errors.
- * - Submits with fetch as URL-encoded data to the form's action (api/submit.js on Vercel).
+ * - Submits with fetch as URL-encoded data to the form's action (src/pages/api/submit.ts).
  * - Without JavaScript the form still posts normally and the handler redirects to /thank-you/.
  */
 

@@ -1,0 +1,186 @@
+---
+import '../styles/admin.css';
+import Icon from '../components/admin/Icon';
+import { can, ROLE_LABELS, type Module } from '../lib/cms/permissions';
+import { one } from '../lib/server/db';
+
+interface Props {
+  title: string;
+  active?: string;
+}
+const { title, active } = Astro.props;
+const admin = Astro.locals.admin!;
+const session = Astro.locals.session!;
+
+const pending = can(admin, 'enquiries')
+  ? await one<{ membership: number; contact: number }>(
+      `SELECT count(*) FILTER (WHERE type IN ('membership','fonen'))::int AS membership, count(*) FILTER (WHERE type = 'contact')::int AS contact
+         FROM enquiries WHERE status = 'pending'`,
+    )
+  : null;
+const totalPending = (pending?.membership ?? 0) + (pending?.contact ?? 0);
+
+type Item = { key: string; label: string; href: string; icon: string; module: Module; count?: number };
+const groups: { label: string; items: Item[] }[] = [
+  { label: '', items: [{ key: 'dashboard', label: 'Dashboard', href: '/admin/', icon: 'dashboard', module: 'dashboard' }] },
+  {
+    label: 'Content',
+    items: [
+      { key: 'pages', label: 'Pages', href: '/admin/pages/', icon: 'pages', module: 'pages' },
+      { key: 'homepage', label: 'Homepage', href: '/admin/homepage/', icon: 'home', module: 'homepage' },
+      { key: 'news', label: 'News & Publications', href: '/admin/news/', icon: 'news', module: 'news' },
+      { key: 'events', label: 'Events', href: '/admin/events/', icon: 'events', module: 'events' },
+      { key: 'programmes', label: 'Activities & Programmes', href: '/admin/programmes/', icon: 'programmes', module: 'programmes' },
+      { key: 'team', label: 'Management Team', href: '/admin/team/', icon: 'team', module: 'team' },
+      { key: 'partners', label: 'Partners & Sponsors', href: '/admin/partners/', icon: 'partners', module: 'partners' },
+      { key: 'media', label: 'Media Library', href: '/admin/media/', icon: 'media', module: 'media' },
+    ],
+  },
+  {
+    label: 'Enquiries',
+    items: [
+      { key: 'enquiries-membership', label: 'Membership Enquiries', href: '/admin/enquiries/membership/', icon: 'membership', module: 'enquiries', count: pending?.membership },
+      { key: 'enquiries-contact', label: 'Contact Messages', href: '/admin/enquiries/contact/', icon: 'contact', module: 'enquiries', count: pending?.contact },
+    ],
+  },
+  {
+    label: 'Website',
+    items: [
+      { key: 'navigation', label: 'Navigation', href: '/admin/navigation/', icon: 'navigation', module: 'navigation' },
+      { key: 'seo', label: 'SEO Settings', href: '/admin/seo/', icon: 'seo', module: 'seo' },
+      { key: 'admins', label: 'Administrators', href: '/admin/admins/', icon: 'admins', module: 'admins' },
+      { key: 'settings', label: 'General Settings', href: '/admin/settings/', icon: 'settings', module: 'settings' },
+    ],
+  },
+];
+const visible = groups.map((g) => ({ ...g, items: g.items.filter((i) => can(admin, i.module)) })).filter((g) => g.items.length);
+const initials = admin.name
+  .split(/\s+/)
+  .map((p) => p[0])
+  .join('')
+  .slice(0, 2)
+  .toUpperCase();
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="csrf-token" content={session.csrf} />
+    <title>{title} · FON Admin</title>
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+  </head>
+  <body class="admin">
+    <div class="a-shell">
+      <aside class="a-sidebar" id="admin-sidebar" aria-label="Dashboard navigation">
+        <a href="/admin/" class="a-brand">
+          <img src="/icon-192.png" alt="" width="44" height="44" />
+          <span><strong>Friends of Nigeria</strong><span>Website administration</span></span>
+        </a>
+        <nav class="a-nav">
+          {
+            visible.map((g) => (
+              <>
+                {g.label && <div class="a-nav-label">{g.label}</div>}
+                {g.items.map((i) => (
+                  <a href={i.href} aria-current={active === i.key ? 'page' : undefined}>
+                    <Icon name={i.icon} />
+                    <span>{i.label}</span>
+                    {i.count ? <span class="count" title={`${i.count} pending`}>{i.count}</span> : null}
+                  </a>
+                ))}
+              </>
+            ))
+          }
+        </nav>
+        <div class="a-sidebar-foot a-nav">
+          <form method="post" action="/admin/logout/">
+            <input type="hidden" name="csrf" value={session.csrf} />
+            <button type="submit"><Icon name="logout" /> <span>Log out</span></button>
+          </form>
+        </div>
+      </aside>
+
+      <div class="a-main">
+        <header class="a-topbar">
+          <button type="button" class="icon-btn a-menu-btn" aria-controls="admin-sidebar" aria-expanded="false" data-nav-toggle>
+            <Icon name="menu" size={20} /><span class="sr-only">Open navigation</span>
+          </button>
+          <form class="a-search" role="search" action="/admin/search/" method="get">
+            <Icon name="search" size={16} />
+            <label for="admin-search" class="sr-only">Search the dashboard</label>
+            <input id="admin-search" type="search" name="q" placeholder="Search articles, events, pages, people…" autocomplete="off" value={Astro.url.pathname.startsWith('/admin/search') ? Astro.url.searchParams.get('q') ?? '' : ''} />
+          </form>
+          <div class="a-top-actions">
+            {
+              pending && (
+                <a
+                  class="icon-btn"
+                  href={pending.membership >= pending.contact && pending.membership ? '/admin/enquiries/membership/?status=pending' : '/admin/enquiries/contact/?status=pending'}
+                  title={totalPending ? `${totalPending} enquiries waiting for a reply` : 'No pending enquiries'}
+                >
+                  <Icon name="bell" size={19} />
+                  {totalPending > 0 && <span class="dot">{totalPending > 99 ? '99+' : totalPending}</span>}
+                  <span class="sr-only">{totalPending ? `${totalPending} pending enquiries` : 'No pending enquiries'}</span>
+                </a>
+              )
+            }
+            <a class="icon-btn" href="/" target="_blank" rel="noopener" title="View the website">
+              <Icon name="external" size={18} /><span class="sr-only">View the website (opens in a new tab)</span>
+            </a>
+            <details class="a-profile" data-profile>
+              <summary>
+                <span class="avatar" aria-hidden="true">{initials}</span>
+                <span class="who">{admin.name}<small>{ROLE_LABELS[admin.role]}</small></span>
+                <Icon name="chevron-down" size={14} />
+              </summary>
+              <div class="a-dropdown">
+                <div class="head">
+                  <strong>{admin.name}</strong>
+                  <div class="muted" style="font-size:12px">{admin.email}</div>
+                </div>
+                <a href="/admin/account/"><Icon name="user" /> My account</a>
+                <a href="/" target="_blank" rel="noopener"><Icon name="external" /> View website</a>
+                <form method="post" action="/admin/logout/">
+                  <input type="hidden" name="csrf" value={session.csrf} />
+                  <button type="submit"><Icon name="logout" /> Log out</button>
+                </form>
+              </div>
+            </details>
+          </div>
+        </header>
+        <main class="a-content" id="main">
+          <slot />
+        </main>
+      </div>
+    </div>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+    <script>
+      import { toast } from '../components/admin/lib';
+      const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+      toggle?.addEventListener('click', () => {
+        const open = document.body.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', String(open));
+      });
+      document.addEventListener('click', (e) => {
+        const t = e.target as HTMLElement;
+        if (document.body.classList.contains('nav-open') && !t.closest('.a-sidebar') && !t.closest('[data-nav-toggle]')) {
+          document.body.classList.remove('nav-open');
+          toggle?.setAttribute('aria-expanded', 'false');
+        }
+        const profile = document.querySelector<HTMLDetailsElement>('[data-profile]');
+        if (profile?.open && !t.closest('[data-profile]')) profile.open = false;
+      });
+      // Flash message carried over a redirect (e.g. after creating a record).
+      try {
+        const flash = sessionStorage.getItem('fon-flash');
+        if (flash) {
+          sessionStorage.removeItem('fon-flash');
+          toast(flash, 'success');
+        }
+      } catch {}
+    </script>
+  </body>
+</html>

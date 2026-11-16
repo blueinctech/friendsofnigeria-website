@@ -2,43 +2,40 @@
 
 The website of Friends of Nigeria (FON Europe), [friendsofnigeria.net](https://friendsofnigeria.net).
 
-It is a static site built with [Astro](https://astro.build), hosted on Vercel, with content edited through [Decap CMS](https://decapcms.org) at `/admin/`.
+It is an [Astro](https://astro.build) site on Vercel. All content lives in a Postgres database and is edited in the admin dashboard at `/admin/`; the public pages read the same database, so changes appear within about 30 seconds without a rebuild. Setup, environment variables, roles and security are described in [`docs/admin-cms.md`](docs/admin-cms.md).
 
 ## Run it locally
 
 You need Node.js 22 (see `.nvmrc`).
 
 ```bash
+cp .env.example .env   # set DATABASE_URL
 npm install
-npm run dev       # http://localhost:4321
-npm run build     # production build into dist/
-npm run preview   # serve the production build
-npm run check     # type and content checks
+npm run db:migrate     # create the tables
+npm run db:seed        # import the site content
+npm run admin:create   # create your administrator
+npm run dev            # http://localhost:4321 (dashboard at /admin/)
+npm test               # unit tests
+npm run check          # type check
 ```
 
 ## Where things live
 
 | What | Where |
 | --- | --- |
-| Pages | `src/pages/` (one file per URL) |
-| News articles | `src/content/news/*.md` |
-| Team members | `src/content/team/*.md` (the `group` field decides which board they appear in) |
-| Areas of work | `src/content/areas/*.md` |
-| Spotlight Nigeria and NIDA | `src/content/events/*.md` |
-| Photo albums | `src/content/albums/*.md`, photos in `src/assets/albums/<album>/` |
-| Partner logos | `src/content/partners.json`, logos in `src/assets/partners/` |
-| Contact details, social links | `src/data/site.json` |
-| About and membership text | `src/data/about.json`, `src/data/membership.json` |
-| Menus | `src/data/navigation.ts` |
-| Colours, type, spacing | `src/styles/global.css` (tokens at the top) |
+| Public pages | `src/pages/` (one file per URL); content comes from `src/lib/server/public.ts` |
+| Admin dashboard | `src/pages/admin/`, components in `src/components/admin/` |
+| Admin API | `src/pages/api/admin/` |
+| Content types and fields | `src/lib/cms/resources.ts`, homepage blocks in `src/lib/cms/blocks.ts` |
+| Roles and permissions | `src/lib/cms/permissions.ts` |
+| Database schema | `db/migrations/` |
+| First content import | `scripts/db-seed.ts`, reading `src/content/`, `src/data/` and `src/assets/` |
+| Colours, type, spacing | `src/styles/global.css` (tokens at the top), dashboard styles in `src/styles/admin.css` |
 | Old URL redirects | `vercel.json` |
-| Form and sign-in functions | `api/` |
-
-Images placed in `src/assets/` are resized and converted to WebP automatically at build time, and lazy loaded below the fold.
 
 ## Hosting on Vercel
 
-The site is hosted on Vercel and deploys automatically from GitHub: every push to `main` updates the live site, and every pull request gets its own preview link. Build settings are in `vercel.json` (Astro, `npm run build`, output `dist`).
+The site is hosted on Vercel and deploys automatically from GitHub: every push to `main` updates the live site, and every pull request gets its own preview link. Build settings are in `vercel.json`. `npm run build` runs the database migrations, imports the content if the database is empty, then builds the site.
 
 `vercel.json` also sends the old WordPress addresses (old article URLs at the site root, `/about-me/`, `/get-involved/`, `/fonen-registration/`, team pages and so on) to their new pages with permanent redirects, so existing links and search rankings carry over.
 
@@ -46,26 +43,24 @@ To use the real domain, add `friendsofnigeria.net` under **Project → Settings 
 
 ## Environment variables
 
-Set these in Vercel under **Project → Settings → Environment Variables**, then redeploy. Never put them in this repository.
+Set these in Vercel under **Project → Settings → Environment Variables**, then redeploy. Never put them in this repository. The full list, with defaults, is in [`docs/admin-cms.md`](docs/admin-cms.md) and `.env.example`.
 
-| Variable | Needed for | Where to get it |
-| --- | --- | --- |
-| `RESEND_API_KEY` | All forms | [resend.com](https://resend.com) → API Keys (free plan: 3,000 emails a month) |
-| `FORM_TO_EMAIL` | All forms | Who receives submissions, e.g. `contact@friendsofnigeria.net` (comma-separate several) |
-| `FORM_FROM_EMAIL` | All forms | A sender on a domain verified in Resend, e.g. `website@friendsofnigeria.net` |
-| `BREVO_API_KEY` | Newsletter list (optional) | Brevo → SMTP & API → API keys |
-| `BREVO_LIST_ID` | Newsletter list (optional) | The number of the Brevo contact list |
-| `GITHUB_CLIENT_ID` | Content manager sign-in | GitHub OAuth app (see below) |
-| `GITHUB_CLIENT_SECRET` | Content manager sign-in | Same GitHub OAuth app |
+| Variable | Needed for |
+| --- | --- |
+| `DATABASE_URL` | Everything (added by the Neon integration in Vercel) |
+| `ADMIN_SETUP_TOKEN` | Creating the first administrator at `/admin/setup/` |
+| `BLOB_READ_WRITE_TOKEN` | Optional: image storage in Vercel Blob |
+| `RESEND_API_KEY`, `FORM_FROM_EMAIL`, `FORM_TO_EMAIL` | Optional: emailing enquiries and password links |
+| `BREVO_API_KEY`, `BREVO_LIST_ID` | Optional: newsletter list in Brevo |
 
 ## Forms
 
-All forms (contact, membership enquiry, FONEN registration and newsletter) post to one small Vercel function, `api/submit.js`.
+All forms (contact, membership enquiry, FONEN registration and newsletter) post to `src/pages/api/submit.ts`.
 
-- Each submission is emailed to `FORM_TO_EMAIL` through Resend, with the visitor's address as reply-to.
+- Each submission is saved in the database and appears under **Enquiries** in the dashboard, where it can be searched, filtered, marked as pending, contacted or resolved, and exported to CSV.
+- When Resend is configured, it is also emailed to the notification address, with the visitor's address as reply-to.
 - Validation and the success and error messages run in the browser (`src/scripts/forms.ts`). Without JavaScript the forms still post and the visitor lands on `/thank-you/`.
-- Spam protection is a hidden honeypot field.
-- Until the three Resend variables are set, forms show a friendly error that points visitors to contact@friendsofnigeria.net.
+- Spam protection is a hidden honeypot field plus a rate limit per visitor.
 
 Resend needs the sending domain verified once: in Resend go to **Domains → Add domain**, enter `friendsofnigeria.net` and add the DNS records it lists.
 
@@ -75,23 +70,13 @@ Newsletter sign-ups are emailed to `FORM_TO_EMAIL` like any other form. When `BR
 
 ## Membership payments
 
-FONPRO membership is paid through **HelloAsso**. The FONPRO page embeds the official HelloAsso form, and the links are in `src/data/site.json`. No credentials are stored here; payments are handled entirely by HelloAsso.
+FONPRO membership is paid through **HelloAsso**. The FONPRO page embeds the official HelloAsso form, and the links are edited in the dashboard (FONPRO page and **Settings**). No credentials are stored here; payments are handled entirely by HelloAsso.
 
 FONEN registration arrives by email like the other forms. Invoicing for FONEN fees happens outside the website.
 
-## Content manager (Decap CMS)
+## Admin dashboard
 
-Editors can update news, team members, albums, events, partner logos, contact details and page text at **`/admin/`**, without touching code. Every save becomes a commit in this repository and Vercel rebuilds the site in about a minute. Drafts go through a "Draft → In review → Ready" workflow before they are published.
-
-One-time setup:
-
-1. On GitHub, go to **Settings → Developer settings → OAuth Apps → New OAuth App**.
-   - Homepage URL: `https://friendsofnigeria.net` (or the `.vercel.app` address until the domain is connected)
-   - Authorization callback URL: `https://friendsofnigeria.net/api/callback` (same domain as above)
-2. Copy the **Client ID**, generate a **Client secret**, and add both to Vercel as `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`.
-3. Give each editor write access to the repository on GitHub. They then sign in at `/admin/` with "Login with GitHub".
-
-Sign-in is handled by `api/auth.js` and `api/callback.js`. The CMS settings are in `public/admin/config.yml`.
+Administrators sign in at **`/admin/`** to edit pages, the homepage, news, events, the team, programmes, the gallery, partners, menus, SEO and site settings, manage images and enquiries, and see the activity log. There is no public registration: the first administrator is created once with a secret setup token, and further administrators are invited from the dashboard. See [`docs/admin-cms.md`](docs/admin-cms.md).
 
 ## Content that needs review
 

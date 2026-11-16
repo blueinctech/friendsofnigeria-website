@@ -1,0 +1,341 @@
+---
+/**
+ * Dashboard home. Every figure here is counted live from the database.
+ */
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import Icon from '../../components/admin/Icon';
+import { one, query } from '../../lib/server/db';
+import { can } from '../../lib/cms/permissions';
+import { describeActivity, type ActivityRow } from '../../lib/server/activity';
+
+const admin = Astro.locals.admin!;
+const firstName = admin.name.split(/\s+/)[0];
+
+const counts = (await one<Record<string, number>>(`
+  SELECT
+    (SELECT count(*) FROM pages)::int AS pages,
+    (SELECT count(*) FROM pages WHERE status = 'published')::int AS pages_live,
+    (SELECT count(*) FROM news WHERE status = 'published' AND (published_at IS NULL OR published_at <= now()))::int AS news_live,
+    (SELECT count(*) FROM news WHERE status = 'draft')::int AS news_draft,
+    (SELECT count(*) FROM news WHERE status = 'published' AND published_at > now())::int AS news_scheduled,
+    (SELECT count(*) FROM events WHERE status = 'published' AND (timing = 'upcoming' OR (timing = 'auto' AND coalesce(end_date, start_date) >= current_date)))::int AS events_upcoming,
+    (SELECT count(*) FROM events)::int AS events_total,
+    (SELECT count(*) FROM team_members WHERE status = 'published')::int AS team_live,
+    (SELECT count(*) FROM team_members WHERE status <> 'published')::int AS team_hidden,
+    (SELECT count(*) FROM programmes WHERE status = 'published')::int AS programmes,
+    (SELECT count(*) FROM albums WHERE status = 'published')::int AS albums,
+    (SELECT count(*) FROM partners WHERE status = 'published')::int AS partners,
+    (SELECT count(*) FROM media)::int AS media,
+    (SELECT count(*) FROM media WHERE kind = 'image' AND coalesce(alt, '') = '')::int AS media_no_alt,
+    (SELECT count(*) FROM enquiries WHERE type IN ('membership', 'fonen'))::int AS membership_total,
+    (SELECT count(*) FROM enquiries WHERE type IN ('membership', 'fonen') AND status = 'pending')::int AS membership_pending,
+    (SELECT count(*) FROM enquiries WHERE type = 'contact')::int AS contact_total,
+    (SELECT count(*) FROM enquiries WHERE type = 'contact' AND status = 'pending')::int AS contact_pending,
+    (SELECT count(*) FROM enquiries WHERE type = 'newsletter')::int AS newsletter
+`))!;
+
+const showEnquiries = can(admin, 'enquiries');
+
+// Enquiries received per week over the last 12 weeks.
+const weeks = showEnquiries
+  ? await query<{ week: string; membership: number; contact: number }>(`
+      SELECT to_char(w, 'DD Mon') AS week,
+             count(e.id) FILTER (WHERE e.type IN ('membership', 'fonen'))::int AS membership,
+             count(e.id) FILTER (WHERE e.type = 'contact')::int AS contact
+        FROM generate_series(date_trunc('week', now()) - interval '11 weeks', date_trunc('week', now()), interval '1 week') AS w
+        LEFT JOIN enquiries e ON e.created_at >= w AND e.created_at < w + interval '1 week'
+       GROUP BY w ORDER BY w`)
+  : [];
+const weekMax = Math.max(1, ...weeks.map((w) => w.membership + w.contact));
+const weekTotal = weeks.reduce((s, w) => s + w.membership + w.contact, 0);
+
+// Articles published per year.
+const years = await query<{ year: number; n: number }>(`
+  SELECT extract(year FROM published_at)::int AS year, count(*)::int AS n
+    FROM news WHERE status = 'published' AND published_at IS NOT NULL AND published_at <= now()
+   GROUP BY 1 ORDER BY 1 DESC LIMIT 8`);
+years.reverse();
+const yearMax = Math.max(1, ...years.map((y) => y.n));
+
+const upcoming = await query<{ id: string; title: string; start_date: string | null; end_date: string | null; city: string | null; venue: string | null; status: string }>(`
+  SELECT id, title, start_date, end_date, city, venue, status FROM events
+   WHERE timing = 'upcoming' OR (timing = 'auto' AND coalesce(end_date, start_date) >= current_date)
+   ORDER BY start_date NULLS LAST LIMIT 5`);
+
+const recentContent = await query<{ type: string; id: string; title: string; status: string; published_at: string | null; updated_at: string; updated_by: string | null }>(`
+  SELECT * FROM (
+    SELECT 'news' AS type, n.id, n.title, n.status, n.published_at, n.updated_at, a.name AS updated_by FROM news n LEFT JOIN admins a ON a.id = n.updated_by
+    UNION ALL SELECT 'events', e.id, e.title, e.status, e.published_at, e.updated_at, a.name FROM events e LEFT JOIN admins a ON a.id = e.updated_by
+    UNION ALL SELECT 'pages', p.id, p.title, p.status, p.published_at, p.updated_at, a.name FROM pages p LEFT JOIN admins a ON a.id = p.updated_by
+    UNION ALL SELECT 'programmes', p.id, p.title, p.status, p.published_at, p.updated_at, a.name FROM programmes p LEFT JOIN admins a ON a.id = p.updated_by
+    UNION ALL SELECT 'team', t.id, t.name, t.status, t.published_at, t.updated_at, a.name FROM team_members t LEFT JOIN admins a ON a.id = t.updated_by
+  ) x ORDER BY updated_at DESC LIMIT 7`);
+const TYPE_LABEL: Record<string, string> = { news: 'Article', events: 'Event', pages: 'Page', programmes: 'Programme', team: 'Team member' };
+const recentVisible = recentContent.filter((r) => can(admin, r.type === 'team' ? 'team' : (r.type as any)));
+
+// Super administrators see everything; others see content changes only, not sign-ins.
+const activity = await query<ActivityRow>(
+  `SELECT * FROM activity_log
+    WHERE $1 OR action NOT IN ('login', 'logout', 'login_failed', 'password_reset_requested', 'password_reset', 'password_changed', 'reset_link_created', 'setup')
+    ORDER BY created_at DESC LIMIT 10`,
+  [admin.role === 'super_admin'],
+);
+
+const fmtDate = (d: string | Date | null, opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }) =>
+  d ? new Date(d).toLocaleDateString('en-GB', { ...opts, timeZone: 'Europe/Brussels' }) : '';
+function ago(d: string | Date) {
+  const s = Math.round((Date.now() - new Date(d).getTime()) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
+  if (s < 86400 * 7) return `${Math.floor(s / 86400)} d ago`;
+  return fmtDate(d);
+}
+function eventDates(e: { start_date: string | null; end_date: string | null }) {
+  if (!e.start_date) return 'Date to be announced';
+  const start = fmtDate(e.start_date);
+  return e.end_date && e.end_date !== e.start_date ? `${fmtDate(e.start_date, { day: 'numeric', month: 'short' })} – ${fmtDate(e.end_date)}` : start;
+}
+const hour = Number(new Date().toLocaleString('en-GB', { hour: 'numeric', hour12: false, timeZone: 'Europe/Brussels' }));
+const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+
+type Stat = { label: string; value: number; sub?: string; warn?: string; icon: string; href: string; show: boolean };
+const stats: Stat[] = [
+  { label: 'Published articles', value: counts.news_live, sub: `${counts.news_draft} draft${counts.news_draft === 1 ? '' : 's'}`, warn: counts.news_scheduled ? `${counts.news_scheduled} scheduled` : '', icon: 'news', href: '/admin/news/', show: can(admin, 'news') },
+  { label: 'Upcoming events', value: counts.events_upcoming, sub: `${counts.events_total} events in total`, icon: 'events', href: '/admin/events/', show: can(admin, 'events') },
+  { label: 'Membership enquiries', value: counts.membership_total, warn: counts.membership_pending ? `${counts.membership_pending} waiting for a reply` : '', sub: counts.membership_pending ? '' : 'All answered', icon: 'membership', href: '/admin/enquiries/membership/', show: showEnquiries },
+  { label: 'Contact messages', value: counts.contact_total, warn: counts.contact_pending ? `${counts.contact_pending} waiting for a reply` : '', sub: counts.contact_pending ? '' : 'All answered', icon: 'contact', href: '/admin/enquiries/contact/', show: showEnquiries },
+  { label: 'Team members', value: counts.team_live, sub: counts.team_hidden ? `${counts.team_hidden} hidden` : 'All shown', icon: 'team', href: '/admin/team/', show: can(admin, 'team') },
+  { label: 'Pages', value: counts.pages, sub: `${counts.pages_live} published`, icon: 'pages', href: '/admin/pages/', show: can(admin, 'pages') },
+  { label: 'Programmes & activities', value: counts.programmes + counts.albums, sub: `${counts.programmes} programmes, ${counts.albums} activities`, icon: 'programmes', href: '/admin/programmes/', show: can(admin, 'programmes') },
+  { label: 'Media files', value: counts.media, sub: counts.media_no_alt ? '' : 'All images described', warn: counts.media_no_alt ? `${counts.media_no_alt} missing alt text` : '', icon: 'media', href: counts.media_no_alt ? '/admin/media/?missingAlt=1' : '/admin/media/', show: can(admin, 'media') },
+];
+
+const quick = [
+  { label: 'Write an article', href: '/admin/news/new/', icon: 'news', show: can(admin, 'news', 'create') },
+  { label: 'Add an event', href: '/admin/events/new/', icon: 'events', show: can(admin, 'events', 'create') },
+  { label: 'Edit the homepage', href: '/admin/homepage/', icon: 'home', show: can(admin, 'homepage', 'edit') },
+  { label: 'Upload images', href: '/admin/media/', icon: 'upload', show: can(admin, 'media', 'create') },
+  { label: 'Add a team member', href: '/admin/team/new/', icon: 'team', show: can(admin, 'team', 'create') },
+  { label: 'Reply to enquiries', href: '/admin/enquiries/membership/?status=pending', icon: 'inbox', show: showEnquiries },
+].filter((q) => q.show);
+---
+
+<AdminLayout title="Dashboard" active="dashboard">
+  <div class="page-head">
+    <div>
+      <h1>{greeting}, {firstName}</h1>
+      <p>Here is what is happening on the Friends of Nigeria website.</p>
+    </div>
+    <div class="head-actions">
+      <a class="btn btn--ghost" href="/" target="_blank" rel="noopener"><Icon name="external" size={16} /> View website</a>
+      {can(admin, 'news', 'create') && <a class="btn" href="/admin/news/new/"><Icon name="plus" size={16} /> New article</a>}
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    {
+      stats
+        .filter((s) => s.show)
+        .map((s) => (
+          <a class="card stat-card" href={s.href}>
+            <div class="stat-top">
+              <span>{s.label}</span>
+              <span class="stat-icon"><Icon name={s.icon} size={17} /></span>
+            </div>
+            <div class="stat-value">{s.value.toLocaleString('en-GB')}</div>
+            <div class="stat-sub">
+              {s.warn && <span class="warn">{s.warn}</span>}
+              {s.warn && s.sub ? ' · ' : ''}
+              {s.sub}
+            </div>
+          </a>
+        ))
+    }
+  </div>
+
+  <div class="dash-grid">
+    <div>
+      {
+        quick.length > 0 && (
+          <section class="card">
+            <div class="card-head"><h2>Quick actions</h2></div>
+            <div class="card-body">
+              <div class="quick">
+                {quick.map((q) => (
+                  <a href={q.href}>
+                    <Icon name={q.icon} size={20} />
+                    {q.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+        )
+      }
+
+      {
+        showEnquiries && (
+          <section class="card">
+            <div class="card-head">
+              <div>
+                <h2>Enquiries received</h2>
+                <p>Last 12 weeks · {weekTotal} in total</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="bars" role="img" aria-label={`Enquiries per week over the last 12 weeks: ${weeks.map((w) => `${w.week}: ${w.membership + w.contact}`).join(', ')}`}>
+                {weeks.map((w) => {
+                  const total = w.membership + w.contact;
+                  return (
+                    <div class="bar" title={`Week of ${w.week}: ${w.membership} membership, ${w.contact} contact`}>
+                      <span class="val">{total || ''}</span>
+                      <span class={`fill${total ? '' : ' zero'}`} style={`height:${Math.max(2, (total / weekMax) * 100)}%`} />
+                      <span class="lbl">{w.week}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div class="legend">
+                <span>Membership and FONEN applications plus contact messages, by week received.</span>
+              </div>
+            </div>
+          </section>
+        )
+      }
+
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h2>Recently updated</h2>
+            <p>The latest changes to website content</p>
+          </div>
+        </div>
+        <div class="card-body">
+          {
+            recentVisible.length ? (
+              <ul class="list-plain">
+                {recentVisible.map((r) => (
+                  <li>
+                    <span style="min-width:0">
+                      <a href={`/admin/${r.type}/${r.id}/`}>{r.title}</a>
+                      <div class="muted" style="font-size:12px">
+                        {TYPE_LABEL[r.type]} · {r.updated_by ? `${r.updated_by}, ` : ''}
+                        {ago(r.updated_at)}
+                      </div>
+                    </span>
+                    {r.status === 'published' && r.published_at && new Date(r.published_at) > new Date() ? (
+                      <span class="badge badge--blue">Scheduled</span>
+                    ) : r.status === 'published' ? (
+                      <span class="badge badge--green">Published</span>
+                    ) : (
+                      <span class="badge badge--amber">{r.type === 'team' ? 'Hidden' : 'Draft'}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="muted">Nothing has been edited yet.</p>
+            )
+          }
+        </div>
+      </section>
+    </div>
+
+    <div>
+      {
+        can(admin, 'events') && (
+          <section class="card">
+            <div class="card-head">
+              <h2>Upcoming events</h2>
+              <a class="btn btn--link btn--sm" href="/admin/events/?timing_state=upcoming">All events</a>
+            </div>
+            <div class="card-body">
+              {upcoming.length ? (
+                <ul class="list-plain">
+                  {upcoming.map((e) => (
+                    <li>
+                      <span style="min-width:0">
+                        <a href={`/admin/events/${e.id}/`}>{e.title}</a>
+                        <div class="muted" style="font-size:12px">
+                          {eventDates(e)}
+                          {e.city || e.venue ? ` · ${[e.venue, e.city].filter(Boolean).join(', ')}` : ''}
+                        </div>
+                      </span>
+                      {e.status !== 'published' && <span class="badge badge--amber">Draft</span>}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="muted">
+                  No upcoming events. {can(admin, 'events', 'create') && <a href="/admin/events/new/">Add one</a>}
+                </p>
+              )}
+            </div>
+          </section>
+        )
+      }
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Recent activity</h2>
+          {can(admin, 'activity') && <a class="btn btn--link btn--sm" href="/admin/activity/">Full log</a>}
+        </div>
+        <div class="card-body">
+          {
+            activity.length ? (
+              <ul class="timeline">
+                {activity.map((a) => {
+                  const d = describeActivity(a);
+                  return (
+                    <li>
+                      <span class="avatar" aria-hidden="true" style="width:30px;height:30px;font-size:11px">
+                        {(a.admin_name ?? '?')
+                          .split(/\s+/)
+                          .map((p) => p[0])
+                          .join('')
+                          .slice(0, 2)
+                          .toUpperCase()}
+                      </span>
+                      <span>
+                        <strong>{a.admin_name ?? 'Someone'}</strong> {d.verb} {d.noun}{' '}
+                        {d.label && (d.href ? <a href={d.href}>{d.label}</a> : <em>{d.label}</em>)}
+                        <div class="when">{ago(a.created_at)}</div>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p class="muted">No activity yet.</p>
+            )
+          }
+        </div>
+      </section>
+
+      {
+        years.length > 0 && can(admin, 'news') && (
+          <section class="card">
+            <div class="card-head">
+              <div>
+                <h2>Articles published</h2>
+                <p>Per year · {counts.news_live} live</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="bars" style="height:110px" role="img" aria-label={`Articles per year: ${years.map((y) => `${y.year}: ${y.n}`).join(', ')}`}>
+                {years.map((y) => (
+                  <div class="bar">
+                    <span class="val">{y.n}</span>
+                    <span class="fill" style={`height:${(y.n / yearMax) * 100}%`} />
+                    <span class="lbl">{y.year}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )
+      }
+    </div>
+  </div>
+</AdminLayout>

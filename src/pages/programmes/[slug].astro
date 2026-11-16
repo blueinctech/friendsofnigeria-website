@@ -1,0 +1,12 @@
+---
+import ProgrammeDetail from '../../components/ProgrammeDetail.astro';
+import { getProgramme, listAlbums, listProgrammes } from '../../lib/server/public';
+
+const preview = Astro.locals.preview;
+const area = await getProgramme('programme', Astro.params.slug ?? '', preview);
+if (!area) return Astro.rewrite('/404/');
+const siblings = await listProgrammes('programme', preview);
+const albums: never[] = [];
+---
+
+<ProgrammeDetail area={area} siblings={siblings} albums={albums} />

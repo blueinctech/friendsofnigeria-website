@@ -1,22 +1,21 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../../components/PageHero.astro';
 import NewsCard from '../../components/NewsCard.astro';
 import NewsletterForm from '../../components/forms/NewsletterForm.astro';
-import { sortByDateDesc } from '../../lib/related';
+import { getPage, getSite, listNews, pageSeo } from '../../lib/server/public';
 
-const posts = sortByDateDesc(await getCollection('news', (p) => !p.data.draft));
+const preview = Astro.locals.preview;
+const page = await getPage('news', preview);
+if (!page) return Astro.rewrite('/404/');
+const { site } = await getSite(Astro.locals);
+const posts = await listNews(preview);
 const [lead, ...rest] = posts;
-const categories = [...new Set(posts.map((p) => p.data.category))].sort();
+const categories = [...new Set(posts.map((p) => p.category ?? 'News'))].sort();
 ---
 
-<BaseLayout title="News and publications" description="Statements, press releases, event reports, interviews and career guides from Friends of Nigeria Europe.">
-  <PageHero
-    title="News and publications"
-    lead="Statements, press releases, event reports, interviews and career guides from Friends of Nigeria Europe."
-    crumbs={[{ label: 'News' }]}
-  />
+<BaseLayout {...pageSeo(page)}>
+  <PageHero title={page.title} lead={page.lead} crumbs={[{ label: 'News' }]} image={page.hero} imageAlt={page.hero_alt} />
 
   <section class="section">
     <div class="container">
@@ -37,7 +36,7 @@ const categories = [...new Set(posts.map((p) => p.data.category))].sort();
       <ul class="news-grid" role="list">
         {
           rest.map((p, i) => (
-            <li data-category={p.data.category} data-reveal style={`--reveal-delay:${(i % 3) * 60}`}>
+            <li data-category={p.category ?? 'News'} data-reveal style={`--reveal-delay:${(i % 3) * 60}`}>
               <NewsCard post={p} headingLevel="h2" />
             </li>
           ))
@@ -46,15 +45,19 @@ const categories = [...new Set(posts.map((p) => p.data.category))].sort();
     </div>
   </section>
 
-  <section class="section section--dark">
-    <div class="container nl">
-      <div>
-        <h2>Get our news by email</h2>
-        <p>Statements, event invitations and opportunities, a few times a year.</p>
-      </div>
-      <NewsletterForm id="news-newsletter" />
-    </div>
-  </section>
+  {
+    site.newsletter_enabled !== false && (
+      <section class="section section--dark">
+        <div class="container nl">
+          <div>
+            <h2>{page.content.newsletter_heading}</h2>
+            {page.content.newsletter_text && <p>{page.content.newsletter_text}</p>}
+          </div>
+          <NewsletterForm id="news-newsletter" />
+        </div>
+      </section>
+    )
+  }
 </BaseLayout>
 
 <style>

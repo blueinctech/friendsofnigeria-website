@@ -1,27 +1,26 @@
 ---
-import { Image } from 'astro:assets';
-import type { CollectionEntry } from 'astro:content';
 import Icon from './Icon.astro';
 import { formatMonth } from '../lib/format';
+import { img, type Album } from '../lib/server/public';
 
 interface Props {
-  album: CollectionEntry<'albums'>;
+  album: Album;
   headingLevel?: 'h2' | 'h3';
 }
-const { album, headingLevel = 'h3' } = Astro.props;
-const d = album.data;
+const { album: d, headingLevel = 'h3' } = Astro.props;
 const H = headingLevel;
+const cover = img(d.cover, { alt: '', sizes: '(min-width: 1100px) 400px, (min-width: 640px) 50vw, 100vw' });
 ---
 
 <article class="album">
   <div class="media media--zoom album-media">
-    <Image src={d.cover} alt="" widths={[360, 540, 720]} sizes="(min-width: 1100px) 400px, (min-width: 640px) 50vw, 100vw" loading="lazy" />
-    <span class="album-count"><Icon name="images" size={14} />{d.photos.length}</span>
+    {cover && <img {...cover} />}
+    <span class="album-count"><Icon name="images" size={14} />{d.photo_total}</span>
   </div>
   <p class="meta">
-    <span>{d.type}</span><span class="dot" aria-hidden="true"></span><time datetime={d.date.toISOString()}>{formatMonth(d.date, d.yearOnly)}</time>
+    <span>{d.type}</span><span class="dot" aria-hidden="true"></span><time datetime={d.date.toISOString().slice(0, 10)}>{formatMonth(d.date, d.year_only)}</time>
   </p>
-  <H class="album-title"><a href={`/gallery/${album.id}/`} class="stretched">{d.title}</a></H>
+  <H class="album-title"><a href={`/gallery/${d.slug}/`} class="stretched">{d.title}</a></H>
 </article>
 
 <style>

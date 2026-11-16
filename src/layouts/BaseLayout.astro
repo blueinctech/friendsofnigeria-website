@@ -2,56 +2,66 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import site from '../data/site.json';
-import { getImage } from 'astro:assets';
-import type { ImageMetadata } from 'astro';
-import defaultOg from '../assets/site/spotlight-banner-2023.jpg';
+import { getSite, ogImageUrl, telHref, type Media } from '../lib/server/public';
 
 interface Props {
   title: string;
-  description?: string;
-  image?: ImageMetadata;
-  imageAlt?: string;
+  /** Complete <title>, used as is (otherwise the SEO suffix is added). */
+  fullTitle?: string;
+  description?: string | null;
+  image?: Media | null;
+  imageAlt?: string | null;
   type?: 'website' | 'article';
   publishedTime?: Date;
   noindex?: boolean;
+  canonical?: string | null;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
+const { site, seo, media } = await getSite(Astro.locals);
 const {
   title,
-  description = site.description,
-  image = defaultOg,
-  imageAlt = 'Friends of Nigeria members and guests at Spotlight Nigeria in Paris',
+  fullTitle: givenTitle,
+  description: rawDescription,
+  image,
+  imageAlt,
   type = 'website',
   publishedTime,
   noindex = false,
+  canonical: canonicalOverride,
   jsonLd,
 } = Astro.props;
 
-const fullTitle = title === site.name ? `${site.name} | Connecting Nigeria and Europe` : `${title} | ${site.name}`;
-const canonical = new URL(Astro.url.pathname, Astro.site);
-const og = await getImage({ src: image, width: 1200, height: 630, format: 'jpg', fit: 'cover' });
-const ogUrl = new URL(og.src, Astro.site);
+// Search results show about 160 characters: cut longer descriptions at a word.
+const clean = (rawDescription || seo.default_description || site.description || '').replace(/\s+/g, ' ').trim();
+const description = clean.length <= 160 ? clean : `${clean.slice(0, 157).replace(/[\s,;:.–—-]+\S*$/, '')}…`;
+
+const fullTitle = givenTitle || `${title}${seo.title_suffix ?? ''}`;
+const origin = Astro.site ?? Astro.url;
+const canonical = canonicalOverride || new URL(Astro.url.pathname, origin).toString();
+const ogMedia = image ?? media[seo.default_og_image] ?? null;
+const ogPath = ogImageUrl(ogMedia);
+const ogUrl = ogPath ? new URL(ogPath, origin).toString() : null;
+const hideFromSearch = noindex || seo.indexing === false || Astro.locals.preview;
 
 const org = {
   '@context': 'https://schema.org',
   '@type': 'NGO',
-  name: 'Friends of Nigeria',
-  alternateName: 'FON Europe',
-  url: Astro.site?.toString(),
-  logo: new URL('/icon-512.png', Astro.site).toString(),
+  name: site.name,
+  alternateName: site.short_name || undefined,
+  url: new URL('/', origin).toString(),
+  logo: new URL('/icon-512.png', origin).toString(),
   description: site.description,
-  email: site.contact.email,
-  telephone: site.contact.phones.map((p) => p.tel),
+  email: site.email,
+  telephone: (site.phones ?? []).map((p: { display: string }) => telHref(p.display).slice(4)),
   address: {
     '@type': 'PostalAddress',
-    streetAddress: site.contact.address,
-    postalCode: site.contact.postcode,
-    addressLocality: site.contact.city,
-    addressCountry: 'FR',
+    streetAddress: site.address,
+    postalCode: site.postcode,
+    addressLocality: site.city,
+    addressCountry: site.country,
   },
-  sameAs: site.social.map((s) => s.url),
+  sameAs: (site.social ?? []).map((s: { url: string }) => s.url),
 };
 const ld = [org, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [])];
 ---
@@ -64,35 +74,42 @@ const ld = [org, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [])]
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    {noindex && <meta name="robots" content="noindex, follow" />}
+    {hideFromSearch && <meta name="robots" content="noindex, follow" />}
     <meta name="theme-color" content="#ffffff" />
     <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="sitemap" href="/sitemap-index.xml" />
 
-    <meta property="og:site_name" content="Friends of Nigeria" />
+    <meta property="og:site_name" content={site.name} />
     <meta property="og:type" content={type} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={ogUrl} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={imageAlt} />
+    {ogUrl && <meta property="og:image" content={ogUrl} />}
+    {ogMedia?.og_url && <meta property="og:image:width" content="1200" />}
+    {ogMedia?.og_url && <meta property="og:image:height" content="630" />}
+    {ogUrl && <meta property="og:image:alt" content={imageAlt || ogMedia?.alt || seo.default_og_alt || ''} />}
     <meta property="og:locale" content="en_GB" />
     {publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@FON_EUROPE" />
+    {seo.twitter_handle && <meta name="twitter:site" content={seo.twitter_handle} />}
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={ogUrl} />
+    {ogUrl && <meta name="twitter:image" content={ogUrl} />}
 
     <script is:inline>document.documentElement.classList.add('js');</script>
     <script type="application/ld+json" set:html={JSON.stringify(ld)} />
     <slot name="head" />
   </head>
   <body>
+    {
+      Astro.locals.preview && (
+        <div class="preview-bar" role="status">
+          Preview: drafts and scheduled content are visible. <a href={Astro.url.pathname}>Leave preview</a>
+        </div>
+      )
+    }
     <div class="scroll-progress" aria-hidden="true"></div>
     <a class="skip-link" href="#main">Skip to content</a>
     <Header />
@@ -106,3 +123,21 @@ const ld = [org, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [])]
     </script>
   </body>
 </html>
+
+<style is:global>
+  .preview-bar {
+    position: fixed;
+    inset: auto 12px 12px auto;
+    z-index: 1000;
+    background: #1b1b1b;
+    color: #fff;
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+  }
+  .preview-bar a {
+    color: #8fe0b0;
+    margin-left: 6px;
+  }
+</style>

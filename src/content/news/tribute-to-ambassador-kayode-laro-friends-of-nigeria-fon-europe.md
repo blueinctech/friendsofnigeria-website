@@ -2,7 +2,7 @@
 title: "Tribute to Ambassador Kayode Laro – Friends of Nigeria (FON) Europe"
 date: "2023-08-12"
 category: "Statement"
-excerpt: "We at Friends of Nigeria (FON) Europe and the entire diaspora community in France regret to announce the passing of our beloved Ambassador, His Excellency Kayode Laro, who passed on in the evening of Friday August 11, 2023.  Ambassador Laro was an…"
+excerpt: "Friends of Nigeria Europe and the diaspora community in France mourn the passing of His Excellency Kayode Laro, Ambassador of Nigeria to France, on 11 August 2023."
 image: "../../assets/news/tribute-to-ambassador-kayode-laro-friends-of-nigeria-fon-eur.jpg"
 imageAlt: "Tribute to Ambassador Kayode Laro – Friends of Nigeria (FON) Europe"
 ---

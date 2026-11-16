@@ -2,8 +2,10 @@
 import FormShell from './FormShell.astro';
 import Field from './Field.astro';
 import Icon from '../Icon.astro';
-import membership from '../../data/membership.json';
+import { getProgramme } from '../../lib/server/public';
 const f = 'fonen-registration';
+const fonen = await getProgramme('membership', 'fonen', true);
+const categories = fonen?.categories ?? [];
 ---
 
 <FormShell name={f} label="FONEN registration" success="<strong>Your FONEN registration has been received.</strong> Our team will review it and contact you with membership confirmation and payment details.">
@@ -11,7 +13,7 @@ const f = 'fonen-registration';
     <legend>Membership category</legend>
     <div class="radio-cards">
       {
-        membership.fonen.categories.map((c) => (
+        categories.map((c) => (
           <label class="radio-card">
             <input type="radio" name="category" value={`${c.name} (${c.fee})`} required aria-describedby={`${f}-category-error`} />
             <strong>{c.name}</strong>

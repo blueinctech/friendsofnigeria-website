@@ -2,7 +2,7 @@
 title: "The EU job market – sectors with the most job offers"
 date: "2020-12-20"
 category: "Careers"
-excerpt: "The EU Job Market – Sectors with the most job offers For part 3, I’ll be outlining the most “in-demand” job sectors in Europe. This is based on data analysis of the job offers on most European job search websites. The world is constantly changing,…"
+excerpt: "Part 3 of our series looks at the job sectors most in demand across Europe, based on job offers on European job search websites."
 image: "../../assets/news/the-eu-job-market-sectors-with-the-most-job-offers.jpg"
 imageAlt: "The EU job market – sectors with the most job offers"
 ---
@@ -13,7 +13,7 @@ For part 3, I’ll be outlining the most “in-demand” job sectors in Europe. 
 
 The world is constantly changing, and this change in trends and needs of society causes a fluctuation in the job market. In Europe, some countries are experiencing skill shortage which in turn makes certain occupations to be in high demand. Clearly, the high demand sectors are always easier to find employment irrespective of your race or nationality. But for those who are not in these high demand sectors, next week’s post will enlighten you more on how to stand out regardless of the industry you find yourself.
 
-Now that you are aware of the [easiest countries](https://friendsofnigeria.net/how-to-get-a-job-in-europe-as-a-non-european-part-1/) to find a job and you also have access to a reasonable number of [online resources](/news/how-to-get-a-job-in-europe-as-a-non-european-part-ii/) to kick start your search, here are some of the job sectors in EU that are easiest to find employment as a non-EU citizen;
+Now that you are aware of the [easiest countries](/news/how-to-get-a-job-in-europe-as-a-non-european-part-i/) to find a job and you also have access to a reasonable number of [online resources](/news/how-to-get-a-job-in-europe-as-a-non-european-part-ii/) to kick start your search, here are some of the job sectors in EU that are easiest to find employment as a non-EU citizen;
 
 - **ICT professionals:** The world has become a global village and that’s no longer news. Almost every economic sector needs ICT skills, so the demand keeps getting higher. Employers in this sector are always willing to sponsor work permits for job applicants anywhere in the world given that it’s one of the most sought after skills.
 - **STEM Professional (Science, Technology, Engineering and Mathematics):** STEM graduates are needed in many fields, including emerging and already established fields. Nevertheless, there are insufficient graduates to meet the demand in most European countries. So, job opportunities in this industry easily come with the assistance of any paperwork and work permit required.

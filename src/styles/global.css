@@ -103,6 +103,10 @@
 * {
   margin: 0;
 }
+/* Author display rules must never undo the hidden attribute. */
+[hidden] {
+  display: none !important;
+}
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -428,6 +432,13 @@ p {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-3);
+}
+/* Phones: buttons in a row share the width, and fill it once they wrap,
+   so stacked buttons line up instead of ending at ragged widths. */
+@media (max-width: 479px) {
+  .btn-row > .btn {
+    flex: 1 1 auto;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .btn,
@@ -786,12 +797,12 @@ fieldset {
 /* Elements fade up out of a soft blur as they enter the viewport. */
 .js [data-reveal] {
   opacity: 0;
-  transform: translate3d(0, 24px, 0);
-  filter: blur(6px);
+  transform: translate3d(0, 20px, 0);
+  filter: blur(4px);
   transition:
-    opacity 900ms var(--ease-expo),
-    transform 1100ms var(--ease-expo),
-    filter 900ms var(--ease-expo);
+    opacity 750ms var(--ease-expo),
+    transform 950ms var(--ease-expo),
+    filter 750ms var(--ease-expo);
   transition-delay: calc(var(--reveal-delay, 0) * 1ms);
 }
 .js [data-reveal].is-visible {

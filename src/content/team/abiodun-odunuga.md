@@ -13,7 +13,7 @@ Abiodun Dominic Odunuga is an international development consultant.
 
 Having acquired over 10 years of experience in the field of sustainability, entrepreneurship and International development, Abiodun has developed and worked on projects with organizations such as the World Bank, European Union, United Nations (UN), Africa Development Bank (AfDB), and The Commonwealth across Africa and Europe. He has presented various papers relating to entrepreneurship, social innovation and sustainability at different levels such as the International Conference on Sustainable Development (ICSD) in New York, United States as well as the in Rome Italy.
 
-He has consulted for various government agencies in Nigeria and France on economic initiatives in Agriculture, Digital Technology and Industry. Abiodun has also worked with various Sates Governments in Nigeria and the Nigeria Governors Forum with respect to development projects and attracting foreign investments.
+He has consulted for various government agencies in Nigeria and France on economic initiatives in Agriculture, Digital Technology and Industry. Abiodun has also worked with various State Governments in Nigeria and the Nigeria Governors Forum with respect to development projects and attracting foreign investments.
 
 He holds a Masters in Development Practice (MDP) degree from Sciences Po, Paris.
 

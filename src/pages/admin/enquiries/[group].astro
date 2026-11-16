@@ -1,0 +1,33 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import Forbidden from '../../../components/admin/Forbidden.astro';
+import Enquiries from '../../../components/admin/Enquiries';
+import { can } from '../../../lib/cms/permissions';
+
+const group = Astro.params.group;
+if (group !== 'membership' && group !== 'contact') return new Response(null, { status: 404 });
+const admin = Astro.locals.admin!;
+const title = group === 'membership' ? 'Membership Enquiries' : 'Contact Messages';
+const intro =
+  group === 'membership'
+    ? 'Membership applications and FONEN registrations sent from the website forms.'
+    : 'Messages sent from the contact form, and newsletter sign-ups.';
+---
+
+<AdminLayout title={title} active={`enquiries-${group}`}>
+  {
+    can(admin, 'enquiries', 'view') ? (
+      <>
+        <div class="page-head">
+          <div>
+            <h1>{title}</h1>
+            <p>{intro} Only administrators with access to enquiries can see them.</p>
+          </div>
+        </div>
+        <Enquiries client:load group={group} canDelete={can(admin, 'enquiries', 'delete')} canEdit={can(admin, 'enquiries', 'edit')} />
+      </>
+    ) : (
+      <Forbidden />
+    )
+  }
+</AdminLayout>

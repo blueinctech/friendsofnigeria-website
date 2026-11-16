@@ -1,0 +1,12 @@
+---
+/** Membership programmes added in the dashboard (FONEN and FONPRO have their own pages). */
+import ProgrammeDetail from '../../components/ProgrammeDetail.astro';
+import { getProgramme, listProgrammes } from '../../lib/server/public';
+
+const preview = Astro.locals.preview;
+const area = await getProgramme('membership', Astro.params.slug ?? '', preview);
+if (!area) return Astro.rewrite('/404/');
+const siblings = await listProgrammes('membership', preview);
+---
+
+<ProgrammeDetail area={area} siblings={siblings} albums={[]} />

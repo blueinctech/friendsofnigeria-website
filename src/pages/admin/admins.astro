@@ -1,0 +1,29 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import Forbidden from '../../components/admin/Forbidden.astro';
+import AdminsManager from '../../components/admin/AdminsManager';
+import Icon from '../../components/admin/Icon';
+import { can } from '../../lib/cms/permissions';
+const admin = Astro.locals.admin!;
+---
+
+<AdminLayout title="Administrators" active="admins">
+  {
+    can(admin, 'admins', 'view') ? (
+      <>
+        <div class="page-head">
+          <div>
+            <h1>Administrator Management</h1>
+            <p>Who can sign in to this dashboard and what each person can do. There is no public sign-up: new administrators are invited here and choose their own password from a private link.</p>
+          </div>
+          <div class="head-actions">
+            <a class="btn btn--ghost" href="/admin/activity/"><Icon name="activity" size={16} /> Activity log</a>
+          </div>
+        </div>
+        <AdminsManager client:load selfId={admin.id} />
+      </>
+    ) : (
+      <Forbidden />
+    )
+  }
+</AdminLayout>

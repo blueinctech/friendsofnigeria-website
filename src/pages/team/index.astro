@@ -1,42 +1,32 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../../components/PageHero.astro';
 import TeamCard from '../../components/TeamCard.astro';
 import CtaBand from '../../components/CtaBand.astro';
-import { groupLabels, groupOrder } from '../../lib/format';
-import heroImg from '../../assets/about/team-group.png';
+import { getPage, listTeam, pageSeo } from '../../lib/server/public';
 
-const people = await getCollection('team');
-const groups = groupOrder
-  .map((g) => ({ id: g, ...groupLabels[g], people: people.filter((p) => p.data.group === g).sort((a, b) => a.data.order - b.data.order) }))
-  .filter((g) => g.people.length);
+const preview = Astro.locals.preview;
+const page = await getPage('team', preview);
+if (!page) return Astro.rewrite('/404/');
+const groups = await listTeam(preview);
 ---
 
-<BaseLayout
-  title="Management team"
-  description="Meet the honorary board, executive board and country chapter leads of Friends of Nigeria across France, Germany, Belgium, Luxembourg and Nigeria."
-  image={heroImg}
->
-  <PageHero
-    title="The people behind Friends of Nigeria"
-    lead="Our boards and chapter leads are professionals at the forefront of their careers, volunteering their time to connect Nigeria and Europe."
-    crumbs={[{ label: 'About us', href: '/about/' }, { label: 'Management team' }]}
-  >
+<BaseLayout {...pageSeo(page)}>
+  <PageHero title={page.title} lead={page.lead} crumbs={[{ label: 'About us', href: '/about/' }, { label: 'Management team' }]}>
     <nav aria-label="Jump to a board" class="jump">
       <ul role="list">
-        {groups.map((g) => <li><a href={`#${g.id}`}>{g.title.replace(', FON Europe', '').replace(' Executive Board', '').replace(' Sub-committee Leads', ' committees')}</a></li>)}
+        {groups.map((g) => <li><a href={`#${g.slug}`}>{g.nav_label || g.title}</a></li>)}
       </ul>
     </nav>
   </PageHero>
 
   {
     groups.map((g, gi) => (
-      <section class:list={['section', 'section--tight', { 'section--subtle': gi % 2 === 1 }]} id={g.id}>
+      <section class:list={['section', 'section--tight', { 'section--subtle': gi % 2 === 1 }]} id={g.slug}>
         <div class="container">
           <div class="group-head">
             <h2 data-reveal>{g.title}</h2>
-            <p data-reveal style="--reveal-delay:60">{g.description}</p>
+            {g.description && <p data-reveal style="--reveal-delay:60">{g.description}</p>}
           </div>
           <ul class="team-grid" role="list">
             {g.people.map((p, i) => (
@@ -50,7 +40,7 @@ const groups = groupOrder
     ))
   }
 
-  <CtaBand title="Want to contribute to the network?" text="Friends of Nigeria is run by volunteers across Europe and Nigeria. Join as a member, or get in touch to find out how you can help." />
+  <CtaBand title={page.content.cta_title} text={page.content.cta_text} />
 </BaseLayout>
 
 <style>

@@ -2,7 +2,7 @@
 title: "COVID-19 information: the 5th edition of Spotlight Nigeria moved to 2021"
 date: "2020-06-03"
 category: "Events"
-excerpt: "In the wake of the COVID-19 pandemic, we’ve all witnessed how rapidly the world has changed overnight, forcing countries to close borders in a bid to safeguard the health and wellbeing of their citizens. Today, even as countries put in place…"
+excerpt: "Because of the COVID-19 pandemic and continuing travel restrictions, the 5th edition of the Spotlight Nigeria Business and Investment Forum has been moved to 2021."
 image: "../../assets/news/covid-19-information-the-5th-edition-of-spotlight-nigeria-mo.jpg"
 imageAlt: "COVID-19 information: the 5th edition of Spotlight Nigeria moved to 2021"
 ---

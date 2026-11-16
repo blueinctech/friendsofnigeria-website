@@ -1,52 +1,65 @@
 ---
-import { Image } from 'astro:assets';
-import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Icon from '../../components/Icon.astro';
 import AlbumCard from '../../components/AlbumCard.astro';
 import CtaBand from '../../components/CtaBand.astro';
 import { formatDate } from '../../lib/format';
-import { sortByDateDesc } from '../../lib/related';
+import { getEvent, getSite, img, listAlbums, listEvents } from '../../lib/server/public';
 
-export async function getStaticPaths() {
-  const events = await getCollection('events');
-  return events.map((event) => ({ params: { slug: event.id }, props: { event } }));
-}
-const { event } = Astro.props;
-const d = event.data;
-const { Content } = await render(event);
-const albums = event.id === 'spotlight-nigeria' ? sortByDateDesc(await getCollection('albums', (a) => a.data.type === 'Flagship event')) : [];
-const other = (await getCollection('events')).find((e) => e.id !== event.id);
+const preview = Astro.locals.preview;
+const d = await getEvent(Astro.params.slug ?? '', preview);
+if (!d) return Astro.rewrite('/404/');
+const { site } = await getSite(Astro.locals);
+const name = d.short_title || d.title;
+const albums = d.kind === 'flagship' ? (await listAlbums(preview)).filter((a) => a.type === 'Flagship event' && a.title.toLowerCase().includes(name.toLowerCase())) : [];
+const others = (await listEvents(preview)).filter((e) => e.id !== d.id && e.kind === d.kind);
+const other = others[0];
+const place = [d.venue, [d.address, d.city].filter(Boolean).join(' ')].filter(Boolean);
+const dates = d.start ? (d.end && d.end.valueOf() !== d.start.valueOf() ? `${formatDate(d.start)} – ${formatDate(d.end)}` : formatDate(d.start)) : null;
 const ld = {
   '@context': 'https://schema.org',
-  '@type': 'EventSeries',
+  '@type': d.kind === 'flagship' ? 'EventSeries' : 'Event',
   name: d.title,
   description: d.summary,
-  url: d.website,
-  location: { '@type': 'Place', name: d.lastEdition?.venue ?? 'Paris', address: d.lastEdition ? `${d.lastEdition.address} ${d.lastEdition.city}` : 'Paris, France' },
-  organizer: { '@type': 'Organization', name: 'Friends of Nigeria', url: Astro.site?.toString() },
+  url: d.website_url ?? new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString(),
+  startDate: d.kind === 'flagship' ? undefined : d.start?.toISOString().slice(0, 10),
+  location: { '@type': 'Place', name: d.venue ?? d.city ?? 'Paris', address: [d.address, d.city].filter(Boolean).join(' ') || 'Paris, France' },
+  organizer: { '@type': 'Organization', name: site.name, url: new URL('/', Astro.site ?? Astro.url).toString() },
 };
+const heroImg = img(d.image, { alt: d.image_alt, sizes: '(min-width: 1000px) 620px, 100vw', loading: 'eager', fetchpriority: 'high' });
 ---
 
-<BaseLayout title={d.title} description={d.summary} image={d.image} imageAlt={d.imageAlt} jsonLd={ld}>
+<BaseLayout title={d.seo_title || d.title} description={d.seo_description || d.summary} image={d.og ?? d.image} imageAlt={d.image_alt} canonical={d.canonical_url} jsonLd={ld}>
   <section class="ev-hero">
     <div class="container">
-      <Breadcrumbs items={[{ label: 'Events', href: '/events/' }, { label: d.shortTitle }]} tone="dark" />
+      <Breadcrumbs items={[{ label: 'Events', href: '/events/' }, { label: name }]} tone="dark" />
       <div class="ev-hero-grid">
         <div class="ev-hero-copy">
-          <p class="ev-since">Since {d.since} · Paris</p>
+          {(d.since || d.city) && <p class="ev-since">{[d.since && `Since ${d.since}`, d.city].filter(Boolean).join(' · ')}</p>}
+          {!d.since && dates && <p class="ev-since">{dates}</p>}
           <h1>{d.title}</h1>
-          <p class="ev-lead">{d.tagline}</p>
+          {d.tagline && <p class="ev-lead">{d.tagline}</p>}
           <div class="btn-row">
-            <a href={d.website} class="btn btn--light" target="_blank" rel="noopener">
-              Visit the official website <Icon name="arrow-up-right" size={16} /><span class="visually-hidden"> (opens in a new tab)</span>
+            {d.upcoming && d.registration_url && (
+              <a href={d.registration_url} class="btn btn--light" target="_blank" rel="noopener">
+                Register <Icon name="arrow-up-right" size={16} />
+                <span class="visually-hidden"> (opens in a new tab)</span>
+              </a>
+            )}
+            {d.website_url && (
+              <a href={d.website_url} class:list={['btn', d.upcoming && d.registration_url ? 'btn--ghost-light' : 'btn--light']} target="_blank" rel="noopener">
+                Visit the official website <Icon name="arrow-up-right" size={16} />
+                <span class="visually-hidden"> (opens in a new tab)</span>
+              </a>
+            )}
+            <a href={`/contact/?topic=${encodeURIComponent(name === 'NIDA' ? 'NIDA' : name === 'Spotlight Nigeria' ? 'Spotlight Nigeria' : 'Other')}`} class="btn btn--ghost-light">
+              Enquire
             </a>
-            <a href={`/contact/?topic=${encodeURIComponent(d.shortTitle === 'NIDA' ? 'NIDA' : 'Spotlight Nigeria')}`} class="btn btn--ghost-light">Enquire</a>
           </div>
         </div>
         <div class="media ev-hero-media">
-          <Image src={d.image} alt={d.imageAlt} widths={[640, 960, 1280]} sizes="(min-width: 1000px) 620px, 100vw" loading="eager" fetchpriority="high" />
+          {heroImg && <img {...heroImg} />}
         </div>
       </div>
     </div>
@@ -70,7 +83,7 @@ const ld = {
               </div>
             ))}
           </dl>
-          {d.statsSource && <p class="source">Source: {d.statsSource}</p>}
+          {d.stats_source && <p class="source">Source: {d.stats_source}</p>}
         </div>
       </section>
     )
@@ -79,43 +92,49 @@ const ld = {
   <section class="section">
     <div class="container ev-body">
       <div class="prose" data-reveal>
-        <h2>About {d.shortTitle}</h2>
-        <Content />
+        <h2>About {name}</h2>
+        <Fragment set:html={d.body} />
       </div>
       <aside class="ev-aside" data-reveal style="--reveal-delay:100">
         {
-          d.lastEdition && (
+          (dates || place.length > 0) && (
             <div class="edition">
-              <h2 class="aside-title">Latest edition</h2>
-              <p class="edition-name">{d.lastEdition.name}</p>
+              <h2 class="aside-title">{d.kind === 'flagship' && !d.upcoming ? 'Latest edition' : d.upcoming ? 'Next edition' : 'Event details'}</h2>
+              {d.edition_name && <p class="edition-name">{d.edition_name}</p>}
               <ul role="list">
-                <li>
-                  <Icon name="calendar" size={16} />
-                  {formatDate(d.lastEdition.date)}
-                </li>
-                <li>
-                  <Icon name="map-pin" size={16} />
-                  <span>
-                    {d.lastEdition.venue}
-                    <br />
-                    {d.lastEdition.address} {d.lastEdition.city}
-                  </span>
-                </li>
+                {dates && (
+                  <li>
+                    <Icon name="calendar" size={16} />
+                    {dates}
+                  </li>
+                )}
+                {place.length > 0 && (
+                  <li>
+                    <Icon name="map-pin" size={16} />
+                    <span>
+                      {place[0]}
+                      {place[1] && <br />}
+                      {place[1]}
+                    </span>
+                  </li>
+                )}
               </ul>
             </div>
           )
         }
-        <div class="highlights">
-          <h2 class="aside-title">Who it brings together</h2>
-          <ul role="list">
-            {d.highlights.map((h) => (
-              <li>
-                <Icon name="check" size={16} />
-                {h}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {d.highlights.length > 0 && (
+          <div class="highlights">
+            <h2 class="aside-title">Who it brings together</h2>
+            <ul role="list">
+              {d.highlights.map((h) => (
+                <li>
+                  <Icon name="check" size={16} />
+                  {h}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </aside>
     </div>
   </section>
@@ -127,7 +146,7 @@ const ld = {
           <ul class="ev-gallery" role="list">
             {d.gallery.map((g, i) => (
               <li class="media" data-reveal="image" style={`--reveal-delay:${i * 80}`}>
-                <Image src={g} alt={`${d.shortTitle} in Paris`} widths={[400, 600, 800]} sizes="(min-width: 900px) 25vw, 50vw" loading="lazy" />
+                <img {...img(g, { alt: g.alt || `${name}${d.city ? ` in ${d.city}` : ''}`, sizes: '(min-width: 900px) 25vw, 50vw', maxWidth: 800 })} />
               </li>
             ))}
           </ul>
@@ -162,10 +181,10 @@ const ld = {
     other && (
       <section class="section section--tight">
         <div class="container">
-          <a href={`/events/${other.id}/`} class="other">
-            <span class="other-k">Our other flagship event</span>
+          <a href={`/events/${other.slug}/`} class="other">
+            <span class="other-k">{d.kind === 'flagship' ? 'Our other flagship event' : 'Another event'}</span>
             <span class="other-t">
-              {other.data.title} <Icon name="arrow-right" size={24} />
+              {other.title} <Icon name="arrow-right" size={24} />
             </span>
           </a>
         </div>

@@ -2,7 +2,7 @@
 title: "The impact of the Twitter ban on Nigeria, its citizens and the diaspora"
 date: "2021-06-28"
 category: "Opinion"
-excerpt: "Nigeria’s decision to suspend Twitter indefinitely, for whatever reason, could backfire on the government and cost the country in all ramifications possible. Over the past 5 years, Nigeria has been among the best performing African Countries in…"
+excerpt: "Nigeria’s decision to suspend Twitter indefinitely could backfire on the government and cost the country in all ramifications possible."
 image: "../../assets/news/the-impact-of-the-twitter-ban-on-nigeria-its-citizens-and-th.jpg"
 imageAlt: "The impact of the Twitter ban on Nigeria, its citizens and the diaspora"
 ---

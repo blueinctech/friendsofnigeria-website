@@ -1,11 +1,13 @@
 ---
-import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
+import { img, listPartners, type Partner } from '../lib/server/public';
 interface Props {
   variant?: 'grid' | 'marquee';
+  partners?: Partner[];
 }
 const { variant = 'grid' } = Astro.props;
-const partners = (await getCollection('partners')).sort((a, b) => a.data.order - b.data.order);
+const partners = Astro.props.partners ?? (await listPartners(Astro.locals.preview));
+// Logos keep their own proportions: only the width is constrained.
+const logo = (p: Partner, alt: string, w: number) => img(p.logo, { alt, sizes: `${w}px`, maxWidth: w * 2 });
 ---
 
 {
@@ -14,16 +16,17 @@ const partners = (await getCollection('partners')).sort((a, b) => a.data.order -
       {[0, 1].map((copy) => (
         <ul class="marquee-track" role="list" aria-hidden={copy === 1 ? 'true' : undefined}>
           {partners.map((p) => {
-            const img = <Image src={p.data.logo} alt={copy === 1 ? '' : p.data.name} width={220} densities={[1, 2]} loading="lazy" />;
+            const attrs = logo(p, copy === 1 ? '' : p.name, 220);
+            const pic = attrs ? <img {...attrs} /> : <span>{p.name}</span>;
             return (
               <li>
-                {p.data.url ? (
-                  <a href={p.data.url} target="_blank" rel="noopener noreferrer" title={p.data.name} tabindex={copy === 1 ? -1 : undefined}>
-                    {img}
+                {p.url ? (
+                  <a href={p.url} target="_blank" rel="noopener noreferrer" title={p.name} tabindex={copy === 1 ? -1 : undefined}>
+                    {pic}
                     {copy === 0 && <span class="visually-hidden"> (opens in a new tab)</span>}
                   </a>
                 ) : (
-                  <div title={p.data.name}>{img}</div>
+                  <div title={p.name}>{pic}</div>
                 )}
               </li>
             );
@@ -38,16 +41,17 @@ const partners = (await getCollection('partners')).sort((a, b) => a.data.order -
 <ul class="partners" role="list">
   {
     partners.map((p, i) => {
-      const img = <Image src={p.data.logo} alt={p.data.name} width={260} densities={[1, 2]} loading="lazy" />;
+      const attrs = logo(p, p.name, 260);
+      const pic = attrs ? <img {...attrs} /> : <span>{p.name}</span>;
       return (
         <li data-reveal style={`--reveal-delay:${(i % 7) * 40}`}>
-          {p.data.url ? (
-            <a href={p.data.url} target="_blank" rel="noopener noreferrer" title={p.data.name}>
-              {img}
+          {p.url ? (
+            <a href={p.url} target="_blank" rel="noopener noreferrer" title={p.name}>
+              {pic}
               <span class="visually-hidden"> (opens in a new tab)</span>
             </a>
           ) : (
-            <div title={p.data.name}>{img}</div>
+            <div title={p.name}>{pic}</div>
           )}
         </li>
       );

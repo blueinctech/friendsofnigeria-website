@@ -1,42 +1,51 @@
 ---
-import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../../components/PageHero.astro';
 import Icon from '../../components/Icon.astro';
 import CtaBand from '../../components/CtaBand.astro';
+import { formatDate } from '../../lib/format';
+import { getPage, img, listEvents, pageSeo, type EventItem } from '../../lib/server/public';
 
-const events = (await getCollection('events')).sort((a, b) => a.data.order - b.data.order);
+const preview = Astro.locals.preview;
+const page = await getPage('events', preview);
+if (!page) return Astro.rewrite('/404/');
+const c = page.content;
+const all = await listEvents(preview);
+const flagship = all.filter((e) => e.kind === 'flagship');
+const others = all.filter((e) => e.kind !== 'flagship');
+const upcoming = others.filter((e) => e.upcoming).sort((a, b) => (a.start?.valueOf() ?? Infinity) - (b.start?.valueOf() ?? Infinity));
+const past = others.filter((e) => !e.upcoming).sort((a, b) => (b.start?.valueOf() ?? 0) - (a.start?.valueOf() ?? 0));
+const when = (e: EventItem) =>
+  !e.start ? 'Date to be announced' : e.end && e.end.valueOf() !== e.start.valueOf() ? `${formatDate(e.start)} – ${formatDate(e.end)}` : formatDate(e.start);
+const where = (e: EventItem) => [e.venue, e.city].filter(Boolean).join(', ');
 ---
 
-<BaseLayout title="Events" description="Spotlight Nigeria Business and Investment Forum and the Nigerians in Diaspora Awards (NIDA), the flagship events of Friends of Nigeria in Paris.">
-  <PageHero
-    title="Flagship events"
-    lead="Two annual gatherings in Paris that bring Nigerian and European business leaders, investors, institutions and the diaspora together."
-    crumbs={[{ label: 'Events' }]}
-  />
+<BaseLayout {...pageSeo(page)}>
+  <PageHero title={page.title} lead={page.lead} crumbs={[{ label: 'Events' }]} image={page.hero} imageAlt={page.hero_alt} />
 
   <section class="section">
     <div class="container ev-list">
       {
-        events.map((e, i) => (
+        flagship.map((e, i) => (
           <article class:list={['ev', { 'ev--flip': i % 2 }]}>
             <div class="media media--zoom ev-media" data-reveal="image" data-parallax>
-              <Image src={e.data.image} alt={e.data.imageAlt} widths={[640, 960, 1280]} sizes="(min-width: 1000px) 680px, 100vw" loading={i === 0 ? 'eager' : 'lazy'} />
+              {e.image && <img {...img(e.image, { alt: e.image_alt, sizes: '(min-width: 1000px) 680px, 100vw', loading: i === 0 ? 'eager' : 'lazy' })} />}
             </div>
             <div class="ev-copy" data-reveal>
-              <p class="ev-since">Since {e.data.since} · Paris</p>
-              <h2>{e.data.title}</h2>
-              <p class="ev-tagline">{e.data.tagline}</p>
-              <p>{e.data.summary}</p>
+              {(e.since || e.city) && <p class="ev-since">{[e.since && `Since ${e.since}`, e.city].filter(Boolean).join(' · ')}</p>}
+              <h2>{e.title}</h2>
+              {e.tagline && <p class="ev-tagline">{e.tagline}</p>}
+              <p>{e.summary}</p>
               <div class="btn-row">
-                <a href={`/events/${e.id}/`} class="btn">
-                  Discover {e.data.shortTitle} <Icon name="arrow-right" size={16} class="arrow" />
+                <a href={`/events/${e.slug}/`} class="btn">
+                  Discover {e.short_title || e.title} <Icon name="arrow-right" size={16} class="arrow" />
                 </a>
-                <a href={e.data.website} class="btn btn--ghost" target="_blank" rel="noopener">
-                  Official website <Icon name="arrow-up-right" size={16} />
-                  <span class="visually-hidden"> (opens in a new tab)</span>
-                </a>
+                {e.website_url && (
+                  <a href={e.website_url} class="btn btn--ghost" target="_blank" rel="noopener">
+                    Official website <Icon name="arrow-up-right" size={16} />
+                    <span class="visually-hidden"> (opens in a new tab)</span>
+                  </a>
+                )}
               </div>
             </div>
           </article>
@@ -45,16 +54,54 @@ const events = (await getCollection('events')).sort((a, b) => a.data.order - b.d
     </div>
   </section>
 
+  {
+    [
+      { heading: c.upcoming_heading, items: upcoming, id: 'upcoming' },
+      { heading: c.past_heading, items: past, id: 'past' },
+    ]
+      .filter((g) => g.items.length)
+      .map((g) => (
+        <section class="section section--tight" id={g.id}>
+          <div class="container">
+            <h2 class="list-heading" data-reveal>{g.heading}</h2>
+            <ul class="ev-cards" role="list">
+              {g.items.map((e) => (
+                <li class="ev-card spotlight" data-reveal>
+                  {e.image && (
+                    <div class="media ev-card-media">
+                      <img {...img(e.image, { alt: e.image_alt, sizes: '(min-width: 900px) 360px, 100vw', maxWidth: 720 })} />
+                    </div>
+                  )}
+                  <div class="ev-card-body">
+                    <p class="ev-card-date">
+                      <Icon name="calendar" size={15} /> {when(e)}
+                    </p>
+                    <h3>
+                      <a href={`/events/${e.slug}/`} class="stretched">{e.title}</a>
+                    </h3>
+                    {where(e) && (
+                      <p class="ev-card-where">
+                        <Icon name="map-pin" size={15} /> {where(e)}
+                      </p>
+                    )}
+                    {e.summary && <p class="ev-card-summary">{e.summary}</p>}
+                    {g.id === 'upcoming' && e.registration_url && <span class="ev-card-reg">Registration open</span>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ))
+  }
+
   <section class="section section--subtle">
     <div class="container more-events">
       <div>
-        <h2 data-reveal>Business breakfasts, missions and community events</h2>
-        <p class="lead" data-reveal>
-          Throughout the year we also host Nigerian delegations in Paris, organise business breakfast meetings and trade missions, and take part in
-          bilateral events between Europe and Nigeria.
-        </p>
+        <h2 data-reveal>{c.more_heading}</h2>
+        {c.more_text && <p class="lead" data-reveal>{c.more_text}</p>}
       </div>
-      <a href="/our-activities/" class="btn btn--dark" data-reveal>See our activities <Icon name="arrow-right" size={16} class="arrow" /></a>
+      {c.more_cta_label && <a href={c.more_cta_url} class="btn btn--dark" data-reveal>{c.more_cta_label} <Icon name="arrow-right" size={16} class="arrow" /></a>}
     </div>
   </section>
 
@@ -62,6 +109,61 @@ const events = (await getCollection('events')).sort((a, b) => a.data.order - b.d
 </BaseLayout>
 
 <style>
+  .list-heading {
+    margin-bottom: 24px;
+  }
+  .ev-cards {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .ev-card {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .ev-card-media {
+    aspect-ratio: 16 / 9;
+  }
+  .ev-card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .ev-card-body {
+    padding: 18px 20px 22px;
+    display: grid;
+    gap: 8px;
+  }
+  .ev-card h3 {
+    font-size: 1.15rem;
+  }
+  .ev-card-date,
+  .ev-card-where {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--ink-2);
+  }
+  .ev-card-summary {
+    font-size: 0.95rem;
+  }
+  .ev-card-reg {
+    justify-self: start;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: var(--green-50);
+    color: var(--green-700);
+  }
+
   .ev-list {
     display: grid;
     gap: clamp(4rem, 3rem + 4vw, 7rem);

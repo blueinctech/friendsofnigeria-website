@@ -1,25 +1,22 @@
 ---
-import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../../components/PageHero.astro';
 import Icon from '../../components/Icon.astro';
 import MembershipEnquiryForm from '../../components/forms/MembershipEnquiryForm.astro';
-import membership from '../../data/membership.json';
-import heroImg from '../../assets/site/audience-2022.jpg';
+import { getPage, getSite, iconName, img, listProgrammes, pageSeo } from '../../lib/server/public';
 
-const steps = [
-  { title: 'Choose your platform', text: 'FONEN for companies, FONPRO for individual professionals.' },
-  { title: 'Register', text: 'Complete the FONEN registration form, or join FONPRO securely through HelloAsso.' },
-  { title: 'Get connected', text: 'Access our events, network, training sessions and opportunities in Nigeria and Europe.' },
-];
+const preview = Astro.locals.preview;
+const page = await getPage('membership', preview);
+if (!page) return Astro.rewrite('/404/');
+const c = page.content;
+const { site } = await getSite(Astro.locals);
+const plans = await listProgrammes('membership', preview);
+const stepsImg = img(page.media[c.steps_image], { alt: c.steps_image_alt, sizes: '(min-width: 1000px) 520px, 100vw' });
+const planIcon = (slug: string, icon: string | null) => (slug === 'fonen' ? 'building' : slug === 'fonpro' ? 'user' : iconName(icon, 'users'));
 ---
 
-<BaseLayout title="Become a member" description="Join Friends of Nigeria through FONEN, our corporate network for European companies, or FONPRO, the largest network of Nigerian professionals in France." image={heroImg}>
-  <PageHero
-    title="Become a member"
-    lead={membership.intro}
-    crumbs={[{ label: 'Become a member' }]}
-  >
+<BaseLayout {...pageSeo(page)}>
+  <PageHero title={page.title} lead={page.lead} crumbs={[{ label: page.title }]}>
     <div class="btn-row">
       <a href="#platforms" class="btn">Compare memberships <Icon name="arrow-right" size={16} class="arrow" /></a>
       <a href="#enquire" class="btn btn--ghost">Ask a question</a>
@@ -29,34 +26,43 @@ const steps = [
   <section class="section" id="platforms">
     <div class="container">
       <div class="plans">
-        <article class="plan spotlight lift" data-reveal>
-          <span class="plan-icon"><Icon name="building" size={24} /></span>
-          <span class="tag">{membership.fonen.audience}</span>
-          <h2>{membership.fonen.name}<span>{membership.fonen.fullName}</span></h2>
-          <p>{membership.fonen.summary}</p>
-          <p class="muted">{membership.fonen.details}</p>
-          <ul class="rows" role="list">
-            {membership.fonen.categories.map((c) => <li><span>{c.name} membership</span><strong>{c.fee}</strong></li>)}
-          </ul>
-          <div class="btn-row">
-            <a href="/membership/fonen/" class="btn">Register your company <Icon name="arrow-right" size={16} class="arrow" /></a>
-            <a href="/membership/fonen/#about" class="btn btn--ghost">Learn more</a>
-          </div>
-        </article>
-        <article class="plan spotlight lift" data-reveal style="--reveal-delay:100">
-          <span class="plan-icon"><Icon name="user" size={24} /></span>
-          <span class="tag">{membership.fonpro.audience}</span>
-          <h2>{membership.fonpro.name}<span>{membership.fonpro.fullName}</span></h2>
-          <p>{membership.fonpro.summary}</p>
-          <p class="muted">{membership.fonpro.details}</p>
-          <ul class="rows" role="list">
-            <li><span>Registration and payment</span><strong>Secure, via HelloAsso</strong></li>
-          </ul>
-          <div class="btn-row">
-            <a href="/membership/fonpro/" class="btn">Join FONPRO <Icon name="arrow-right" size={16} class="arrow" /></a>
-            <a href="/membership/fonpro/#about" class="btn btn--ghost">Learn more</a>
-          </div>
-        </article>
+        {
+          plans.map((p, i) => (
+            <article class="plan spotlight lift" data-reveal style={i ? `--reveal-delay:${i * 100}` : undefined}>
+              <span class="plan-icon"><Icon name={planIcon(p.slug, p.icon)} size={24} /></span>
+              {p.audience && <span class="tag">{p.audience}</span>}
+              <h2>
+                {p.title}
+                {p.full_name && <span>{p.full_name}</span>}
+              </h2>
+              <p>{p.summary}</p>
+              {p.details && <p class="muted">{p.details}</p>}
+              <ul class="rows" role="list">
+                {p.categories.length > 0
+                  ? p.categories.map((cat) => (
+                      <li>
+                        <span>{cat.name} membership</span>
+                        <strong>{cat.fee}</strong>
+                      </li>
+                    ))
+                  : /helloasso/i.test(p.secondary_link_url ?? '') && (
+                      <li>
+                        <span>Registration and payment</span>
+                        <strong>Secure, via HelloAsso</strong>
+                      </li>
+                    )}
+              </ul>
+              <div class="btn-row">
+                <a href={p.link_url?.startsWith('#') ? `${p.path}${p.link_url}` : p.path} class="btn">
+                  {p.link_label || `About ${p.title}`} <Icon name="arrow-right" size={16} class="arrow" />
+                </a>
+                <a href={`${p.path}#about`} class="btn btn--ghost">
+                  Learn more
+                </a>
+              </div>
+            </article>
+          ))
+        }
       </div>
     </div>
   </section>
@@ -64,13 +70,13 @@ const steps = [
   <section class="section section--subtle">
     <div class="container how">
       <div class="media how-media" data-reveal="image" data-parallax>
-        <Image src={heroImg} alt="Business leaders and members in the audience at Spotlight Nigeria 2022" widths={[480, 720, 960]} sizes="(min-width: 1000px) 520px, 100vw" />
+        {stepsImg && <img {...stepsImg} />}
       </div>
       <div>
-        <h2 data-reveal>How to join</h2>
+        <h2 data-reveal>{c.steps_heading}</h2>
         <ol class="steps" role="list">
           {
-            steps.map((s, i) => (
+            (c.steps ?? []).map((s: { title: string; text: string }, i: number) => (
               <li data-reveal style={`--reveal-delay:${i * 80}`}>
                 <span class="step-n">{i + 1}</span>
                 <div>
@@ -88,11 +94,13 @@ const steps = [
   <section class="section" id="enquire">
     <div class="container enquire">
       <div class="enquire-intro">
-        <h2 data-reveal>Not sure which is right for you?</h2>
-        <p class="lead" data-reveal>Send us a short note and our membership team will help you choose and guide you through registration.</p>
-        <p class="contact-alt" data-reveal>
-          Prefer email? Write to <a href="mailto:contact@friendsofnigeria.net">contact@friendsofnigeria.net</a>
-        </p>
+        <h2 data-reveal>{c.enquire_heading}</h2>
+        {c.enquire_lead && <p class="lead" data-reveal>{c.enquire_lead}</p>}
+        {site.email && (
+          <p class="contact-alt" data-reveal>
+            Prefer email? Write to <a href={`mailto:${site.email}`}>{site.email}</a>
+          </p>
+        )}
       </div>
       <div class="form-card spotlight" data-reveal style="--reveal-delay:100">
         <MembershipEnquiryForm />
@@ -112,10 +120,10 @@ const steps = [
     }
   }
   .plan {
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     gap: var(--s-4);
-    align-content: start;
-    justify-items: start;
     padding: clamp(1.75rem, 1.25rem + 2vw, 3rem);
     border: 1px solid var(--line);
     border-radius: var(--r-md);
@@ -143,6 +151,9 @@ const steps = [
   }
   .plan > p {
     color: var(--ink-2);
+  }
+  .plan > .btn-row {
+    margin-top: auto;
   }
   .plan .muted {
     font-size: var(--fs-sm);

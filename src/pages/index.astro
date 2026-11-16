@@ -1,90 +1,94 @@
 ---
-import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
 import TeamCard from '../components/TeamCard.astro';
 import NewsCard from '../components/NewsCard.astro';
 import PartnerGrid from '../components/PartnerGrid.astro';
 import CtaBand from '../components/CtaBand.astro';
-import about from '../data/about.json';
-import membership from '../data/membership.json';
-import site from '../data/site.json';
+import {
+  contentCounts,
+  eventsByIds,
+  getPage,
+  getSite,
+  homeTeam,
+  iconName,
+  img,
+  isExternal,
+  listNews,
+  listPartners,
+  listProgrammes,
+  mediaIdsIn,
+  mediaMap,
+} from '../lib/server/public';
 
-import { getImage } from 'astro:assets';
-import heroMain from '../assets/site/area-investment.jpg';
-import slideConversation from '../assets/site/hero-conversation.jpg';
-import slideSpeaker from '../assets/activities/extra-2.jpg';
-import slideNetworking from '../assets/activities/extra-1.jpg';
-import slideAudience from '../assets/site/audience-2022.jpg';
-import slideExchange from '../assets/activities/extra-4.jpg';
-import heroPanel from '../assets/site/hero-panel.jpg';
-import heroBrand from '../assets/activities/extra-3.jpg';
-import heroCity from '../assets/site/hero-city.jpg';
-import teamPhoto from '../assets/site/team-spotlight-2022.jpg';
-import spotlightImg from '../assets/site/spotlight-banner-2023.jpg';
-import nidaImg from '../assets/events/nida-og.jpg';
+const preview = Astro.locals.preview;
+const page = await getPage('home', preview);
+if (!page) return new Response(null, { status: 404 });
+const { home: h, seo } = await getSite(Astro.locals);
 
-// Hero slideshow: photos from Friends of Nigeria events. The first slide is
-// rendered normally (it is the LCP image); the rest carry their srcset in data
-// attributes and are only fetched by the script just before they are shown.
-const slideSizes = '(min-width: 1100px) 460px, (min-width: 640px) 430px, 90vw';
-const slideDefs = [
-  { src: slideConversation, pos: '62% 32%', alt: 'Two women in conversation during a networking break at Spotlight Nigeria in Paris' },
-  { src: slideSpeaker, pos: '50% 30%', alt: 'A speaker addresses delegates from the podium at a Friends of Nigeria event in Paris' },
-  { src: slideNetworking, pos: '50% 45%', alt: 'Guests networking over refreshments at a Friends of Nigeria event in Paris' },
-  { src: slideAudience, pos: '45% 50%', alt: 'Nigerian and European delegates listening to a session at Spotlight Nigeria in Paris' },
-  { src: slideExchange, pos: '50% 40%', alt: 'Professionals exchanging ideas at a Friends of Nigeria networking evening' },
-];
-const slides = await Promise.all(
-  slideDefs.map(async (d) => {
-    const img = await getImage({ src: d.src, widths: [600, 900, 1200], sizes: slideSizes, format: 'webp' });
-    return { ...d, url: img.src, srcset: img.srcSet.attribute };
-  }),
-);
-
-const areas = (await getCollection('areas')).sort((a, b) => a.data.order - b.data.order);
-const exec = (await getCollection('team', (p) => p.data.group === 'executive-board-europe')).sort((a, b) => a.data.order - b.data.order);
-const news = (await getCollection('news', (p) => !p.data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const [media, areas, exec, news, partners, plans, counts] = await Promise.all([
+  mediaMap(mediaIdsIn(h)),
+  listProgrammes('area', preview),
+  homeTeam(preview),
+  listNews(preview, Math.max(1, Number(h.news_count) || 4)),
+  listPartners(preview),
+  listProgrammes('membership', preview),
+  contentCounts(),
+]);
 const [lead, ...rest] = news;
-const albums = await getCollection('albums');
-const partners = await getCollection('partners');
 
-// Figures shown here are counted from the site's own content or taken from the
-// official event websites (Spotlight Nigeria 2026 = 9th edition; NIDA 2023–2025).
-const stats = [
-  { value: 9, label: 'editions of Spotlight Nigeria in Paris since 2014' },
-  { value: 3, label: 'NIDA gala nights celebrating Nigerians abroad, 2023 to 2025' },
-  { value: albums.length, label: 'documented engagements, missions and visits since 2017' },
-  { value: partners.length, label: 'institutional partners and sponsors' },
-];
+// Hero slideshow: the first slide is rendered normally (it is the LCP image);
+// the rest carry their srcset in data attributes and are only fetched by the
+// script just before they are shown.
+const slideSizes = '(min-width: 1100px) 460px, (min-width: 640px) 430px, 90vw';
+const allSlides = ((h.slides ?? []) as { image: string; alt: string; position?: string }[]).filter((s) => media[s.image]);
+const first = allSlides[0];
+const firstImg = first ? img(media[first.image], { alt: first.alt, sizes: '(min-width: 1100px) 880px, (min-width: 640px) 820px, 150vw', loading: 'eager', fetchpriority: 'high' }) : null;
+const slides = allSlides.slice(1).map((s) => {
+  const a = img(media[s.image], { alt: s.alt, sizes: slideSizes })!;
+  return { pos: s.position || '50% 40%', alt: s.alt, url: a.src, srcset: a.srcset ?? '', width: a.width, height: a.height };
+});
+const city = img(media[h.background_image], { alt: '', sizes: '100vw', loading: 'eager', fetchpriority: 'low', class: 'hc-img' });
+const cardA = img(media[h.card_a_image], { alt: h.card_a_alt, sizes: '(min-width: 1000px) 240px, 40vw', loading: 'eager' });
+const cardB = img(media[h.card_b_image], { alt: h.card_b_alt, sizes: '(min-width: 1000px) 360px, 60vw', loading: 'eager' });
+const aboutImg = img(media[h.about_image], { alt: h.about_image_alt, sizes: '(min-width: 1100px) 700px, 110vw' });
 
-const iconFor: Record<string, string> = {
-  diaspora: 'globe',
-  support: 'users',
-  investment: 'trending-up',
-  training: 'graduation',
-  bilateral: 'landmark',
-};
+// Key figures: entered by hand or counted from the published content.
+const stats = ((h.stats ?? []) as { source: string; value?: number; label: string }[]).map((s) => ({
+  label: s.label,
+  value: s.source === 'albums' ? counts.albums : s.source === 'partners' ? counts.partners : s.source === 'team' ? counts.team : s.source === 'news' ? counts.news : Number(s.value ?? 0),
+}));
+
+// Featured events, in the order chosen on the Homepage screen.
+type Featured = { event: string; heading?: string; kicker?: string; text?: string; facts?: { icon: string; text: string }[]; image?: string; image_alt?: string };
+const featuredDefs = (h.featured_events ?? []) as Featured[];
+const eventRows = await eventsByIds(featuredDefs.map((f) => f.event).filter(Boolean), preview);
+const featured = featuredDefs
+  .map((f) => ({ f, e: eventRows.find((e) => e.id === f.event) }))
+  .filter((x) => x.e)
+  .map(({ f, e }) => ({
+    e: e!,
+    heading: f.heading || e!.short_title || e!.title,
+    kicker: f.kicker,
+    text: f.text || e!.summary,
+    facts: f.facts ?? [],
+    image: img(media[f.image ?? ''] ?? e!.image, { alt: f.image_alt || e!.image_alt, sizes: '(min-width: 1000px) 680px, 100vw' }),
+  }));
+
+const fonen = plans.find((p) => p.slug === 'fonen');
+const fonpro = plans.find((p) => p.slug === 'fonpro');
+const planCards = [fonen, fonpro, ...plans.filter((p) => p !== fonen && p !== fonpro)].filter(Boolean) as typeof plans;
+const hl = (text: string) => text.replace(/ ([^ ]+)$/, '\u00a0$1');
 ---
 
-<BaseLayout title={site.name} description="Friends of Nigeria connects Nigerian professionals and businesses with European companies, investors and institutions to create partnerships and opportunities between Nigeria and Europe.">
+<BaseLayout title={page.title} fullTitle={page.seo_title || seo.home_title} description={page.seo_description} image={page.og} canonical={page.canonical_url} noindex={page.noindex}>
   <!-- Hero -->
   <section class="hero" data-hero>
     <!-- Cityscape atmosphere from the original site: image, then a soft white veil. -->
     <div class="hero-city" aria-hidden="true">
       <div class="hc-parallax">
         <div class="hc-drift">
-          <Image
-            src={heroCity}
-            alt=""
-            widths={[800, 1200, 1600]}
-            sizes="100vw"
-            loading="eager"
-            fetchpriority="low"
-            decoding="async"
-            class="hc-img"
-          />
+          {city && <img {...city} />}
         </div>
       </div>
       <div class="hc-veil"></div>
@@ -99,25 +103,21 @@ const iconFor: Record<string, string> = {
     <div class="container hero-grid">
       <div class="hero-copy" data-hero-copy>
         <h1 class="hero-title">
-          <span class="ht-line" style="--i:0"><span>Connecting Nigeria and&nbsp;Europe.</span></span>
-          <span class="ht-line ht-green" style="--i:1"><span>Building lasting partnerships.</span></span>
+          <span class="ht-line" style="--i:0"><span>{hl(h.title_line1)}</span></span>
+          {h.title_line2 && <span class="ht-line ht-green" style="--i:1"><span>{h.title_line2}</span></span>}
         </h1>
-        <p class="hero-lead">
-          We bring together businesses, investors and professionals across Nigeria and Europe to create partnerships and unlock
-          opportunities.
-        </p>
+        <p class="hero-lead">{h.lead}</p>
         <div class="hero-actions">
-          <a href="/about/" class="hbtn hbtn--primary">
-            <span class="hbtn-label">Discover Friends of Nigeria</span>
-            <span class="hbtn-icon" aria-hidden="true"><Icon name="arrow-right" size={16} /></span>
-          </a>
-          <a href="/membership/" class="hbtn hbtn--ghost"><span class="hbtn-label">Become a Member</span></a>
+          {h.primary_cta_label && (
+            <a href={h.primary_cta_url} class="hbtn hbtn--primary">
+              <span class="hbtn-label">{h.primary_cta_label}</span>
+              <span class="hbtn-icon" aria-hidden="true"><Icon name="arrow-right" size={16} /></span>
+            </a>
+          )}
+          {h.secondary_cta_label && <a href={h.secondary_cta_url} class="hbtn hbtn--ghost"><span class="hbtn-label">{h.secondary_cta_label}</span></a>}
         </div>
         <ul class="chapters" role="list" aria-label="Where we operate">
-          <li>France</li>
-          <li>Germany</li>
-          <li>Belgium &amp; Luxembourg</li>
-          <li>Nigeria liaison office</li>
+          {(h.chapters ?? []).map((c: string) => <li>{c}</li>)}
         </ul>
       </div>
 
@@ -125,20 +125,15 @@ const iconFor: Record<string, string> = {
         <div class="hs-layer hs-main" data-depth="0.6">
           <div class="hs-float">
             <figure class="hs-frame hs-frame--main" data-slideshow>
-              <div class="hs-slide is-active is-first" data-slide style="--pos:48% 40%">
-                <Image
-                  src={heroMain}
-                  alt="Nigerian and European business leaders in conversation at the Spotlight Nigeria forum in Paris"
-                  widths={[600, 900, 1200, 1600]}
-                  sizes="(min-width: 1100px) 880px, (min-width: 640px) 820px, 150vw"
-                  loading="eager"
-                  fetchpriority="high"
-                />
-              </div>
+              {firstImg && (
+                <div class="hs-slide is-active is-first" data-slide style={`--pos:${first.position || '50% 40%'}`}>
+                  <img {...firstImg} />
+                </div>
+              )}
               {
                 slides.map((sl, i) => (
                   <div class="hs-slide" data-slide data-kb={i % 2 ? 'a' : 'b'} style={`--pos:${sl.pos}`} aria-hidden="true">
-                    <img alt={sl.alt} data-src={sl.url} data-srcset={sl.srcset} sizes={slideSizes} decoding="async" width="900" height="600" />
+                    <img alt={sl.alt} data-src={sl.url} data-srcset={sl.srcset} sizes={slideSizes} decoding="async" width={sl.width ?? 900} height={sl.height ?? 600} />
                   </div>
                 ))
               }
@@ -157,7 +152,7 @@ const iconFor: Record<string, string> = {
         <div class="hs-layer hs-a" data-depth="1.3">
           <div class="hs-float">
             <figure class="hs-frame hs-frame--card">
-              <Image src={heroPanel} alt="Panel discussion on stage at Spotlight Nigeria 2023 in Paris" widths={[320, 480, 640]} sizes="(min-width: 1000px) 240px, 40vw" loading="eager" />
+              {cardA && <img {...cardA} />}
             </figure>
           </div>
         </div>
@@ -165,7 +160,7 @@ const iconFor: Record<string, string> = {
         <div class="hs-layer hs-b" data-depth="1.8">
           <div class="hs-float">
             <figure class="hs-frame hs-frame--card">
-              <Image src={heroBrand} alt="Nigerian and European professionals in conversation at a Friends of Nigeria networking evening" widths={[360, 540, 720]} sizes="(min-width: 1000px) 360px, 60vw" loading="eager" />
+              {cardB && <img {...cardB} />}
             </figure>
           </div>
         </div>
@@ -187,9 +182,9 @@ const iconFor: Record<string, string> = {
                 </circle>
               </svg>
               <div class="link-labels">
-                <span><strong>Nigeria</strong></span>
-                <span class="link-mid">Business · Diaspora</span>
-                <span><strong>Europe</strong></span>
+                <span><strong>{h.link_left}</strong></span>
+                <span class="link-mid">{h.link_middle}</span>
+                <span><strong>{h.link_right}</strong></span>
               </div>
             </div>
           </div>
@@ -203,23 +198,19 @@ const iconFor: Record<string, string> = {
     <div class="container">
       <div class="about-grid">
         <div class="about-media media" data-reveal="image" data-parallax>
-          <Image
-            src={teamPhoto}
-            alt="The Friends of Nigeria team with speakers and guests at Spotlight Nigeria 2022 in Paris"
-            widths={[640, 960, 1280, 1600]}
-            sizes="(min-width: 1100px) 700px, 110vw"
-            loading="lazy"
-          />
+          {aboutImg && <img {...aboutImg} />}
         </div>
         <div class="about-copy">
-          <h2 data-reveal>A non-profit bridge between Nigeria and Europe</h2>
-          <p class="lead" data-reveal style="--reveal-delay:80">{about.intro}</p>
-          <p class="about-vision" data-reveal style="--reveal-delay:140">
-            <strong>Our vision</strong> is {about.vision.charAt(0).toLowerCase() + about.vision.slice(1)}
-          </p>
+          <h2 data-reveal>{h.about_heading}</h2>
+          <p class="lead" data-reveal style="--reveal-delay:80">{h.about_intro}</p>
+          {h.about_vision && (
+            <p class="about-vision" data-reveal style="--reveal-delay:140">
+              <strong>Our vision</strong> is {h.about_vision.charAt(0).toLowerCase() + h.about_vision.slice(1)}
+            </p>
+          )}
           <ul class="mission" role="list">
             {
-              about.mission.map((m, i) => (
+              (h.about_mission ?? []).map((m: { title: string; text: string }, i: number) => (
                 <li data-reveal style={`--reveal-delay:${180 + i * 60}`}>
                   <h3>{m.title}</h3>
                   <p>{m.text}</p>
@@ -227,7 +218,7 @@ const iconFor: Record<string, string> = {
               ))
             }
           </ul>
-          <a href="/about/" class="link-arrow" data-reveal>More about Friends of Nigeria <Icon name="arrow-right" /></a>
+          {h.about_link_label && <a href="/about/" class="link-arrow" data-reveal>{h.about_link_label} <Icon name="arrow-right" /></a>}
         </div>
       </div>
 
@@ -252,23 +243,14 @@ const iconFor: Record<string, string> = {
     <div class="container work-grid" data-areas>
       <div class="work-intro">
         <div class="work-sticky">
-          <h2 data-reveal>What we do</h2>
-          <p class="work-lead" data-reveal style="--reveal-delay:80">
-            Five areas of work that connect the Nigerian diaspora, European businesses and Nigerian institutions.
-          </p>
+          <h2 data-reveal>{h.work_heading}</h2>
+          {h.work_lead && <p class="work-lead" data-reveal style="--reveal-delay:80">{h.work_lead}</p>}
           <div class="work-frame media" aria-hidden="true">
             {
-              areas.map((a, i) => (
-                <Image
-                  src={a.data.image}
-                  alt=""
-                  widths={[480, 720, 960]}
-                  sizes="(min-width: 1000px) 480px, 0px"
-                  loading="lazy"
-                  class:list={['work-img', { 'is-active': i === 0 }]}
-                  data-area-img={i}
-                />
-              ))
+              areas.map((a, i) => {
+                const attrs = img(a.image, { alt: '', sizes: '(min-width: 1000px) 480px, 0px', class: i === 0 ? 'work-img is-active' : 'work-img' });
+                return attrs && <img {...attrs} data-area-img={i} />;
+              })
             }
           </div>
         </div>
@@ -277,22 +259,24 @@ const iconFor: Record<string, string> = {
         {
           areas.map((a, i) => (
             <li class="work-item" data-area={i} data-reveal style={`--reveal-delay:${i * 60}`}>
-              <a href={`/what-we-do/${a.id}/`} class="work-link">
-                <span class="work-num">0{i + 1}</span>
+              <a href={a.path} class="work-link">
+                <span class="work-num">{String(i + 1).padStart(2, '0')}</span>
                 <span class="work-icon">
-                  <Icon name={iconFor[a.data.icon]} size={22} />
+                  <Icon name={iconName(a.icon)} size={22} />
                 </span>
                 <span class="work-text">
-                  <h3>{a.data.title}</h3>
-                  <p>{a.data.summary}</p>
+                  <h3>{a.title}</h3>
+                  <p>{a.summary}</p>
                 </span>
                 <span class="work-arrow">
                   <Icon name="arrow-up-right" size={20} />
                 </span>
               </a>
-              <div class="work-mobile-img media">
-                <Image src={a.data.image} alt={a.data.imageAlt} widths={[480, 720]} sizes="(max-width: 999px) 100vw, 0px" loading="lazy" />
-              </div>
+              {a.image && (
+                <div class="work-mobile-img media">
+                  <img {...img(a.image, { alt: a.image_alt, sizes: '(max-width: 999px) 100vw, 0px', maxWidth: 960 })} />
+                </div>
+              )}
             </li>
           ))
         }
@@ -305,70 +289,45 @@ const iconFor: Record<string, string> = {
     <span class="glow-orb events-orb" aria-hidden="true"></span>
     <div class="container">
       <div class="section-head section-head--split">
-        <h2 data-reveal>Our flagship events</h2>
-        <a href="/events/" class="link-arrow" data-reveal>All events <Icon name="arrow-right" /></a>
+        <h2 data-reveal>{h.events_heading}</h2>
+        {h.events_link_label && <a href="/events/" class="link-arrow" data-reveal>{h.events_link_label} <Icon name="arrow-right" /></a>}
       </div>
 
-      <article class="event-row" data-reveal>
-        <div class="event-media media" data-parallax>
-          <Image
-            src={spotlightImg}
-            alt="Delegates in conversation in front of Spotlight Nigeria and Friends of Nigeria banners"
-            widths={[640, 960, 1280]}
-            sizes="(min-width: 1000px) 680px, 100vw"
-            loading="lazy"
-          />
-        </div>
-        <div class="event-copy">
-          <p class="event-kicker">Business and Investment Forum · Since 2014</p>
-          <h3>Spotlight Nigeria</h3>
-          <p>
-            An annual conference and exhibition that gives private sector companies and investors from France and Nigeria a platform to collaborate,
-            exchange ideas, build business contacts and sign deals, with a focus each year on key sectors of the Nigerian economy and key state
-            governments.
-          </p>
-          <ul class="event-facts" role="list">
-            <li><Icon name="map-pin" size={16} />L'Hôtel de l'Industrie, Paris</li>
-            <li><Icon name="calendar" size={16} />9th edition held on 6 October 2026</li>
-          </ul>
-          <div class="btn-row">
-            <a href="/events/spotlight-nigeria/" class="btn btn--light">Learn more <Icon name="arrow-right" size={16} class="arrow" /></a>
-            <a href="https://spotlightnigeria-france.com/" class="btn btn--ghost-light" target="_blank" rel="noopener">
-              Official website <Icon name="arrow-up-right" size={16} /><span class="visually-hidden"> (opens in a new tab)</span>
-            </a>
-          </div>
-        </div>
-      </article>
-
-      <article class="event-row event-row--flip" data-reveal>
-        <div class="event-media media event-media--nida" data-parallax>
-          <Image
-            src={nidaImg}
-            alt="Guests at the Nigerians in Diaspora Awards gala night in Paris"
-            widths={[640, 960, 1200]}
-            sizes="(min-width: 1000px) 680px, 100vw"
-            loading="lazy"
-          />
-        </div>
-        <div class="event-copy">
-          <p class="event-kicker">Gala and awards night · Since 2023</p>
-          <h3>Nigerians in Diaspora Awards</h3>
-          <p>
-            A first-of-its-kind gala celebrating trailblazing Nigerians who are rewriting the narrative of what it means to be a Nigerian abroad, with
-            awards, music, performances and an evening of networking for professionals across the diaspora in Europe.
-          </p>
-          <ul class="event-facts" role="list">
-            <li><Icon name="map-pin" size={16} />Paris</li>
-            <li><Icon name="award" size={16} />Editions in 2023, 2024 and 2025</li>
-          </ul>
-          <div class="btn-row">
-            <a href="/events/nida/" class="btn btn--light">Learn more <Icon name="arrow-right" size={16} class="arrow" /></a>
-            <a href="https://nida-awards.org/" class="btn btn--ghost-light" target="_blank" rel="noopener">
-              Official website <Icon name="arrow-up-right" size={16} /><span class="visually-hidden"> (opens in a new tab)</span>
-            </a>
-          </div>
-        </div>
-      </article>
+      {
+        featured.map(({ e, heading, kicker, text, facts, image }, i) => (
+          <article class:list={['event-row', { 'event-row--flip': i % 2 === 1 }]} data-reveal>
+            <div class:list={['event-media media', { 'event-media--nida': e.slug === 'nida' }]} data-parallax>
+              {image && <img {...image} />}
+            </div>
+            <div class="event-copy">
+              {kicker && <p class="event-kicker">{kicker}</p>}
+              <h3>{heading}</h3>
+              <p>{text}</p>
+              {facts.length > 0 && (
+                <ul class="event-facts" role="list">
+                  {facts.map((f) => (
+                    <li>
+                      <Icon name={f.icon || 'calendar'} size={16} />
+                      {f.text}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div class="btn-row">
+                <a href={`/events/${e.slug}/`} class="btn btn--light">
+                  Learn more <Icon name="arrow-right" size={16} class="arrow" />
+                </a>
+                {e.website_url && (
+                  <a href={e.website_url} class="btn btn--ghost-light" target="_blank" rel="noopener">
+                    Official website <Icon name="arrow-up-right" size={16} />
+                    <span class="visually-hidden"> (opens in a new tab)</span>
+                  </a>
+                )}
+              </div>
+            </div>
+          </article>
+        ))
+      }
     </div>
   </section>
 
@@ -377,10 +336,10 @@ const iconFor: Record<string, string> = {
     <div class="container">
       <div class="section-head section-head--split">
         <div>
-          <h2 data-reveal>Management team</h2>
-          <p data-reveal style="--reveal-delay:80">The executive board of Friends of Nigeria Europe, supported by an honorary board and chapter leads across Europe and Nigeria.</p>
+          <h2 data-reveal>{h.team_heading}</h2>
+          {h.team_lead && <p data-reveal style="--reveal-delay:80">{h.team_lead}</p>}
         </div>
-        <a href="/team/" class="link-arrow" data-reveal>Meet the full team <Icon name="arrow-right" /></a>
+        {h.team_link_label && <a href="/team/" class="link-arrow" data-reveal>{h.team_link_label} <Icon name="arrow-right" /></a>}
       </div>
       <ul class="team-row" role="list">
         {
@@ -398,42 +357,49 @@ const iconFor: Record<string, string> = {
   <section class="section section--subtle membership" id="membership">
     <div class="container">
       <div class="section-head">
-        <h2 data-reveal>Two ways to join the network</h2>
-        <p data-reveal style="--reveal-delay:80">{membership.intro}</p>
+        <h2 data-reveal>{h.membership_heading}</h2>
+        {h.membership_lead && <p data-reveal style="--reveal-delay:80">{h.membership_lead}</p>}
       </div>
       <div class="plans">
-        <article class="plan spotlight lift" data-reveal>
-          <div class="plan-top">
-            <span class="plan-icon"><Icon name="building" size={22} /></span>
-            <span class="tag">{membership.fonen.audience}</span>
-          </div>
-          <h3>{membership.fonen.name}<span>{membership.fonen.fullName}</span></h3>
-          <p>{membership.fonen.summary}</p>
-          <p class="plan-detail">{membership.fonen.details}</p>
-          <ul class="plan-tiers" role="list">
-            {membership.fonen.categories.map((c) => <li><span>{c.name}</span><strong>{c.fee}</strong></li>)}
-          </ul>
-          <div class="btn-row">
-            <a href="/membership/fonen/" class="btn">Register your company <Icon name="arrow-right" size={16} class="arrow" /></a>
-            <a href="/membership/#enquire" class="btn btn--ghost">Ask a question</a>
-          </div>
-        </article>
-        <article class="plan spotlight lift" data-reveal style="--reveal-delay:100">
-          <div class="plan-top">
-            <span class="plan-icon"><Icon name="user" size={22} /></span>
-            <span class="tag">{membership.fonpro.audience}</span>
-          </div>
-          <h3>{membership.fonpro.name}<span>{membership.fonpro.fullName}</span></h3>
-          <p>{membership.fonpro.summary}</p>
-          <p class="plan-detail">{membership.fonpro.details}</p>
-          <ul class="plan-tiers" role="list">
-            <li><span>Membership handled securely via</span><strong>HelloAsso</strong></li>
-          </ul>
-          <div class="btn-row">
-            <a href="/membership/fonpro/" class="btn">Join FONPRO <Icon name="arrow-right" size={16} class="arrow" /></a>
-            <a href="/membership/#enquire" class="btn btn--ghost">Ask a question</a>
-          </div>
-        </article>
+        {
+          planCards.map((p, i) => (
+            <article class="plan spotlight lift" data-reveal style={i ? `--reveal-delay:${i * 100}` : undefined}>
+              <div class="plan-top">
+                <span class="plan-icon"><Icon name={p.slug === 'fonen' ? 'building' : p.slug === 'fonpro' ? 'user' : iconName(p.icon, 'users')} size={22} /></span>
+                {p.audience && <span class="tag">{p.audience}</span>}
+              </div>
+              <h3>
+                {p.title}
+                {p.full_name && <span>{p.full_name}</span>}
+              </h3>
+              <p>{p.summary}</p>
+              {p.details && <p class="plan-detail">{p.details}</p>}
+              <ul class="plan-tiers" role="list">
+                {p.categories.length > 0
+                  ? p.categories.map((c) => (
+                      <li>
+                        <span>{c.name}</span>
+                        <strong>{c.fee}</strong>
+                      </li>
+                    ))
+                  : isExternal(p.secondary_link_url) && /helloasso/i.test(p.secondary_link_url ?? '') && (
+                      <li>
+                        <span>Registration and payment</span>
+                        <strong>Secure, via HelloAsso</strong>
+                      </li>
+                    )}
+              </ul>
+              <div class="btn-row">
+                <a href={p.path} class="btn">
+                  {p.link_label || `About ${p.title}`} <Icon name="arrow-right" size={16} class="arrow" />
+                </a>
+                <a href="/membership/#enquire" class="btn btn--ghost">
+                  Ask a question
+                </a>
+              </div>
+            </article>
+          ))
+        }
       </div>
     </div>
   </section>
@@ -442,14 +408,14 @@ const iconFor: Record<string, string> = {
   <section class="section news" id="news">
     <div class="container">
       <div class="section-head section-head--split">
-        <h2 data-reveal>News and publications</h2>
-        <a href="/news/" class="link-arrow" data-reveal>All news <Icon name="arrow-right" /></a>
+        <h2 data-reveal>{h.news_heading}</h2>
+        {h.news_link_label && <a href="/news/" class="link-arrow" data-reveal>{h.news_link_label} <Icon name="arrow-right" /></a>}
       </div>
       <div class="news-grid">
         <div data-reveal>{lead && <NewsCard post={lead} variant="feature" />}</div>
         <ul class="news-list" role="list">
           {
-            rest.slice(0, 3).map((p, i) => (
+            rest.map((p, i) => (
               <li data-reveal style={`--reveal-delay:${i * 70}`}>
                 <NewsCard post={p} variant="compact" />
               </li>
@@ -465,12 +431,12 @@ const iconFor: Record<string, string> = {
     <div class="container">
       <div class="section-head section-head--split">
         <div>
-          <h2 data-reveal>Partners and sponsors</h2>
-          <p data-reveal style="--reveal-delay:80">Institutions, chambers of commerce and organisations that have partnered with and supported our work.</p>
+          <h2 data-reveal>{h.partners_heading}</h2>
+          {h.partners_lead && <p data-reveal style="--reveal-delay:80">{h.partners_lead}</p>}
         </div>
-        <a href="/partners/" class="link-arrow" data-reveal>Partner with us <Icon name="arrow-right" /></a>
+        {h.partners_link_label && <a href="/partners/" class="link-arrow" data-reveal>{h.partners_link_label} <Icon name="arrow-right" /></a>}
       </div>
-      <PartnerGrid />
+      <PartnerGrid partners={partners} />
     </div>
   </section>
 
@@ -796,6 +762,9 @@ const iconFor: Record<string, string> = {
   @media (min-width: 1100px) {
     .hero-stage {
       margin-right: 0;
+      /* Keep the whole photo stack inside the first screen on short laptops. */
+      max-width: clamp(440px, calc((100vh - 160px) / 1.02), 600px);
+      max-width: clamp(440px, calc((100svh - 160px) / 1.02), 600px);
     }
   }
   .hs-layer {
@@ -1139,6 +1108,7 @@ const iconFor: Record<string, string> = {
     /* Phones: tighter copy so the photos start inside the first screen. */
     .hero {
       padding-top: 1.25rem;
+      padding-bottom: 2rem;
     }
     .hero-grid {
       gap: 1.75rem;
@@ -1152,8 +1122,17 @@ const iconFor: Record<string, string> = {
       line-height: 1.55;
     }
     .hero-actions {
+      flex-direction: column;
+      align-items: stretch;
+      max-width: 340px;
       margin-top: var(--s-5);
       gap: 10px;
+    }
+    .hbtn {
+      justify-content: space-between;
+    }
+    .hbtn--ghost {
+      justify-content: center;
     }
     .hbtn {
       min-height: 50px;
@@ -1494,6 +1473,9 @@ const iconFor: Record<string, string> = {
       grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
       gap: var(--s-9);
     }
+    .event-row--flip {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    }
     .event-row--flip .event-media {
       order: 2;
     }
@@ -1594,9 +1576,9 @@ const iconFor: Record<string, string> = {
     }
   }
   .plan {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: var(--s-4);
-    align-content: start;
     padding: clamp(1.75rem, 1.25rem + 2vw, 3rem);
     background: var(--white);
     border: 1px solid var(--line);
@@ -1637,6 +1619,9 @@ const iconFor: Record<string, string> = {
   }
   .plan > p {
     color: var(--ink-2);
+  }
+  .plan > .btn-row {
+    margin-top: auto;
   }
   .plan .plan-detail {
     font-size: var(--fs-sm);

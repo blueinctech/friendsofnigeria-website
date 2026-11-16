@@ -2,7 +2,7 @@
 title: "Chat with Mr Alec Fokapu, CEO of FiftyFor – A B2B Rating Platform for African Companies"
 date: "2018-06-21"
 category: "Interview"
-excerpt: "Friends of Nigeria had a brief chitchat with Mr. Alec Fokapu,"
+excerpt: "Friends of Nigeria talks to Alec Fokapu, CEO of FiftyFor, a B2B rating platform for African companies, about the opportunities and risks of the Nigerian market."
 image: "../../assets/news/chat-with-mr-alec-fokapu-ceo-of-fiftyfor-a-b2b-rating-platfo.jpg"
 imageAlt: "Chat with Mr Alec Fokapu, CEO of FiftyFor – A B2B Rating Platform for African Companies"
 ---

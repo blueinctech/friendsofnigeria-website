@@ -3,26 +3,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
 import PartnerGrid from '../components/PartnerGrid.astro';
 import Icon from '../components/Icon.astro';
-import { getCollection } from 'astro:content';
-const partners = (await getCollection('partners')).sort((a, b) => a.data.order - b.data.order);
+import { getPage, isExternal, listPartners, pageSeo } from '../lib/server/public';
+
+const page = await getPage('partners', Astro.locals.preview);
+if (!page) return Astro.rewrite('/404/');
+const c = page.content;
+const partners = await listPartners(Astro.locals.preview);
 ---
 
-<BaseLayout
-  title="Partners and sponsors"
-  description="The institutions, chambers of commerce and organisations that have partnered with and supported Friends of Nigeria and Spotlight Nigeria."
->
-  <PageHero
-    title="Partners and sponsors"
-    lead="Our work is made possible by institutions in France, Europe and Nigeria that share our commitment to stronger economic and cultural ties."
-    crumbs={[{ label: 'About us', href: '/about/' }, { label: 'Partners and sponsors' }]}
-  />
+<BaseLayout {...pageSeo(page)}>
+  <PageHero title={page.title} lead={page.lead} crumbs={[{ label: 'About us', href: '/about/' }, { label: page.title }]} image={page.hero} imageAlt={page.hero_alt} />
 
   <section class="section">
     <div class="container">
-      <PartnerGrid />
+      <PartnerGrid partners={partners} />
       <h2 class="visually-hidden">Partner list</h2>
       <ul class="names" role="list">
-        {partners.map((p) => <li>{p.data.name}</li>)}
+        {partners.map((p) => <li>{p.name}</li>)}
       </ul>
     </div>
   </section>
@@ -30,15 +27,22 @@ const partners = (await getCollection('partners')).sort((a, b) => a.data.order -
   <section class="section section--subtle">
     <div class="container partner-cta">
       <div>
-        <h2 data-reveal>Partner with Friends of Nigeria</h2>
-        <p class="lead" data-reveal style="--reveal-delay:80">
-          We work with public institutions, companies and organisations on events, trade missions, training and diaspora initiatives. Sponsoring
-          Spotlight Nigeria gives your organisation direct access to business leaders, investors and decision-makers from Nigeria and Europe.
-        </p>
+        <h2 data-reveal>{c.cta_heading}</h2>
+        {c.cta_text && <p class="lead" data-reveal style="--reveal-delay:80">{c.cta_text}</p>}
       </div>
       <div class="btn-row" data-reveal style="--reveal-delay:140">
-        <a href="/contact/?topic=Partnership%20or%20sponsorship" class="btn">Discuss a partnership <Icon name="arrow-right" size={16} class="arrow" /></a>
-        <a href="https://spotlightnigeria-france.com/" class="btn btn--ghost" target="_blank" rel="noopener">Spotlight Nigeria sponsorship <Icon name="arrow-up-right" size={16} /><span class="visually-hidden"> (opens in a new tab)</span></a>
+        {c.cta_primary_label && <a href={c.cta_primary_url} class="btn">{c.cta_primary_label} <Icon name="arrow-right" size={16} class="arrow" /></a>}
+        {
+          c.cta_secondary_label &&
+            (isExternal(c.cta_secondary_url) ? (
+              <a href={c.cta_secondary_url} class="btn btn--ghost" target="_blank" rel="noopener">
+                {c.cta_secondary_label} <Icon name="arrow-up-right" size={16} />
+                <span class="visually-hidden"> (opens in a new tab)</span>
+              </a>
+            ) : (
+              <a href={c.cta_secondary_url} class="btn btn--ghost">{c.cta_secondary_label}</a>
+            ))
+        }
       </div>
     </div>
   </section>

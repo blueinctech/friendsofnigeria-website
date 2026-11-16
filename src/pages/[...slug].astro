@@ -1,0 +1,25 @@
+---
+/** Custom pages created in the dashboard (Pages → Add page). */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { getPageByPath, pageSeo } from '../lib/server/public';
+
+const slug = Astro.params.slug ?? '';
+const page = /^[a-z0-9-]+(\/[a-z0-9-]+)*$/.test(slug) ? await getPageByPath(`/${slug}/`, Astro.locals.preview) : null;
+if (!page) return Astro.rewrite('/404/');
+---
+
+<BaseLayout {...pageSeo(page)}>
+  <PageHero title={page.title} lead={page.lead} crumbs={[{ label: page.title }]} image={page.hero} imageAlt={page.hero_alt} />
+  {
+    page.body && (
+      <section class="section">
+        <div class="container container--narrow">
+          <div class="prose" set:html={page.body} />
+        </div>
+      </section>
+    )
+  }
+  <CtaBand />
+</BaseLayout>

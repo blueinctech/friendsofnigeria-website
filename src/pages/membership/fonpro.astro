@@ -3,25 +3,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../../components/PageHero.astro';
 import Icon from '../../components/Icon.astro';
 import MembershipEnquiryForm from '../../components/forms/MembershipEnquiryForm.astro';
-import membership from '../../data/membership.json';
-import site from '../../data/site.json';
-import img from '../../assets/site/hero-conversation.jpg';
+import { getProgramme, getSite } from '../../lib/server/public';
 
-const m = membership.fonpro;
-const benefits = [
-  'Take part in projects and initiatives that contribute towards development in Nigeria',
-  'Belong to a network of trailblazers and experts across France and Europe',
-  'Training and capacity development sessions on business and professional subjects',
-  'Access to career resources, networking events, Spotlight Nigeria and NIDA',
-];
+const m = await getProgramme('membership', 'fonpro', Astro.locals.preview);
+if (!m) return Astro.rewrite('/404/');
+const { site } = await getSite(Astro.locals);
+// HelloAsso form: the programme's second link, or the address in General Settings.
+const helloAsso = m.secondary_link_url || site.fonpro_url;
 ---
 
-<BaseLayout title="FONPRO – professional membership" description={`${m.fullName}: ${m.summary}`} image={img}>
-  <PageHero title={`${m.name}: ${m.fullName}`} lead={m.summary} crumbs={[{ label: 'Become a member', href: '/membership/' }, { label: 'FONPRO' }]}>
+<BaseLayout title={m.seo_title || `${m.title} – ${(m.audience ?? 'membership').replace(/ membership$/i, '').toLowerCase()} membership`} description={m.seo_description || `${m.full_name}: ${m.summary}`} image={m.og ?? m.image} canonical={m.canonical_url}>
+  <PageHero title={m.full_name ? `${m.title}: ${m.full_name}` : m.title} lead={m.summary} crumbs={[{ label: 'Become a member', href: '/membership/' }, { label: m.title }]}>
     <div class="btn-row">
-      <a href="#join" class="btn">Join FONPRO <Icon name="arrow-right" size={16} class="arrow" /></a>
-      <a href={site.membershipLinks.fonproHelloAsso} class="btn btn--ghost" target="_blank" rel="noopener">
-        Open on HelloAsso <Icon name="arrow-up-right" size={16} /><span class="visually-hidden"> (opens in a new tab)</span>
+      <a href="#join" class="btn">{m.link_label || `Join ${m.title}`} <Icon name="arrow-right" size={16} class="arrow" /></a>
+      <a href={helloAsso} class="btn btn--ghost" target="_blank" rel="noopener">
+        {m.secondary_link_label || 'Open on HelloAsso'} <Icon name="arrow-up-right" size={16} /><span class="visually-hidden"> (opens in a new tab)</span>
       </a>
     </div>
   </PageHero>
@@ -29,9 +25,10 @@ const benefits = [
   <section class="section" id="about">
     <div class="container container--narrow">
       <h2 data-reveal>Why join</h2>
-      <p class="lead" data-reveal>{m.details}</p>
+      {m.details && <p class="lead" data-reveal>{m.details}</p>}
+      {m.body && <div class="prose" data-reveal set:html={m.body} />}
       <ul class="benefits" role="list">
-        {benefits.map((b, i) => <li data-reveal style={`--reveal-delay:${i * 60}`}><Icon name="check" size={18} />{b}</li>)}
+        {m.benefits.map((b, i) => <li data-reveal style={`--reveal-delay:${i * 60}`}><Icon name="check" size={18} />{b}</li>)}
       </ul>
     </div>
   </section>
@@ -41,21 +38,21 @@ const benefits = [
       <h2 data-reveal>Join online</h2>
       <p class="lead join-lead" data-reveal>
         FONPRO membership is processed securely by HelloAsso, the payment platform used by French associations. Complete the form below or{' '}
-        <a href={site.membershipLinks.fonproHelloAsso} target="_blank" rel="noopener">open it on HelloAsso<span class="visually-hidden"> (opens in a new tab)</span></a>.
+        <a href={helloAsso} target="_blank" rel="noopener">open it on HelloAsso<span class="visually-hidden"> (opens in a new tab)</span></a>.
       </p>
       <div class="embed" data-reveal>
         <iframe
           title="FONPRO membership form on HelloAsso"
-          src={`${site.membershipLinks.fonproHelloAsso}/widget`}
+          src={`${helloAsso.replace(/\/$/, '')}/widget`}
           loading="lazy"
           referrerpolicy="strict-origin-when-cross-origin"
           allow="payment"
         ></iframe>
       </div>
-      <p class="alt">
+      {site.fon_france_url && <p class="alt">
         Living in France and looking for general FON France membership instead?{' '}
-        <a href={site.membershipLinks.fonFranceHelloAsso} target="_blank" rel="noopener">Join FON France on HelloAsso<span class="visually-hidden"> (opens in a new tab)</span></a>.
-      </p>
+        <a href={site.fon_france_url} target="_blank" rel="noopener">Join FON France on HelloAsso<span class="visually-hidden"> (opens in a new tab)</span></a>.
+      </p>}
     </div>
   </section>
 

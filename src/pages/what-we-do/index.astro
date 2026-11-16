@@ -1,31 +1,26 @@
 ---
-import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../../components/PageHero.astro';
 import Icon from '../../components/Icon.astro';
 import CtaBand from '../../components/CtaBand.astro';
+import { getPage, iconName, img, listProgrammes, pageSeo } from '../../lib/server/public';
 
-const areas = (await getCollection('areas')).sort((a, b) => a.data.order - b.data.order);
-const iconFor: Record<string, string> = { diaspora: 'globe', support: 'users', investment: 'trending-up', training: 'graduation', bilateral: 'landmark' };
+const preview = Astro.locals.preview;
+const page = await getPage('what-we-do', preview);
+if (!page) return Astro.rewrite('/404/');
+const areas = await listProgrammes('area', preview);
+const num = (i: number) => String(i + 1).padStart(2, '0');
 ---
 
-<BaseLayout
-  title="What we do"
-  description="Diaspora engagement, social support and integration, investment promotion, training and professional development, and bilateral engagements between Nigeria and Europe."
->
-  <PageHero
-    title="What we do"
-    lead="Five areas of work, one purpose: helping Nigerian professionals in Europe thrive and connecting European companies and investors with opportunities in Nigeria."
-    crumbs={[{ label: 'What we do' }]}
-  >
+<BaseLayout {...pageSeo(page)}>
+  <PageHero title={page.title} lead={page.lead} crumbs={[{ label: page.title }]}>
     <ol class="toc" role="list">
       {
         areas.map((a, i) => (
           <li>
-            <a href={`#${a.id}`}>
-              <span>0{i + 1}</span>
-              {a.data.title}
+            <a href={`#${a.slug}`}>
+              <span>{num(i)}</span>
+              {a.title}
             </a>
           </li>
         ))
@@ -37,19 +32,19 @@ const iconFor: Record<string, string> = { diaspora: 'globe', support: 'users', i
     <div class="container rows">
       {
         areas.map((a, i) => (
-          <article class:list={['row', { 'row--flip': i % 2 === 1 }]} id={a.id}>
+          <article class:list={['row', { 'row--flip': i % 2 === 1 }]} id={a.slug}>
             <div class="media media--zoom row-media" data-reveal="image" data-parallax>
-              <Image src={a.data.image} alt={a.data.imageAlt} widths={[480, 720, 960, 1280]} sizes="(min-width: 1000px) 620px, 100vw" loading={i === 0 ? 'eager' : 'lazy'} />
+              {a.image && <img {...img(a.image, { alt: a.image_alt, sizes: '(min-width: 1000px) 620px, 100vw', loading: i === 0 ? 'eager' : 'lazy' })} />}
             </div>
             <div class="row-copy" data-reveal>
               <span class="row-icon">
-                <Icon name={iconFor[a.data.icon]} size={22} />
+                <Icon name={iconName(a.icon)} size={22} />
               </span>
-              <h2>{a.data.title}</h2>
-              <p class="row-headline">{a.data.headline}</p>
-              <p>{a.data.summary}</p>
-              <a href={`/what-we-do/${a.id}/`} class="link-arrow">
-                Learn more<span class="visually-hidden"> about {a.data.title.toLowerCase()}</span> <Icon name="arrow-right" />
+              <h2>{a.title}</h2>
+              {a.headline && <p class="row-headline">{a.headline}</p>}
+              <p>{a.summary}</p>
+              <a href={a.path} class="link-arrow">
+                Learn more<span class="visually-hidden"> about {a.title.toLowerCase()}</span> <Icon name="arrow-right" />
               </a>
             </div>
           </article>

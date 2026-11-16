@@ -1,49 +1,42 @@
 ---
-import { Image, getImage } from 'astro:assets';
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Icon from '../../components/Icon.astro';
 import AlbumCard from '../../components/AlbumCard.astro';
 import { formatMonth } from '../../lib/format';
-import { sortByDateDesc } from '../../lib/related';
+import { getAlbum, getSite, img, listAlbums } from '../../lib/server/public';
 
-export async function getStaticPaths() {
-  const albums = await getCollection('albums');
-  return albums.map((album) => ({ params: { slug: album.id }, props: { album } }));
-}
-const { album } = Astro.props;
-const d = album.data;
-const large = await Promise.all(d.photos.map((p) => getImage({ src: p, width: Math.min(1600, p.width), format: 'webp' })));
-const more = sortByDateDesc(await getCollection('albums', (a) => a.id !== album.id)).slice(0, 3);
+const preview = Astro.locals.preview;
+const d = await getAlbum(Astro.params.slug ?? '', preview);
+if (!d) return Astro.rewrite('/404/');
+const { site } = await getSite(Astro.locals);
+// The lightbox opens the largest optimised copy (up to 1600 px wide).
+const large = d.photos.map((p) => [...p.variants].reverse().find((v) => v.w <= 1600)?.url ?? p.url);
+const more = (await listAlbums(preview)).filter((a) => a.id !== d.id).slice(0, 3);
+const when = formatMonth(d.date, d.year_only);
 ---
 
-<BaseLayout title={d.title} description={`${d.photos.length} photos: ${d.title}, ${formatMonth(d.date, d.yearOnly)}. ${d.type} by Friends of Nigeria.`} image={d.cover}>
+<BaseLayout title={d.title} description={d.summary || `${d.photos.length} photos: ${d.title}, ${when}. ${d.type} by ${site.name}.`} image={d.cover}>
   <section class="section album-page">
     <div class="container">
       <Breadcrumbs items={[{ label: 'Photo gallery', href: '/gallery/' }, { label: d.title }]} />
       <header class="album-head">
         <p class="meta">
-          <span>{d.type}</span><span class="dot" aria-hidden="true"></span><time datetime={d.date.toISOString()}>{formatMonth(d.date, d.yearOnly)}</time>
+          <span>{d.type}</span><span class="dot" aria-hidden="true"></span><time datetime={d.date.toISOString().slice(0, 10)}>{when}</time>
         </p>
         <h1>{d.title}</h1>
         <p class="count">
-          {d.photos.length} photos{d.photoCount && d.photoCount > d.photos.length ? ` (a selection of ${d.photoCount})` : ''}
+          {d.photos.length} photos{d.photo_count && d.photo_count > d.photos.length ? ` (a selection of ${d.photo_count})` : ''}
         </p>
+        {d.summary && <p class="lead">{d.summary}</p>}
       </header>
 
       <ul class="photos" role="list" data-lightbox-gallery>
         {
           d.photos.map((p, i) => (
             <li>
-              <a href={large[i].src} class="photo" data-lightbox-item data-index={i} aria-label={`Open photo ${i + 1} of ${d.photos.length}`}>
-                <Image
-                  src={p}
-                  alt={`${d.title}, photo ${i + 1}`}
-                  widths={[360, 540, 720]}
-                  sizes="(min-width: 1100px) 400px, (min-width: 640px) 50vw, 100vw"
-                  loading={i < 6 ? 'eager' : 'lazy'}
-                />
+              <a href={large[i]} class="photo" data-lightbox-item data-index={i} aria-label={`Open photo ${i + 1} of ${d.photos.length}`}>
+                <img {...img(p, { alt: p.alt || `${d.title}, photo ${i + 1}`, sizes: '(min-width: 1100px) 400px, (min-width: 640px) 50vw, 100vw', loading: i < 6 ? 'eager' : 'lazy', maxWidth: 720 })} />
               </a>
             </li>
           ))
