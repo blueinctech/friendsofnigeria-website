@@ -170,8 +170,8 @@ async function processFile(id: string, buf: Buffer, type: Detected, name: string
     return { kind: 'image', mime: type.mime, width, height, main: { key: `${id}/${stem}.svg`, body: buf, mime: type.mime }, variants: [], og: null };
   }
 
-  let image: sharp.Sharp;
-  let meta: sharp.Metadata;
+  let image: ReturnType<typeof sharp>;
+  let meta: Awaited<ReturnType<ReturnType<typeof sharp>['metadata']>>;
   try {
     image = sharp(buf, { failOn: 'error', limitInputPixels: 80_000_000, animated: type.mime === 'image/gif' });
     meta = await image.metadata();

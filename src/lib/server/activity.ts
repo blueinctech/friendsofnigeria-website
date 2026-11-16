@@ -97,7 +97,7 @@ export function describeActivity(row: ActivityRow): { verb: string; noun: string
   const verb = ACTION_LABELS[row.action] ?? row.action.replace(/_/g, ' ');
   const type = row.entity_type ?? '';
   const selfAction = ['login', 'logout', 'login_failed', 'password_reset_requested', 'password_reset', 'password_changed', 'setup'].includes(row.action);
-  const noun = selfAction ? '' : (ENTITY_NAMES[type] ?? type);
+  const noun = selfAction || row.action === 'reorder' || row.action === 'export' ? '' : (ENTITY_NAMES[type] ?? type);
   const label = row.action === 'login_failed' ? (row.entity_label ?? '') : selfAction ? '' : (row.entity_label ?? '');
   let href: string | null = null;
   if (row.action !== 'delete' && row.entity_id) {

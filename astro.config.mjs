@@ -29,7 +29,24 @@ export default defineConfig({
   // addresses such as /media/<id>/photo.webp and /robots.txt do not.
   trailingSlash: 'ignore',
   integrations: [preact({ include: ['**/components/admin/**'] })],
-  security: { checkOrigin: true },
+  security: {
+    checkOrigin: true,
+    // The standalone Node server only trusts Host headers for listed domains
+    // (Vercel passes the real request URL, so this only matters for node builds).
+    ...(useNode
+      ? {
+          allowedDomains: [
+            { hostname: 'localhost' },
+            { hostname: '127.0.0.1' },
+            ...(process.env.CMS_ALLOWED_HOSTS ?? '')
+              .split(',')
+              .map((h) => h.trim())
+              .filter(Boolean)
+              .map((hostname) => ({ hostname })),
+          ],
+        }
+      : {}),
+  },
   prefetch: {
     prefetchAll: false,
     defaultStrategy: 'hover',

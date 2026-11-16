@@ -214,7 +214,7 @@ body.admin {
   color: var(--a-ink-3);
   pointer-events: none;
 }
-.a-search input {
+.admin .a-search input {
   width: 100%;
   height: 38px;
   padding: 0 12px 0 36px;
@@ -223,7 +223,7 @@ body.admin {
   background: var(--a-surface-2);
   font: inherit;
 }
-.a-search input:focus {
+.admin .a-search input:focus {
   background: #fff;
   border-color: var(--a-green);
   outline: none;
@@ -606,7 +606,8 @@ a.stat-card:hover {
   display: grid;
   gap: 16px;
 }
-.dash-grid .card + .card {
+.dash-grid .card + .card,
+.stats-grid .card + .card {
   margin-top: 0;
 }
 .quick {

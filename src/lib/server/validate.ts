@@ -75,7 +75,8 @@ export function validateValue(field: Field, raw: unknown, values: Record<string,
     case 'date': {
       if (empty(raw)) return [null, required ? 'This field is required.' : null];
       const v = String(raw).slice(0, 10);
-      if (!DATE.test(v) || Number.isNaN(Date.parse(v))) return [v, 'Enter a valid date.'];
+      // Round-trip check so impossible dates such as 30 February are refused.
+      if (!DATE.test(v) || Number.isNaN(Date.parse(v)) || new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) !== v) return [v, 'Enter a valid date.'];
       return [v, null];
     }
     case 'datetime': {

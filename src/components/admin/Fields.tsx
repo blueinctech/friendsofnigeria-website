@@ -309,8 +309,8 @@ export function FieldInput({
       input = (
         <input
           {...common}
-          type={field.type === 'email' ? 'email' : 'text'}
-          inputMode={field.type === 'url' ? 'url' : undefined}
+          type={(field.type === 'email' ? 'email' : 'text') as 'text'}
+          inputMode={field.type === 'url' ? ('url' as const) : undefined}
           value={str}
           placeholder={field.placeholder ?? (field.type === 'url' ? 'https://… or /page/' : undefined)}
           onInput={(e) => onChange((e.target as HTMLInputElement).value)}
