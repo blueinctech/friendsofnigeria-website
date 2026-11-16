@@ -1,0 +1,19 @@
+---
+import { destroySession } from '../../lib/server/auth';
+import { logActivity } from '../../lib/server/activity';
+import { clientIp, SESSION_COOKIE } from '../../lib/server/http';
+import { safeEqual } from '../../lib/server/security';
+
+// Sign-out only by POST with the session's CSRF token (sent by the dashboard's logout buttons).
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const { admin, session } = Astro.locals;
+  if (admin && session && safeEqual(String(form.get('csrf') ?? ''), session.csrf)) {
+    await destroySession(Astro.cookies.get(SESSION_COOKIE)?.value);
+    await logActivity(admin, { action: 'logout', entityType: 'admin', entityId: admin.id, entityLabel: admin.email, ip: clientIp(Astro) });
+    Astro.cookies.delete(SESSION_COOKIE, { path: '/' });
+    return Astro.redirect('/admin/login/?out=1', 303);
+  }
+}
+return Astro.redirect('/admin/', 303);
+---

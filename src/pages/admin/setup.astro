@@ -1,0 +1,94 @@
+---
+/**
+ * First-time setup: creates the first super administrator. Works only while no
+ * administrator exists, and only with the secret ADMIN_SETUP_TOKEN that the
+ * site owner set in the hosting environment. Disabled for good afterwards.
+ */
+import AdminAuthLayout from '../../layouts/AdminAuthLayout.astro';
+import { countAdmins, createAdmin, isEmail, normaliseEmail } from '../../lib/server/auth';
+import { passwordProblem, rateLimit, safeEqual } from '../../lib/server/security';
+import { cleanText } from '../../lib/server/sanitize';
+import { logActivity } from '../../lib/server/activity';
+import { clientIp } from '../../lib/server/http';
+
+if ((await countAdmins()) > 0) return Astro.redirect('/admin/login/');
+
+const setupToken = process.env.ADMIN_SETUP_TOKEN ?? '';
+const enabled = setupToken.length >= 16;
+let error = '';
+let name = '';
+let email = '';
+
+if (Astro.request.method === 'POST' && enabled) {
+  const form = await Astro.request.formData();
+  name = cleanText(form.get('name')).slice(0, 120);
+  email = normaliseEmail(form.get('email'));
+  const password = String(form.get('password') ?? '');
+  const limit = await rateLimit(`setup:${clientIp(Astro) ?? 'unknown'}`, 10, 3600);
+  if (!limit.allowed) error = 'Too many attempts. Please wait an hour.';
+  else if (!safeEqual(String(form.get('token') ?? ''), setupToken)) error = 'The setup token is incorrect.';
+  else if (!name) error = 'Enter your name.';
+  else if (!isEmail(email)) error = 'Enter a valid email address.';
+  else if (password !== String(form.get('confirm') ?? '')) error = 'The two passwords do not match.';
+  else if (passwordProblem(password, { email, name })) error = passwordProblem(password, { email, name })!;
+  else if ((await countAdmins()) > 0) return Astro.redirect('/admin/login/');
+  else {
+    const admin = await createAdmin({ email, name, role: 'super_admin', password });
+    await logActivity({ id: admin!.id, name }, { action: 'setup', entityType: 'admin', entityId: admin!.id, entityLabel: email, ip: clientIp(Astro) });
+    return Astro.redirect('/admin/login/?setup=1', 303);
+  }
+}
+---
+
+<AdminAuthLayout title="First-time setup">
+  <img src="/icon-192.png" alt="" width="48" height="48" />
+  <h1>Create the first administrator</h1>
+  {
+    !enabled ? (
+      <>
+        <p class="sub">For security, setup is locked until the website owner sets a secret setup token on the server.</p>
+        <div class="notice notice--amber" style="display:block">
+          <p>
+            In Vercel, open the project’s <strong>Settings → Environment Variables</strong> and add <code>ADMIN_SETUP_TOKEN</code> with a long random value (at least 16 characters). Redeploy, then come back to this page and enter the same value.
+          </p>
+          <p style="margin-top:8px">
+            Developers can instead run <code>npm run admin:create</code> with the production <code>DATABASE_URL</code>.
+          </p>
+        </div>
+      </>
+    ) : (
+      <>
+        <p class="sub">This account will be a Super Administrator. This page stops working once it exists.</p>
+        {error && <p class="form-error" role="alert">{error}</p>}
+        <form method="post" data-busy>
+          <div class="field">
+            <label for="token">Setup token</label>
+            <input id="token" name="token" type="password" required autocomplete="off" />
+            <span class="help">The value of ADMIN_SETUP_TOKEN in the hosting settings.</span>
+          </div>
+          <div class="field">
+            <label for="name">Your name</label>
+            <input id="name" name="name" type="text" required maxlength="120" autocomplete="name" value={name} />
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required autocomplete="username" value={email} />
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="pw-wrap">
+              <input id="password" name="password" type="password" required minlength="12" maxlength="200" autocomplete="new-password" />
+              <button type="button" class="btn btn--link btn--sm" data-reveal-pw aria-pressed="false" style="padding:0 8px">Show</button>
+            </div>
+            <span class="help">At least 12 characters.</span>
+          </div>
+          <div class="field">
+            <label for="confirm">Repeat the password</label>
+            <input id="confirm" name="confirm" type="password" required minlength="12" maxlength="200" autocomplete="new-password" />
+          </div>
+          <button type="submit" class="btn btn--block">Create administrator</button>
+        </form>
+      </>
+    )
+  }
+</AdminAuthLayout>
