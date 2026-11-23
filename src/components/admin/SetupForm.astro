@@ -1,0 +1,61 @@
+---
+/** The first-time setup form, shown on /admin/setup/ and on the sign-in page while no administrator exists. */
+interface Props {
+  enabled: boolean;
+  error?: string;
+  name?: string;
+  email?: string;
+  action: string;
+}
+const { enabled, error = '', name = '', email = '', action } = Astro.props;
+---
+
+  {
+  !enabled ? (
+    <>
+      <p class="sub">For security, setup is locked until the website owner sets a secret setup token on the server.</p>
+      <div class="notice notice--amber" style="display:block">
+        <p>
+          In Vercel, open the project’s <strong>Settings → Environment Variables</strong> and add <code>ADMIN_SETUP_TOKEN</code> with a long random value (at least 16 characters). Redeploy, then come back to this page and enter the same value.
+        </p>
+        <p style="margin-top:8px">
+          Developers can instead run <code>npm run admin:create</code> with the production <code>DATABASE_URL</code>.
+        </p>
+      </div>
+    </>
+  ) : (
+    <>
+      <p class="sub">This account will be a Super Administrator. This page stops working once it exists.</p>
+      {error && <p class="form-error" role="alert">{error}</p>}
+      <form method="post" action={action} data-busy>
+        <input type="hidden" name="intent" value="setup" />
+        <div class="field">
+          <label for="token">Setup token</label>
+          <input id="token" name="token" type="password" required autocomplete="off" />
+          <span class="help">The value of ADMIN_SETUP_TOKEN in the hosting settings.</span>
+        </div>
+        <div class="field">
+          <label for="name">Your name</label>
+          <input id="name" name="name" type="text" required maxlength="120" autocomplete="name" value={name} />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required autocomplete="username" value={email} />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="pw-wrap">
+            <input id="password" name="password" type="password" required minlength="12" maxlength="200" autocomplete="new-password" />
+            <button type="button" class="btn btn--link btn--sm" data-reveal-pw aria-pressed="false" style="padding:0 8px">Show</button>
+          </div>
+          <span class="help">At least 12 characters.</span>
+        </div>
+        <div class="field">
+          <label for="confirm">Repeat the password</label>
+          <input id="confirm" name="confirm" type="password" required minlength="12" maxlength="200" autocomplete="new-password" />
+        </div>
+        <button type="submit" class="btn btn--block">Create administrator</button>
+      </form>
+    </>
+  )
+}

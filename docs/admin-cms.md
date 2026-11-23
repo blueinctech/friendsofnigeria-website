@@ -43,7 +43,8 @@ Admin   ──> /admin/ (never cached)  ──> Astro server ──┘   + image
    **only if the database is empty**, then builds the site. A later deploy never
    overwrites content edited in the dashboard. The first import takes about two
    minutes.
-6. **Create the first administrator.** Open `https://<your-domain>/admin/setup/`,
+6. **Create the first administrator.** Open `https://<your-domain>/admin/` (the
+   sign-in page shows the setup form while no administrator exists; `/admin/setup/` shows the same form),
    enter the setup token, your name, email and a password. This page works only
    while no administrator exists, and is switched off for good afterwards.
    You can then remove `ADMIN_SETUP_TOKEN` from Vercel.
