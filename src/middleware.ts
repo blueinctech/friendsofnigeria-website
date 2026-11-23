@@ -87,6 +87,9 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
 
     if (isAdminPage || isAdminApi) {
       response.headers.set('Cache-Control', 'no-store');
+      // Never let a CDN keep a copy of an admin response (including a 404).
+      response.headers.set('CDN-Cache-Control', 'no-store');
+      response.headers.set('Vercel-CDN-Cache-Control', 'no-store');
       response.headers.set('X-Robots-Tag', 'noindex, nofollow');
       response.headers.set('X-Frame-Options', 'DENY');
       response.headers.set('Referrer-Policy', 'same-origin');

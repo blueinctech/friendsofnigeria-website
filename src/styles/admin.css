@@ -1068,6 +1068,9 @@ tr.drop-target td {
   border: 1px solid #cddcf5;
   margin-bottom: 16px;
 }
+.notice:is(p) {
+  display: block;
+}
 .notice--green {
   background: var(--a-green-50);
   color: var(--a-green-dark);
