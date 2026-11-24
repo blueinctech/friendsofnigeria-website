@@ -55,6 +55,15 @@ export default defineConfig({
     inlineStylesheets: 'auto',
   },
   vite: {
-    ssr: { external: ['sharp', 'pg'] },
+    ssr: {
+      external: ['sharp', 'pg'],
+      // sanitize-html is CommonJS and require()s htmlparser2, which is ES-module
+      // only. Vercel's Node runtime cannot require() an ES module, so bundle
+      // them into the server build instead of loading them from node_modules.
+      noExternal: [
+        'sanitize-html', 'htmlparser2', 'domhandler', 'domutils', 'dom-serializer', 'domelementtype', 'entities',
+        'escape-string-regexp', 'is-plain-object', 'launder', 'dayjs', 'parse-srcset', 'postcss', 'nanoid', 'picocolors', 'source-map-js',
+      ],
+    },
   },
 });
