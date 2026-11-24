@@ -1,0 +1,31 @@
+---
+/**
+ * Shown when a page fails on the server. Without this page Astro looked for
+ * "/500" among the routes, the custom-page catch-all answered, and visitors saw
+ * the 404 page instead of an error. On preview deployments and locally the
+ * error message is shown to help diagnose it; production shows only a notice.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+interface Props {
+  error?: unknown;
+}
+const { error } = Astro.props;
+console.error('[500]', Astro.url.pathname, error);
+Astro.response.status = 500;
+const isAdmin = Astro.url.pathname.startsWith('/admin');
+const showDetail = process.env.VERCEL ? process.env.VERCEL_ENV !== 'production' : true;
+const detail = showDetail && error ? (error instanceof Error ? `${error.name}: ${error.message}` : String(error)) : '';
+---
+
+<BaseLayout title="Something went wrong" description="The page could not be shown." noindex>
+  <section class="section status-page">
+    <div class="container narrow">
+      <p class="code" aria-hidden="true">500</p>
+      <h1>Something went wrong</h1>
+      <p class="lead">The page could not be shown. Please try again in a moment.</p>
+      {detail && <pre style="white-space:pre-wrap;font-size:14px;background:#f4f4f2;padding:12px;border-radius:10px">{detail}</pre>}
+      <a href={isAdmin ? '/admin/login/' : '/'} class="btn">{isAdmin ? 'Back to sign in' : 'Go to the homepage'}</a>
+    </div>
+  </section>
+</BaseLayout>
