@@ -37,28 +37,33 @@ async function main() {
   if (oldUrl === newUrl) throw new Error('OLD_DATABASE_URL and DATABASE_URL are the same database');
   const bucket = env('S3_BUCKET');
 
-  const src = new pg.Client({ connectionString: oldUrl });
-  const dst = new pg.Client({ connectionString: newUrl });
-  await src.connect();
-  await dst.connect();
+  // Pools reconnect by themselves if Neon drops an idle connection during the uploads.
+  const src = new pg.Pool({ connectionString: oldUrl, max: 8, keepAlive: true });
+  const dstPool = new pg.Pool({ connectionString: newUrl, max: 2, keepAlive: true });
+  src.on('error', (err) => console.warn(`⚠ old database connection: ${err.message}`));
+  dstPool.on('error', (err) => console.warn(`⚠ new database connection: ${err.message}`));
 
-  const { S3Client, PutObjectCommand, HeadObjectCommand } = await import('@aws-sdk/client-s3');
+  const { S3Client, PutObjectCommand, ListObjectsV2Command } = await import('@aws-sdk/client-s3');
   const s3 = new S3Client({
     region: process.env.S3_REGION || 'auto',
     endpoint: process.env.S3_ENDPOINT || undefined,
     forcePathStyle: Boolean(process.env.S3_ENDPOINT),
+    // S3-compatible stores (Neon, R2) don't all accept the SDK's default checksums.
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
     credentials: { accessKeyId: env('S3_ACCESS_KEY_ID'), secretAccessKey: env('S3_SECRET_ACCESS_KEY') },
   });
-  const inBucket = async (key: string) => {
-    try {
-      await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: `media/${key}` }));
-      return true;
-    } catch {
-      return false;
-    }
-  };
+  // Files already in the bucket (from an earlier run) are skipped.
+  const existing = new Set<string>();
+  let token: string | undefined;
+  do {
+    const r = await s3.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: 'media/', ContinuationToken: token }));
+    for (const o of r.Contents ?? []) if (o.Key) existing.add(o.Key.slice('media/'.length));
+    token = r.NextContinuationToken;
+  } while (token);
+  const inBucket = (key: string) => existing.has(key);
 
-  const migrated = await dst.query(`SELECT 1 FROM schema_migrations WHERE version = '002_media_s3.sql'`).catch(() => ({ rowCount: 0 }));
+  const migrated = await dstPool.query(`SELECT 1 FROM schema_migrations WHERE version = '002_media_s3.sql'`).catch(() => ({ rowCount: 0 }));
   if (!migrated.rowCount) throw new Error('The new database is not migrated yet. Run npm run db:migrate against it first.');
 
   // ---------------------------------------------------------------- media files
@@ -72,14 +77,15 @@ async function main() {
   const media = (await src.query('SELECT * FROM media ORDER BY created_at')).rows;
   let uploaded = 0;
   let skipped = 0;
-  for (const m of media) {
+  let done = 0;
+  const copyOne = async (m: any) => {
     const objects: { url: string; key: string }[] = [{ url: m.url, key: keyOf(m.url) }];
     for (const v of (m.variants ?? []) as Variant[]) objects.push({ url: v.url, key: v.key ?? keyOf(v.url) });
     if (m.og_url) objects.push({ url: m.og_url, key: keyOf(m.og_url) });
 
     for (const o of objects) {
       if (o.url.startsWith('http')) urlMap.set(o.url, `/media/${o.key}`);
-      if (await inBucket(o.key)) {
+      if (inBucket(o.key)) {
         skipped++;
         continue;
       }
@@ -107,15 +113,22 @@ async function main() {
       );
       uploaded++;
     }
+    if (++done % 25 === 0) console.log(`  … ${done}/${media.length} media records`);
     m.storage = 's3';
     m.url = `/media/${objects[0].key}`;
     m.variants = ((m.variants ?? []) as Variant[]).map((v) => ({ ...v, url: `/media/${v.key ?? keyOf(v.url)}` }));
     if (m.og_url) m.og_url = `/media/${keyOf(m.og_url)}`;
-  }
+  };
+  // Eight uploads at a time.
+  const queue = [...media];
+  await Promise.all(Array.from({ length: 8 }, async () => {
+    for (let m = queue.shift(); m; m = queue.shift()) await copyOne(m);
+  }));
   console.log(`✔ media files: ${uploaded} uploaded, ${skipped} already in the bucket (${media.length} media records)`);
 
   // ---------------------------------------------------------------- tables
-  const tablesOf = async (c: pg.Client) =>
+  const dst = await dstPool.connect();
+  const tablesOf = async (c: pg.Pool | pg.PoolClient) =>
     (await c.query(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`)).rows.map(
       (r) => r.table_name as string,
     );
@@ -196,8 +209,9 @@ async function main() {
     throw err;
   }
   console.log('Done. The new database and bucket hold a full copy.');
+  dst.release();
   await src.end();
-  await dst.end();
+  await dstPool.end();
 }
 
 main().catch((err) => {

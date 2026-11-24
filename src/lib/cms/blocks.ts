@@ -332,7 +332,10 @@ export const SITE_SCHEMA: BlockSchema = {
     {
       title: 'Forms and newsletter',
       fields: [
-        text('notify_email', 'Send form submissions to', '', { max: 500, help: 'Email addresses, separated by commas. Leave empty to use the FORM_TO_EMAIL server setting. Every submission is also saved in the dashboard.' }),
+        text('notify_email_contact', 'Contact and Join Us forms go to', 'contact@friendsofnigeria.net, blueinctech@gmail.com', { max: 500, help: 'Email addresses, separated by commas. Every submission is also saved in the dashboard.' }),
+        text('notify_email_fonen', 'FONEN registrations go to', 'contact@friendsofnigeria.net, blueinctech@gmail.com', { max: 500, help: 'Email addresses, separated by commas.' }),
+        text('notify_email_newsletter', 'Newsletter sign-ups go to', 'info@friendsofnigeria.net, blueinctech@gmail.com', { max: 500, help: 'Email addresses, separated by commas.' }),
+        text('notify_email', 'Any other form goes to', '', { max: 500, help: 'Used when a form above is left empty. Leave this empty too to use the FORM_TO_EMAIL server setting.' }),
         { name: 'newsletter_enabled', label: 'Show newsletter sign-up forms', type: 'toggle', default: true },
         { name: 'newsletter_notify', label: 'Email the team about each newsletter sign-up', type: 'toggle', default: true },
       ],

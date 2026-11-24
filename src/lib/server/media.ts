@@ -143,6 +143,9 @@ async function s3() {
     region: process.env.S3_REGION || 'auto',
     endpoint: process.env.S3_ENDPOINT || undefined,
     forcePathStyle: Boolean(process.env.S3_ENDPOINT),
+    // S3-compatible stores (Neon, R2) don't all accept the SDK's default checksums.
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
     credentials:
       process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY
         ? { accessKeyId: process.env.S3_ACCESS_KEY_ID, secretAccessKey: process.env.S3_SECRET_ACCESS_KEY }

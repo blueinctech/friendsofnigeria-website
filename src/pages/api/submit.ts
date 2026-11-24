@@ -101,7 +101,9 @@ export const POST: APIRoute = async (ctx) => {
 
     // Email the team (optional: submissions are already saved).
     const site = await getSettings('site');
-    const to = String(site.notify_email || process.env.FORM_TO_EMAIL || '')
+    // Each form has its own recipients (as on the old WordPress site), then a shared fallback.
+    const perForm = { contact: site.notify_email_contact, membership: site.notify_email_contact, fonen: site.notify_email_fonen, newsletter: site.notify_email_newsletter }[form.type];
+    const to = String(perForm || site.notify_email || process.env.FORM_TO_EMAIL || '')
       .split(',')
       .map((s) => s.trim())
       .filter(isEmail);
