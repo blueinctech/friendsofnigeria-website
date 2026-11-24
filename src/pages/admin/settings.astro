@@ -34,12 +34,12 @@ const storage = storageDriver();
                 <span class="badge badge--green">Connected</span>
               </li>
               <li>
-                <span>Email sending (Resend) for form notifications and password links</span>
+                <span>Email sending (Amazon SES or Resend) for form notifications and password links</span>
                 {mail ? <span class="badge badge--green">Configured</span> : <span class="badge badge--amber">Not configured</span>}
               </li>
               <li>
                 <span>File storage</span>
-                <span class="badge badge--blue">{storage === 'blob' ? 'Vercel Blob' : 'Database'}</span>
+                <span class="badge badge--blue">{storage === 's3' ? 'S3 bucket' : storage === 'blob' ? 'Vercel Blob' : 'Database'}</span>
               </li>
             </ul>
           </div>

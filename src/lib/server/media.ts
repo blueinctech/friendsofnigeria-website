@@ -2,7 +2,10 @@
  * Media library: upload validation, image optimisation and storage.
  *
  * Storage driver:
- * - Vercel Blob when BLOB_READ_WRITE_TOKEN is set (recommended in production).
+ * - An S3-compatible bucket when S3_BUCKET is set (AWS S3, Neon object storage,
+ *   Cloudflare R2...). Files are served from /media/... by the website, so the
+ *   bucket can stay private. Use this on Hostinger or any non-Vercel host.
+ * - Vercel Blob when BLOB_READ_WRITE_TOKEN is set.
  * - Otherwise the files are stored in Postgres (table media_blobs) and served
  *   from /media/... with long-lived cache headers, so the CMS works with only a
  *   database.
@@ -36,7 +39,7 @@ export interface MediaRecord {
   width: number | null;
   height: number | null;
   alt: string;
-  storage: 'db' | 'blob';
+  storage: 'db' | 'blob' | 's3';
   url: string;
   variants: Variant[];
   og_url: string | null;
@@ -50,7 +53,8 @@ export class UploadError extends Error {
   status = 400;
 }
 
-export const storageDriver = (): 'db' | 'blob' => (process.env.BLOB_READ_WRITE_TOKEN ? 'blob' : 'db');
+export const storageDriver = (): 'db' | 'blob' | 's3' =>
+  process.env.S3_BUCKET ? 's3' : process.env.BLOB_READ_WRITE_TOKEN ? 'blob' : 'db';
 
 // ------------------------------------------------------------------ File type detection
 
@@ -129,6 +133,55 @@ async function blobDelete(urls: string[]) {
   if (!urls.length) return;
   const { del } = await import('@vercel/blob');
   await del(urls);
+}
+
+// S3-compatible bucket. Objects live under "media/<key>"; the site serves them at /media/<key>.
+let s3Client: import('@aws-sdk/client-s3').S3Client | null = null;
+async function s3() {
+  const sdk = await import('@aws-sdk/client-s3');
+  s3Client ??= new sdk.S3Client({
+    region: process.env.S3_REGION || 'auto',
+    endpoint: process.env.S3_ENDPOINT || undefined,
+    forcePathStyle: Boolean(process.env.S3_ENDPOINT),
+    credentials:
+      process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY
+        ? { accessKeyId: process.env.S3_ACCESS_KEY_ID, secretAccessKey: process.env.S3_SECRET_ACCESS_KEY }
+        : undefined,
+  });
+  return { sdk, client: s3Client, bucket: process.env.S3_BUCKET! };
+}
+
+export async function s3Put(key: string, body: Buffer, contentType: string) {
+  const { sdk, client, bucket } = await s3();
+  await client.send(
+    new sdk.PutObjectCommand({
+      Bucket: bucket,
+      Key: `media/${key}`,
+      Body: body,
+      ContentType: contentType,
+      CacheControl: 'public, max-age=31536000, immutable',
+    }),
+  );
+}
+
+async function s3Delete(keys: string[]) {
+  if (!keys.length) return;
+  const { sdk, client, bucket } = await s3();
+  for (const key of keys) await client.send(new sdk.DeleteObjectCommand({ Bucket: bucket, Key: `media/${key}` }));
+}
+
+async function s3Get(key: string): Promise<{ mime: string; data: Buffer } | null> {
+  if (!process.env.S3_BUCKET) return null;
+  const { sdk, client, bucket } = await s3();
+  try {
+    const res = await client.send(new sdk.GetObjectCommand({ Bucket: bucket, Key: `media/${key}` }));
+    if (!res.Body) return null;
+    return { mime: res.ContentType || 'application/octet-stream', data: Buffer.from(await res.Body.transformToByteArray()) };
+  } catch (err) {
+    const status = (err as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+    if (status === 404 || (err as Error).name === 'NoSuchKey') return null;
+    throw err;
+  }
 }
 
 interface PendingObject {
@@ -246,6 +299,16 @@ export async function storeUpload(input: UploadInput): Promise<MediaRecord> {
       await blobDelete([...urlFor.values()]).catch(() => {});
       throw err;
     }
+  } else if (driver === 's3') {
+    try {
+      for (const o of objects) {
+        await s3Put(o.key, o.body, o.mime);
+        urlFor.set(o.key, `/media/${o.key}`);
+      }
+    } catch (err) {
+      await s3Delete([...urlFor.keys()]).catch(() => {});
+      throw err;
+    }
   } else {
     for (const o of objects) urlFor.set(o.key, `/media/${o.key}`);
   }
@@ -290,11 +353,19 @@ export async function deleteMediaFiles(media: MediaRecord) {
     const urls = [media.url, media.og_url, ...(media.variants ?? []).map((v) => v.url)].filter(Boolean) as string[];
     await blobDelete([...new Set(urls)]);
   }
+  if (media.storage === 's3') {
+    const keys = [media.url, media.og_url, ...(media.variants ?? []).map((v) => v.url)]
+      .filter((u): u is string => Boolean(u && u.startsWith('/media/')))
+      .map((u) => u.slice('/media/'.length));
+    await s3Delete([...new Set(keys)]);
+  }
   await query('DELETE FROM media WHERE id = $1', [media.id]);
 }
 
+/** A stored file by key: from Postgres (storage "db") or the S3 bucket (storage "s3"). */
 export async function readStoredFile(key: string) {
-  return one<{ mime: string; data: Buffer }>('SELECT mime, data FROM media_blobs WHERE key = $1', [key]);
+  const fromDb = await one<{ mime: string; data: Buffer }>('SELECT mime, data FROM media_blobs WHERE key = $1', [key]);
+  return fromDb ?? (await s3Get(key));
 }
 
 // ------------------------------------------------------------------ Usage

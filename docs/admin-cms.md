@@ -65,9 +65,12 @@ redeploy. Never commit them. `.env.example` lists them for local development.
 | --- | --- | --- |
 | `DATABASE_URL` | Yes | Postgres connection string. Added by the Neon integration. `POSTGRES_URL` is used if `DATABASE_URL` is missing. |
 | `ADMIN_SETUP_TOKEN` | For first setup | Secret of at least 16 characters that unlocks `/admin/setup/` while no administrator exists. Remove after setup. |
+| `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | No | Stores uploaded images in an S3 bucket. The bucket stays private; the site serves files from `/media/<key>`. `S3_ENDPOINT` is only for non-AWS S3-compatible storage. Takes priority over Blob. |
 | `BLOB_READ_WRITE_TOKEN` | No | Stores uploaded images in Vercel Blob instead of the database. |
-| `RESEND_API_KEY` | No | Sends enquiry notifications and password links by email ([resend.com](https://resend.com)). |
-| `FORM_FROM_EMAIL` | With Resend | Sender on a domain verified in Resend, e.g. `website@friendsofnigeria.net`. |
+| `SES_ACCESS_KEY_ID`, `SES_SECRET_ACCESS_KEY`, `SES_REGION` | No | Sends enquiry notifications and password links through Amazon SES. The key needs `ses:SendEmail`. Used before Resend. |
+| `RESEND_API_KEY` | No | Sends email through [resend.com](https://resend.com) when SES is not set. |
+| `FORM_FROM_EMAIL` | With email | Sender on a domain verified in SES (or Resend), e.g. `website@friendsofnigeria.net`. |
+| `CMS_ADAPTER`, `CMS_ALLOWED_HOSTS` | On a Node host | `CMS_ADAPTER=node` builds a standalone Node server (`node dist/server/entry.mjs`, reads `HOST`/`PORT`); `CMS_ALLOWED_HOSTS` lists the site's domains, comma-separated. |
 | `FORM_TO_EMAIL` | No | Who receives enquiry emails. The "Notification email" in **Settings** takes priority. |
 | `BREVO_API_KEY`, `BREVO_LIST_ID` | No | Also adds newsletter sign-ups to a Brevo list. |
 | `ADMIN_SESSION_IDLE_MINUTES` | No | Sign out after this much inactivity. Default 120. |
