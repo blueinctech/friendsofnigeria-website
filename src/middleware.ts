@@ -8,6 +8,7 @@ import { defineMiddleware } from 'astro:middleware';
 import { readSession } from './lib/server/auth';
 import { DatabaseNotConfiguredError } from './lib/server/db';
 import { csrfValid, fail, sameOrigin, SESSION_COOKIE } from './lib/server/http';
+import { applySiteHeaders, legacyRedirect } from './lib/server/host-rules';
 
 /** Admin pages and endpoints that work without a session. */
 const PUBLIC_ADMIN = ['/admin/login/', '/admin/forgot-password/', '/admin/reset-password/', '/admin/setup/'];
@@ -41,6 +42,15 @@ function unavailable(isApi: boolean) {
 }
 
 export const onRequest = defineMiddleware(async (ctx, next) => {
+  // Old WordPress addresses (vercel.json "redirects"); Vercel applies these itself before the app runs.
+  if (ctx.request.method === 'GET' || ctx.request.method === 'HEAD') {
+    const target = legacyRedirect(ctx.url.pathname);
+    if (target) return new Response(null, { status: 308, headers: { Location: target } });
+  }
+  return applySiteHeaders(await handle(ctx, next));
+});
+
+const handle: Parameters<typeof defineMiddleware>[0] = async (ctx, next) => {
   const { url, request, cookies, locals } = ctx;
   const path = url.pathname;
   locals.admin = null;
@@ -116,4 +126,4 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
     }
     throw err;
   }
-});
+};
