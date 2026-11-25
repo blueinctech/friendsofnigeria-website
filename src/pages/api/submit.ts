@@ -1,7 +1,7 @@
 /**
  * Handles every website form (contact, membership enquiry, FONEN registration,
  * newsletter). Each submission is saved to the database, where it appears in
- * the dashboard, and emailed to the team when Resend is configured.
+ * the dashboard, and emailed to the team when email sending is configured.
  *
  * Answers JSON to the site's script, or redirects to /thank-you/ when the
  * browser posted the form without JavaScript.
@@ -9,6 +9,7 @@
 import type { APIRoute } from 'astro';
 import { query } from '../../lib/server/db';
 import { escapeHtml, sendMail } from '../../lib/server/mail';
+import { detailsTable, messageBox, paragraph, renderEmail, SITE_URL } from '../../lib/server/email-template';
 import { rateLimit } from '../../lib/server/security';
 import { cleanText } from '../../lib/server/sanitize';
 import { getSettings } from '../../lib/server/settings';
@@ -109,15 +110,29 @@ export const POST: APIRoute = async (ctx) => {
       .filter(isEmail);
     const notify = form.type !== 'newsletter' || site.newsletter_notify !== false;
     if (to.length && notify) {
-      const rows = fields
-        .map(([k, v]) => `<tr><th align="left" valign="top" style="padding:6px 16px 6px 0;color:#5f6d73;font-weight:600">${escapeHtml(LABELS[k] || k)}</th><td style="padding:6px 0;white-space:pre-wrap">${escapeHtml(v)}</td></tr>`)
-        .join('');
+      const who = values.name || values.company || values.contactName || email;
+      const details = fields.filter(([k]) => k !== 'message' && k !== 'consent').map(([k, v]) => [LABELS[k] || k, v] as [string, string]);
+      const group = form.type === 'contact' ? 'contact' : form.type === 'newsletter' ? '' : 'membership';
+      const html = renderEmail({
+        preheader: form.type === 'newsletter' ? `${email} signed up for the newsletter.` : `${who} sent a ${form.title.toLowerCase()} from the website.`,
+        eyebrow: 'New on the website',
+        heading: form.type === 'newsletter' ? 'New newsletter sign-up' : `${form.title} from ${who}`,
+        body:
+          paragraph(form.type === 'newsletter' ? 'Someone subscribed to the newsletter on friendsofnigeria.net.' : 'Someone filled in a form on friendsofnigeria.net. Reply to this email to answer them directly.') +
+          detailsTable(details) +
+          (values.message ? messageBox('Message', values.message) : ''),
+        buttons: [
+          ...(form.type === 'newsletter' ? [] : [{ label: `Reply to ${String(who).split(' ')[0]}`, href: `mailto:${email}?subject=${encodeURIComponent(`Re: ${values.topic || form.title}`)}` }]),
+          { label: 'Open in dashboard', href: `${SITE_URL}/admin/${group ? `enquiries/${group}/` : 'enquiries/'}`, style: form.type === 'newsletter' ? 'primary' : 'secondary' },
+        ],
+        note: 'This submission is also saved in the website dashboard under Enquiries.',
+      });
       const sent = await sendMail({
         to,
         replyTo: email,
-        subject: `${form.title}: ${values.name || values.company || values.contactName || email}`,
-        html: `<h2 style="font-family:sans-serif">${escapeHtml(form.title)}</h2><table style="font-family:sans-serif;font-size:14px">${rows}</table><p style="font-family:sans-serif;font-size:13px;color:#5f6d73">Also saved in the website dashboard.</p>`,
-        text: `${form.title}\n\n${fields.map(([k, v]) => `${LABELS[k] || k}: ${v}`).join('\n')}`,
+        subject: `${form.title}: ${who}`,
+        html,
+        text: `${form.title}\n\n${fields.map(([k, v]) => `${LABELS[k] || k}: ${v}`).join('\n')}\n\nAlso saved in the website dashboard: ${SITE_URL}/admin/enquiries/`,
       }).catch((err) => {
         console.error('[submit] email failed', err);
         return false;

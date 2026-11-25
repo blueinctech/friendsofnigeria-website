@@ -30,8 +30,16 @@ export const fail = (message: string, status = 400, extra: Record<string, unknow
 
 export function clientIp(ctx: Pick<APIContext, 'request' | 'clientAddress'>): string | null {
   const h = ctx.request.headers;
-  const forwarded = h.get('x-vercel-forwarded-for') || h.get('x-forwarded-for') || h.get('x-real-ip');
-  if (forwarded) return forwarded.split(',')[0].trim().slice(0, 64);
+  // On Vercel, its own header holds the visitor's address.
+  const vercel = process.env.VERCEL ? h.get('x-vercel-forwarded-for') : null;
+  if (vercel) return vercel.split(',')[0].trim().slice(0, 64);
+  // Elsewhere (Hostinger), the proxy appends the real address as the LAST entry;
+  // earlier entries come from the visitor and can be faked to dodge rate limits.
+  const forwarded = h.get('x-forwarded-for');
+  if (forwarded) {
+    const last = forwarded.split(',').map((s) => s.trim()).filter(Boolean).pop();
+    if (last) return last.slice(0, 64);
+  }
   try {
     return ctx.clientAddress ?? null;
   } catch {

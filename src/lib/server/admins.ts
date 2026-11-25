@@ -4,6 +4,7 @@
 import { query, one } from './db.ts';
 import { createResetToken } from './auth.ts';
 import { escapeHtml, mailConfigured, sendMail } from './mail.ts';
+import { paragraph, renderEmail } from './email-template.ts';
 
 export async function activeSuperAdminCount(excludeId?: string) {
   const row = await one<{ n: number }>(`SELECT count(*)::int AS n FROM admins WHERE role = 'super_admin' AND active AND id IS DISTINCT FROM $1`, [excludeId ?? null]);
@@ -33,7 +34,14 @@ export async function issuePasswordLink(admin: { id: string; email: string; name
       to: admin.email,
       subject,
       fromName: 'Friends of Nigeria website',
-      html: `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#1a1f1c"><p>Hello ${escapeHtml(admin.name)},</p><p>${intro}</p><p><a href="${escapeHtml(link)}" style="display:inline-block;background:#0b7a3e;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none">Choose your password</a></p><p>This link works once and expires in ${hours} hours. If you did not expect this email, you can ignore it.</p></div>`,
+      html: renderEmail({
+        preheader: opts.welcome ? 'Set your password to start using the website dashboard.' : 'Use this link to choose a new password.',
+        eyebrow: 'Website dashboard',
+        heading: opts.welcome ? 'Welcome to the website dashboard' : 'Choose a new password',
+        body: paragraph(`Hello ${escapeHtml(admin.name)},`) + paragraph(escapeHtml(intro)),
+        buttons: [{ label: 'Choose your password', href: link }],
+        note: `This link works once and expires in ${hours} hours. If you did not expect this email, you can ignore it.`,
+      }),
       text: `Hello ${admin.name},\n\n${intro}\n\nChoose your password: ${link}\n\nThis link works once and expires in ${hours} hours. If you did not expect this email, you can ignore it.`,
     });
   }

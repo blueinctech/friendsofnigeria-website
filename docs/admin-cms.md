@@ -22,6 +22,32 @@ Admin   ──> /admin/ (never cached)  ──> Astro server ──┘   + image
   in **Vercel Blob** once `BLOB_READ_WRITE_TOKEN` is set. Uploads are resized
   to WebP in several widths, plus a JPEG for social sharing previews.
 
+## Hosting on Hostinger (live since 24 November 2026)
+
+friendsofnigeria.net runs as a Node.js web app on Hostinger (Cloud Startup),
+deployed automatically from `main` on GitHub. Settings that work:
+
+| Setting | Value |
+| --- | --- |
+| Framework preset | **Other** (the Astro preset serves `dist` as static files: every page 403/404) |
+| Node version | 24.x (Astro 7 needs 22.23.4 or newer) |
+| Build command | `npm run build` (runs migrations, then the Astro build) |
+| Output directory | empty |
+| Entry file | `dist/server/entry.mjs` |
+
+Environment variables: `DATABASE_URL` (Neon), `S3_BUCKET`, `S3_REGION`,
+`S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (Neon Object Storage),
+`SES_ACCESS_KEY_ID`, `SES_SECRET_ACCESS_KEY`, `SES_REGION`, `FORM_FROM_EMAIL`,
+`CMS_ADAPTER=node`, `CMS_ALLOWED_HOSTS=friendsofnigeria.net,www.friendsofnigeria.net`
+(read at build time, so redeploy after changing it) and `HOST=0.0.0.0`.
+
+DNS is on Cloudflare: apex A record to the web app's server IP (hPanel → Files →
+FTP Accounts) and `www` CNAME to the apex, both "DNS only". The app redirects
+`www.` to the apex. Never change the MX, SPF, DMARC or DKIM records.
+
+Emails (form notifications, password links) go through Amazon SES; their design
+is in `src/lib/server/email-template.ts`.
+
 ## One-time setup on Vercel
 
 1. **Add the database.** In the Vercel project, open **Storage → Create

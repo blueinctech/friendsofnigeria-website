@@ -14,7 +14,8 @@ const { error } = Astro.props;
 console.error('[500]', Astro.url.pathname, error);
 Astro.response.status = 500;
 const isAdmin = Astro.url.pathname.startsWith('/admin');
-const showDetail = process.env.VERCEL ? process.env.VERCEL_ENV !== 'production' : true;
+// Error details only on a developer's machine or a Vercel preview, never to the public.
+const showDetail = import.meta.env.DEV || (process.env.VERCEL ? process.env.VERCEL_ENV !== 'production' : false);
 const detail = showDetail && error ? (error instanceof Error ? `${error.name}: ${error.message}` : String(error)) : '';
 ---
 

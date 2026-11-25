@@ -16,7 +16,7 @@ const { enabled, error = '', name = '', email = '', action } = Astro.props;
       <p class="sub">For security, setup is locked until the website owner sets a secret setup token on the server.</p>
       <div class="notice notice--amber" style="display:block">
         <p>
-          In Vercel, open the project’s <strong>Settings → Environment Variables</strong> and add <code>ADMIN_SETUP_TOKEN</code> with a long random value (at least 16 characters). Redeploy, then come back to this page and enter the same value.
+          In the hosting panel (Hostinger: the web app’s <strong>Environment variables</strong>; Vercel: <strong>Settings → Environment Variables</strong>), add <code>ADMIN_SETUP_TOKEN</code> with a long random value (at least 16 characters). Redeploy, then come back to this page and enter the same value.
         </p>
         <p style="margin-top:8px">
           Developers can instead run <code>npm run admin:create</code> with the production <code>DATABASE_URL</code>.

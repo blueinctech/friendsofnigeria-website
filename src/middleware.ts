@@ -42,6 +42,14 @@ function unavailable(isApi: boolean) {
 }
 
 export const onRequest = defineMiddleware(async (ctx, next) => {
+  // One address for the site: www.friendsofnigeria.net → friendsofnigeria.net, keeping path and query.
+  if (ctx.url.hostname.startsWith('www.')) {
+    const target = new URL(ctx.url);
+    target.hostname = ctx.url.hostname.slice(4);
+    target.protocol = 'https:';
+    target.port = '';
+    return new Response(null, { status: 308, headers: { Location: target.toString() } });
+  }
   // Old WordPress addresses (vercel.json "redirects"); Vercel applies these itself before the app runs.
   if (ctx.request.method === 'GET' || ctx.request.method === 'HEAD') {
     const target = legacyRedirect(ctx.url.pathname);
